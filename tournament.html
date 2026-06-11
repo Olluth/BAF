@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tournament Tracker | BAF TCG</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">BAF TCG</a>
+      <nav class="nav">
+        <a href="index.html#about">About</a>
+        <a href="index.html#events">Events</a>
+        <a href="index.html#news">News</a>
+        <a href="index.html#contact">Contact</a>
+        <a href="tournament.html" class="button">Tournament Tracker</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="eyebrow">Tracker</span>
+        <h2>Live Tournament Standings</h2>
+      </div>
+      <p>Enter an event slug, coverage view, and round to load live standings from Flesh and Blood coverage. Use the admin panel to configure the tracked player list.</p>
+
+      <section id="admin-panel" class="admin-panel hidden">
+        <h3>Admin Panel</h3>
+        <p>Enter member names below to make them visible to visitors. Access this panel with <code>?admin=1</code> in the page URL.</p>
+        <div class="admin-controls">
+          <input type="text" id="admin-player-input" placeholder="Enter player name" />
+          <button id="admin-add-player" type="button" class="button button-primary">Add Player</button>
+          <button id="admin-clear-players" type="button" class="button">Clear All</button>
+        </div>
+        <ul id="admin-player-list" class="admin-player-list"></ul>
+      </section>
+
+      <form id="tracker-form" class="tracker-form">
+        <label for="event-slug">Event Slug</label>
+        <input type="text" id="event-slug" placeholder="example-regionals-2026" required />
+        <label for="coverage-view">Coverage View</label>
+        <input type="text" id="coverage-view" placeholder="main" required />
+        <label for="round-number">Round</label>
+        <input type="number" id="round-number" min="1" placeholder="1" required />
+        <button type="submit" class="button button-primary">Load Standings</button>
+      </form>
+
+      <div id="tracker-status" class="tracker-status"></div>
+      <section id="visitor-player-list" class="visitor-player-list"></section>
+      <div id="standings-container" class="standings-container"></div>
+      <div id="tracked-players" class="tracked-players"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 BAF TCG Association. Live tracker for members.</p>
+    </div>
+  </footer>
+
+  <script src="js/tournament.js"></script>
+</body>
+</html>
