@@ -97,7 +97,7 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Suivi',
     'tracker.title': 'Classements en direct',
-    'tracker.desc': 'Sélectionnez un événement pour afficher la couverture en direct.',
+    'tracker.desc': 'Sélectionnez un événement pour charger les classements. Cliquez sur un joueur pour voir son historique de rondes.',
     'tracker.event.label': 'Événement',
     'tracker.event.placeholder': 'Sélectionner un événement…',
     'tracker.event.empty': 'Aucun événement configuré.',
@@ -134,6 +134,15 @@ const translations = {
     'tracker.tbd': 'À définir',
     'tracker.coverage.heading': 'Couverture en direct',
     'tracker.coverage.external': 'Ouvrir ↗',
+    'tracker.col.result': 'Résultat',
+    'tracker.result.win': 'Victoire',
+    'tracker.result.loss': 'Défaite',
+    'tracker.result.draw': 'Nul',
+    'tracker.openCoverage': 'Voir sur fabtcg.com ↗',
+    'tracker.roundsLoaded': '{done}/{total} rondes chargées…',
+    'tracker.vs': 'vs',
+    'tracker.refresh.in': 'Actualisation dans {n}s',
+    'tracker.dropped': 'Abandon',
 
     // Admin — login
     'admin.login.username': "Nom d'utilisateur",
@@ -291,7 +300,7 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Tracker',
     'tracker.title': 'Live Tournament Standings',
-    'tracker.desc': 'Select an event to display the live coverage.',
+    'tracker.desc': 'Select an event to load live standings. Click a player to view their round-by-round history.',
     'tracker.event.label': 'Event',
     'tracker.event.placeholder': 'Select an event…',
     'tracker.event.empty': 'No events configured.',
@@ -328,6 +337,15 @@ const translations = {
     'tracker.tbd': 'TBD',
     'tracker.coverage.heading': 'Live Coverage',
     'tracker.coverage.external': 'Open ↗',
+    'tracker.col.result': 'Result',
+    'tracker.result.win': 'Win',
+    'tracker.result.loss': 'Loss',
+    'tracker.result.draw': 'Draw',
+    'tracker.openCoverage': 'View on fabtcg.com ↗',
+    'tracker.roundsLoaded': '{done}/{total} rounds loaded…',
+    'tracker.vs': 'vs',
+    'tracker.refresh.in': 'Refreshing in {n}s',
+    'tracker.dropped': 'Dropped',
 
     // Admin — login
     'admin.login.username': 'Username',

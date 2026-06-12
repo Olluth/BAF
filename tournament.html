@@ -35,7 +35,7 @@
           <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
           <h1 data-i18n="tracker.title">Classements en direct</h1>
         </div>
-        <p data-i18n="tracker.desc">Sélectionnez un événement pour afficher la couverture en direct.</p>
+        <p data-i18n="tracker.desc">Sélectionnez un événement pour charger les classements. Cliquez sur un joueur pour voir son historique de rondes.</p>
 
         <div class="tracker-controls">
           <div class="tracker-field">
@@ -47,14 +47,8 @@
         </div>
 
         <section id="visitor-player-list" class="visitor-player-list"></section>
-
-        <div id="coverage-container" class="coverage-container hidden">
-          <div class="coverage-header">
-            <h3 data-i18n="tracker.coverage.heading">Couverture en direct</h3>
-            <a id="coverage-external-link" href="#" target="_blank" rel="noopener noreferrer" class="button" data-i18n="tracker.coverage.external">Ouvrir ↗</a>
-          </div>
-          <iframe id="coverage-iframe" class="coverage-iframe" title="FaB Coverage" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-        </div>
+        <div id="tracker-status" class="tracker-status hidden"></div>
+        <div id="standings-container"></div>
       </div>
     </section>
   </main>

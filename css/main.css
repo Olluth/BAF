@@ -1022,6 +1022,74 @@ textarea::placeholder {
   border-bottom-color: transparent;
 }
 
+/* ---- Live round tracking ---- */
+
+.tracker-live-status {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  background: rgba(252, 165, 165, 0.08);
+  border: 1px solid rgba(252, 165, 165, 0.2);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(252, 165, 165, 0.12);
+  border: 1px solid rgba(252, 165, 165, 0.22);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fca5a5;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  vertical-align: middle;
+  margin-left: 0.6rem;
+}
+
+.live-match-indicator {
+  display: block;
+  font-size: 0.8rem;
+  color: #fca5a5;
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+
+.dropped-row {
+  opacity: 0.45;
+}
+
+.dropped-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(249, 230, 197, 0.45);
+  border: 1px solid rgba(249, 230, 197, 0.18);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.live-pairing-note {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(252, 165, 165, 0.07);
+  border-left: 2px solid rgba(252, 165, 165, 0.3);
+  border-radius: 0 6px 6px 0;
+  color: #fca5a5;
+  font-size: 0.88rem;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .contact-grid {
@@ -1037,6 +1105,194 @@ textarea::placeholder {
     width: 100%;
     height: 200px;
   }
+}
+
+/* ---- Tournament tracker — standings parser ---- */
+
+.tracker-status-error {
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+}
+
+.tracker-empty {
+  color: rgba(249, 230, 197, 0.45);
+  padding: 2.5rem 0;
+  text-align: center;
+}
+
+.visitor-player-list-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 230, 197, 0.12);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  max-width: 520px;
+}
+
+.visitor-player-list-card h3 {
+  margin: 0 0 0.75rem;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.visitor-player-list-card ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #e7d7b0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.standings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.standings-header h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+/* Override nth-child striping — history rows are mixed in */
+.standings-table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+/* Standings rows are interactive */
+.standings-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.standings-row:hover {
+  background: rgba(255, 230, 197, 0.06);
+}
+
+.standings-row.expanded {
+  background: rgba(255, 230, 197, 0.09);
+}
+
+.standings-table .rank-col {
+  width: 3rem;
+}
+
+.standings-table .rank-cell {
+  color: rgba(249, 230, 197, 0.5);
+  font-size: 0.9rem;
+}
+
+.standings-table .record-cell {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Player cell inner flex layout */
+.player-cell-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.player-name-text {
+  flex: 1;
+}
+
+.tracked-indicator {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f9e6c5;
+  flex-shrink: 0;
+}
+
+.row-chevron {
+  flex-shrink: 0;
+  color: rgba(249, 230, 197, 0.35);
+  font-style: normal;
+  display: inline-block;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+
+.standings-row.expanded .row-chevron {
+  transform: rotate(90deg);
+}
+
+/* History panel row */
+.history-panel-row td {
+  padding: 0 !important;
+}
+
+.history-panel {
+  padding: 0.75rem 1.25rem 1rem;
+  background: rgba(10, 4, 0, 0.55);
+  border-top: 1px solid rgba(255, 230, 197, 0.07);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(249, 230, 197, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 230, 197, 0.08);
+}
+
+.history-table td {
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  color: #e7d7b0;
+  border-bottom: 1px solid rgba(255, 230, 197, 0.06);
+}
+
+.history-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Result badges */
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.result-win {
+  background: rgba(74, 222, 128, 0.14);
+  color: #86efac;
+  border: 1px solid rgba(74, 222, 128, 0.22);
+}
+
+.result-loss {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(248, 113, 113, 0.22);
+}
+
+.result-draw {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(249, 230, 197, 0.65);
+  border: 1px solid rgba(255, 230, 197, 0.15);
 }
 
 @media (max-width: 768px) {
