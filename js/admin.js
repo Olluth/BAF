@@ -578,6 +578,44 @@ const wireEvents = () => {
     }
   });
 
+  // Proxy configuration
+  const proxyInput  = $('proxy-url-input');
+  const proxyStatus = $('proxy-status');
+  const showProxyStatus = (msg, ok = true) => {
+    if (!proxyStatus) return;
+    proxyStatus.textContent = msg;
+    proxyStatus.className = 'admin-proxy-status' + (ok ? ' admin-proxy-ok' : ' admin-proxy-err');
+  };
+
+  if (proxyInput) {
+    proxyInput.value = (() => { try { return localStorage.getItem('baf-proxy-url') || ''; } catch { return ''; } })();
+  }
+
+  $('proxy-save-btn')?.addEventListener('click', () => {
+    const val = proxyInput?.value.trim() || '';
+    try {
+      if (val) {
+        localStorage.setItem('baf-proxy-url', val);
+        showProxyStatus(t('admin.proxy.saved'));
+      } else {
+        localStorage.removeItem('baf-proxy-url');
+        showProxyStatus(t('admin.proxy.cleared'));
+      }
+    } catch (err) {
+      showProxyStatus(err.message, false);
+    }
+  });
+
+  $('proxy-clear-btn')?.addEventListener('click', () => {
+    try {
+      localStorage.removeItem('baf-proxy-url');
+      if (proxyInput) proxyInput.value = '';
+      showProxyStatus(t('admin.proxy.cleared'));
+    } catch (err) {
+      showProxyStatus(err.message, false);
+    }
+  });
+
   document.addEventListener('langchange', () => {
     renderArticleList();
     renderPlayerList();

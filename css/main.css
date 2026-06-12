@@ -819,6 +819,45 @@ textarea::placeholder {
   color: #e7d7b0;
 }
 
+.admin-proxy-section {
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+}
+.admin-proxy-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #fff;
+}
+.admin-proxy-section .admin-panel-desc {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.875rem;
+}
+.admin-proxy-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.admin-proxy-row input[type="url"] {
+  flex: 1 1 260px;
+  padding: 0.55rem 0.85rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.875rem;
+}
+.admin-proxy-status {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+.admin-proxy-ok  { color: #6ee7b7; }
+.admin-proxy-err { color: #fca5a5; }
+
 .admin-form-container {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 230, 197, 0.12);

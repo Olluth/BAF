@@ -179,6 +179,15 @@ const translations = {
     'admin.events.save': 'Enregistrer',
     'admin.events.cancel': 'Annuler',
 
+    // Admin — proxy config
+    'admin.proxy.label': 'Proxy CORS personnalisé (optionnel)',
+    'admin.proxy.desc': "Si tous les proxies publics échouent, entrez l'URL de votre propre proxy ici.",
+    'admin.proxy.placeholder': 'https://…/?url=',
+    'admin.proxy.save': 'Enregistrer',
+    'admin.proxy.clear': 'Effacer',
+    'admin.proxy.saved': 'Proxy enregistré.',
+    'admin.proxy.cleared': 'Proxy effacé.',
+
     // Admin — articles panel
     'admin.articles.title': 'Articles',
     'admin.articles.new': '+ Nouvel article',
@@ -381,6 +390,15 @@ const translations = {
     'admin.events.confirmDelete': 'Permanently delete this event?',
     'admin.events.save': 'Save',
     'admin.events.cancel': 'Cancel',
+
+    // Admin — proxy config
+    'admin.proxy.label': 'Custom CORS proxy (optional)',
+    'admin.proxy.desc': 'If all public proxies fail, enter your own proxy URL here.',
+    'admin.proxy.placeholder': 'https://…/?url=',
+    'admin.proxy.save': 'Save',
+    'admin.proxy.clear': 'Clear',
+    'admin.proxy.saved': 'Proxy saved.',
+    'admin.proxy.cleared': 'Proxy cleared.',
 
     // Admin — articles panel
     'admin.articles.title': 'Articles',

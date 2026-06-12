@@ -5,10 +5,27 @@ const EVENTS_KEY   = 'baf-events';
 const CACHE_PREFIX = 'baf-tracker-';
 const CACHE_TTL    = 5 * 60 * 1000;
 
-const PROXIES = [
-  'https://corsproxy.io/?url=',
-  'https://api.allorigins.win/raw?url=',
-  'https://thingproxy.freeboard.io/fetch/',
+// Each proxy entry: buildUrl(url) → fetch URL, extract(response) → HTML string
+const PROXY_CONFIGS = [
+  // allorigins JSON endpoint — wraps response in JSON, avoids raw CORS issues
+  {
+    buildUrl: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+    extract:  async r => {
+      const d = await r.json();
+      if (!d.contents || (d.status && d.status.http_code >= 400)) throw new Error(`HTTP ${d.status?.http_code}`);
+      return d.contents;
+    },
+  },
+  // corsproxy.io — fast but IPs may be blocked by Cloudflare-protected sites
+  {
+    buildUrl: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
+    extract:  r => r.text(),
+  },
+  // codetabs — alternative datacenter proxy
+  {
+    buildUrl: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+    extract:  r => r.text(),
+  },
 ];
 
 /* ---- Storage ---- */
@@ -45,11 +62,17 @@ const setCache = (slug, data) => {
 /* ---- Network ---- */
 
 const proxiedFetch = async (url) => {
+  // Check for admin-configured custom proxy (stored as plain prefix string)
+  const custom = (() => { try { return localStorage.getItem('baf-proxy-url') || ''; } catch { return ''; } })();
+  const configs = custom
+    ? [{ buildUrl: u => custom + encodeURIComponent(u), extract: r => r.text() }, ...PROXY_CONFIGS]
+    : PROXY_CONFIGS;
+
   const errors = [];
-  for (const proxy of PROXIES) {
+  for (const { buildUrl, extract } of configs) {
     try {
-      const r = await fetch(proxy + encodeURIComponent(url));
-      if (r.ok) return r.text();
+      const r = await fetch(buildUrl(url));
+      if (r.ok) return extract(r);
       errors.push(`HTTP ${r.status}`);
     } catch (e) {
       errors.push(e.message);

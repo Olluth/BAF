@@ -103,6 +103,17 @@
               </div>
               <p class="admin-panel-desc" data-i18n="admin.events.desc">Les événements listés ici apparaissent dans le sélecteur de la page de suivi.</p>
 
+              <div class="admin-proxy-section">
+                <label for="proxy-url-input" data-i18n="admin.proxy.label">Proxy CORS personnalisé (optionnel)</label>
+                <p class="admin-panel-desc" data-i18n="admin.proxy.desc">Si tous les proxies publics échouent, entrez l'URL de votre propre proxy ici. Ex : <code>https://mon-proxy.workers.dev/?url=</code></p>
+                <div class="admin-proxy-row">
+                  <input type="url" id="proxy-url-input" data-i18n-placeholder="admin.proxy.placeholder" placeholder="https://…/?url=" />
+                  <button type="button" id="proxy-save-btn" class="button button-primary" data-i18n="admin.proxy.save">Enregistrer</button>
+                  <button type="button" id="proxy-clear-btn" class="button" data-i18n="admin.proxy.clear">Effacer</button>
+                </div>
+                <p id="proxy-status" class="admin-proxy-status hidden"></p>
+              </div>
+
               <div id="event-form-container" class="admin-form-container hidden">
                 <form id="event-form" class="admin-form" novalidate>
                   <h3 id="event-form-title" data-i18n="admin.events.form.new">Nouvel événement</h3>
