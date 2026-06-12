@@ -11,7 +11,7 @@ const translations = {
     'page.title.admin': 'Admin | BAF TCG',
 
     // Navigation
-    'nav.about': 'À propos',
+    'nav.about': 'La BAF',
     'nav.events': 'Événements',
     'nav.news': 'Actualités',
     'nav.contact': 'Contact',
@@ -32,6 +32,7 @@ const translations = {
     // Events
     'events.eyebrow': 'À venir',
     'events.title': 'Événements à venir',
+    'events.next': 'Prochain événement',
     'events.card1.title': 'Soirée de ligue mensuelle',
     'events.card1.desc': 'Vendredi, 19h00 au Game Hall. Pods Construit Standard et Draft disponibles.',
     'events.card2.title': 'Championnat régional',
@@ -156,7 +157,7 @@ const translations = {
     'page.title.admin': 'Admin | BAF TCG',
 
     // Navigation
-    'nav.about': 'About',
+    'nav.about': 'La BAF',
     'nav.events': 'Events',
     'nav.news': 'News',
     'nav.contact': 'Contact',
@@ -177,6 +178,7 @@ const translations = {
     // Events
     'events.eyebrow': 'Upcoming',
     'events.title': 'Upcoming Events',
+    'events.next': 'Next event',
     'events.card1.title': 'Monthly League Night',
     'events.card1.desc': 'Friday, 7:00 PM at the Game Hall. Standard Construct and Draft pods available.',
     'events.card2.title': 'Regional Championship',

@@ -391,6 +391,78 @@ textarea::placeholder {
   margin: -0.25rem 0 0.5rem;
 }
 
+/* ---- Event banner ---- */
+
+.event-banner {
+  padding: 4rem 0 3rem;
+}
+
+.event-banner .section-header {
+  margin-bottom: 2rem;
+}
+
+.event-banner h1 {
+  margin: 0;
+  font-size: clamp(2rem, 2.5vw, 3rem);
+  line-height: 1.05;
+  color: #ffffff;
+}
+
+.event-label {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: rgba(249, 230, 197, 0.55);
+  margin-bottom: 0.6rem;
+}
+
+.event-featured-card {
+  background: rgba(255, 230, 197, 0.06);
+  border: 1px solid rgba(255, 230, 197, 0.25);
+  border-radius: 28px;
+  padding: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.event-featured-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  color: #ffffff;
+}
+
+.event-featured-card p {
+  margin: 0;
+  color: #e7d7b0;
+  max-width: 60ch;
+}
+
+.event-more {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.event-more-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 230, 197, 0.1);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+}
+
+.event-more-item h3 {
+  margin: 0 0 0.5rem;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.event-more-item p {
+  margin: 0;
+  color: #e7d7b0;
+  font-size: 0.9rem;
+}
+
 /* ---- Admin: Login ---- */
 
 .admin-login-page {
