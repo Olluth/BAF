@@ -438,6 +438,10 @@ textarea::placeholder {
   max-width: 60ch;
 }
 
+.event-more-heading {
+  margin: 1.5rem 0 0.75rem;
+}
+
 .event-more {
   display: grid;
   gap: 1rem;
