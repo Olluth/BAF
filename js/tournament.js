@@ -47,26 +47,35 @@ const parseStandings = (data) => {
 };
 
 const tryFetchRound = async (slug, view, round) => {
+  const url = buildApiUrl(slug, view, round);
   try {
-    const r = await fetch(buildApiUrl(slug, view, round), { headers: { Accept: 'application/json' } });
-    if (!r.ok) return null;
+    const r = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!r.ok) {
+      return { error: `HTTP ${r.status} ${r.statusText}`, round };
+    }
     const data = await r.json();
     const rows = parseStandings(data);
-    return rows && rows.length ? { round, rows } : null;
-  } catch { return null; }
+    return rows && rows.length ? { round, rows } : { noData: true, round };
+  } catch (err) {
+    return { error: err.message || 'Fetch failed', round };
+  }
 };
 
-// Fire rounds 1-15 in parallel, return the highest round that has data.
+// Fire rounds 1-15 in parallel, return the highest round that has data or the last error.
 const detectCurrentRound = async (slug, view) => {
   const MAX = 15;
   const results = await Promise.allSettled(
     Array.from({ length: MAX }, (_, i) => tryFetchRound(slug, view, i + 1)),
   );
+  let lastError = null;
   for (let i = results.length - 1; i >= 0; i--) {
-    const val = results[i].status === 'fulfilled' ? results[i].value : null;
-    if (val) return val;
+    if (results[i].status !== 'fulfilled') continue;
+    const val = results[i].value;
+    if (!val) continue;
+    if (val.rows) return val;
+    if (val.error) lastError = val.error;
   }
-  return null;
+  return { error: lastError || t('tracker.loadError') };
 };
 
 // --- Status bar ---
@@ -208,9 +217,14 @@ const applyRows = (rows) => {
 const loadAndDisplayRound = async (slug, view, round) => {
   setStatus(t('tracker.loading'));
   const result = await tryFetchRound(slug, view, round);
-  if (!result) {
-    setStatus(t('tracker.loadError'), true);
-    document.getElementById('standings-container').innerHTML = `<p>${t('tracker.networkError')}</p>`;
+  if (!result || !result.rows) {
+    if (result?.error) {
+      setStatus(`${t('tracker.fetchError')} ${result.error}`, true);
+      document.getElementById('standings-container').innerHTML = `<p>${t('tracker.networkError')}</p>`;
+    } else {
+      setStatus(t('tracker.loadError'), true);
+      document.getElementById('standings-container').innerHTML = `<p>${t('tracker.networkError')}</p>`;
+    }
     return false;
   }
   updateRoundDisplay(round);
@@ -226,15 +240,33 @@ const loadEvent = async (slug, view) => {
   document.getElementById('standings-container').innerHTML = '';
   document.getElementById('tracked-players').innerHTML   = '';
 
-  const result = await detectCurrentRound(slug, view);
-  if (!result) {
-    setStatus(t('tracker.loadError'), true);
+  let result = await detectCurrentRound(slug, view);
+  let attemptedView = view;
+  if (!result || !result.rows) {
+    const fallbackView = view === 'results' ? 'main' : 'results';
+    if (fallbackView !== view) {
+      const fallback = await detectCurrentRound(slug, fallbackView);
+      if (fallback && fallback.rows) {
+        currentView = fallbackView;
+        result = fallback;
+        attemptedView = fallbackView;
+      }
+    }
+  }
+
+  if (!result || !result.rows) {
+    setStatus(`${t('tracker.fetchError')} ${result?.error || t('tracker.loadError')}`, true);
+    document.getElementById('standings-container').innerHTML = `<p>${t('tracker.networkError')}</p>`;
     return;
   }
+
   maxRound = result.round;
   updateRoundDisplay(result.round);
   showRoundNav(true);
   applyRows(result.rows);
+  if (attemptedView !== view) {
+    setStatus(`${t('tracker.loaded.plural', { count: result.rows.filter((row) => trackedPlayers.some((n) => row.player.toLowerCase().includes(n.toLowerCase()))).length })} (${t('tracker.viewFallback', { view: attemptedView })})`);
+  }
 };
 
 // --- Wire ---
