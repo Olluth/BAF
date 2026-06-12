@@ -1,0 +1,13 @@
+[Unit]
+Description=fabtcg.com CORS proxy
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /opt/fabtcg-proxy/proxy.js
+Restart=always
+RestartSec=5
+User=www-data
+Environment=PORT=3000
+
+[Install]
+WantedBy=multi-user.target
