@@ -11,7 +11,7 @@ const initContactForm = () => {
 
   contactForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    formNote.textContent = 'Merci ! Votre message a bien été reçu. Nous vous répondrons rapidement.';
+    formNote.textContent = t('contact.form.success');
     formNote.style.color = '#047857';
     contactForm.reset();
   });

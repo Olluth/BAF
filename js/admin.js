@@ -153,7 +153,7 @@ const renderArticleList = () => {
   const articles = loadArticles();
   const list = $('article-list');
   if (!articles.length) {
-    list.innerHTML = '<li class="admin-list-empty">Aucun article pour le moment. Cliquez sur « + Nouvel article » pour en créer un.</li>';
+    list.innerHTML = `<li class="admin-list-empty">${t('admin.articles.empty')}</li>`;
     return;
   }
   list.innerHTML = articles
@@ -165,8 +165,8 @@ const renderArticleList = () => {
         <span class="admin-list-item-meta">${escapeHtml(a.date)}</span>
       </div>
       <div class="admin-list-item-actions">
-        <button class="button" data-action="edit" data-id="${escapeAttr(a.id)}">Modifier</button>
-        <button class="button admin-btn-danger" data-action="delete" data-id="${escapeAttr(a.id)}">Supprimer</button>
+        <button class="button" data-action="edit" data-id="${escapeAttr(a.id)}">${t('admin.articles.edit')}</button>
+        <button class="button admin-btn-danger" data-action="delete" data-id="${escapeAttr(a.id)}">${t('admin.articles.delete')}</button>
       </div>
     </li>`,
     )
@@ -175,7 +175,9 @@ const renderArticleList = () => {
 
 const openArticleForm = (article = null) => {
   editingArticleId = article ? article.id : null;
-  $('article-form-title').textContent = article ? 'Modifier l\'article' : 'Nouvel article';
+  const formTitleEl = $('article-form-title');
+  formTitleEl.textContent = t(article ? 'admin.articles.form.edit' : 'admin.articles.form.new');
+  formTitleEl.dataset.i18n = article ? 'admin.articles.form.edit' : 'admin.articles.form.new';
   $('article-id').value = article ? article.id : '';
   $('article-title').value = article ? article.title : '';
   $('article-excerpt').value = article ? article.excerpt : '';
@@ -197,7 +199,7 @@ const renderPlayerList = () => {
   const players = loadPlayers();
   const list = $('player-list');
   if (!players.length) {
-    list.innerHTML = '<li class="admin-list-empty">Aucun joueur suivi pour le moment. Ajoutez-en un ci-dessus.</li>';
+    list.innerHTML = `<li class="admin-list-empty">${t('admin.players.empty')}</li>`;
     return;
   }
   list.innerHTML = players
@@ -208,7 +210,7 @@ const renderPlayerList = () => {
         <span class="admin-list-item-title">${escapeHtml(name)}</span>
       </div>
       <div class="admin-list-item-actions">
-        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">Retirer</button>
+        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">${t('admin.players.remove')}</button>
       </div>
     </li>`,
     )
@@ -226,7 +228,7 @@ const wireEvents = () => {
     const submitBtn = $('login-submit');
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Connexion en cours…';
+    submitBtn.textContent = t('admin.login.submitting');
     errorEl.classList.add('hidden');
 
     try {
@@ -234,14 +236,14 @@ const wireEvents = () => {
         createSession();
         showDashboard();
       } else {
-        errorEl.textContent = 'Nom d\'utilisateur ou mot de passe incorrect.';
+        errorEl.textContent = t('admin.login.error');
         errorEl.classList.remove('hidden');
         $('login-password').value = '';
         $('login-password').focus();
       }
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Se connecter';
+      submitBtn.textContent = t('admin.login.submit');
     }
   });
 
@@ -281,7 +283,7 @@ const wireEvents = () => {
       const article = loadArticles().find((a) => a.id === id);
       if (article) openArticleForm(article);
     } else if (action === 'delete') {
-      if (confirm('Supprimer définitivement cet article ?')) {
+      if (confirm(t('admin.articles.confirmDelete'))) {
         deleteArticle(id);
         renderArticleList();
       }
@@ -300,10 +302,15 @@ const wireEvents = () => {
     const btn = e.target.closest('[data-action="remove-player"]');
     if (!btn) return;
     const name = btn.dataset.name;
-    if (confirm(`Retirer « ${name} » de la liste des joueurs suivis ?`)) {
+    if (confirm(t('admin.players.confirmRemove', { name }))) {
       removePlayer(name);
       renderPlayerList();
     }
+  });
+
+  document.addEventListener('langchange', () => {
+    renderArticleList();
+    renderPlayerList();
   });
 };
 

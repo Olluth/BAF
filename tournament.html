@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Suivi de tournoi | BAF TCG</title>
+  <title data-i18n="page.title.tournament">Suivi de tournoi | BAF TCG</title>
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
@@ -11,11 +11,12 @@
     <div class="container header-inner">
       <a href="index.html" class="brand">BAF TCG</a>
       <nav class="nav">
-        <a href="index.html#about">À propos</a>
-        <a href="index.html#events">Événements</a>
-        <a href="index.html#news">Actualités</a>
-        <a href="index.html#contact">Contact</a>
-        <a href="tournament.html" class="button">Suivi de tournoi</a>
+        <a href="index.html#about" data-i18n="nav.about">À propos</a>
+        <a href="index.html#events" data-i18n="nav.events">Événements</a>
+        <a href="index.html#news" data-i18n="nav.news">Actualités</a>
+        <a href="index.html#contact" data-i18n="nav.contact">Contact</a>
+        <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
+        <button id="lang-toggle" type="button" class="button lang-toggle-btn">EN</button>
       </nav>
     </div>
   </header>
@@ -23,19 +24,19 @@
   <main class="section">
     <div class="container">
       <div class="section-header">
-        <span class="eyebrow">Suivi</span>
-        <h2>Classements en direct</h2>
+        <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
+        <h2 data-i18n="tracker.title">Classements en direct</h2>
       </div>
-      <p>Saisissez le slug de l'événement, la vue de couverture et le round pour charger les classements en direct de la couverture Flesh and Blood.</p>
+      <p data-i18n="tracker.desc">Saisissez le slug de l'événement, la vue de couverture et le round pour charger les classements en direct de la couverture Flesh and Blood.</p>
 
       <form id="tracker-form" class="tracker-form">
-        <label for="event-slug">Slug de l'événement</label>
-        <input type="text" id="event-slug" placeholder="exemple-regionals-2026" required />
-        <label for="coverage-view">Vue de couverture</label>
+        <label for="event-slug" data-i18n="tracker.slug.label">Slug de l'événement</label>
+        <input type="text" id="event-slug" data-i18n-placeholder="tracker.slug.placeholder" placeholder="exemple-regionals-2026" required />
+        <label for="coverage-view" data-i18n="tracker.view.label">Vue de couverture</label>
         <input type="text" id="coverage-view" placeholder="main" required />
-        <label for="round-number">Round</label>
+        <label for="round-number" data-i18n="tracker.round.label">Round</label>
         <input type="number" id="round-number" min="1" placeholder="1" required />
-        <button type="submit" class="button button-primary">Charger les classements</button>
+        <button type="submit" class="button button-primary" data-i18n="tracker.submit">Charger les classements</button>
       </form>
 
       <div id="tracker-status" class="tracker-status"></div>
@@ -47,10 +48,11 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; 2026 BAF TCG Association. Suivi en direct pour les membres.</p>
+      <p data-i18n="footer.tournament">© 2026 BAF TCG Association. Suivi en direct pour les membres.</p>
     </div>
   </footer>
 
+  <script src="js/i18n.js"></script>
   <script src="js/tournament.js"></script>
 </body>
 </html>

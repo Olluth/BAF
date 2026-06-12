@@ -6,6 +6,7 @@ const visitorPlayersSection = document.getElementById('visitor-player-list');
 
 const storageKey = 'baf-tracked-players';
 let trackedPlayers = [];
+let lastRows = null;
 
 const loadTrackedPlayers = () => {
   try {
@@ -22,13 +23,13 @@ const loadTrackedPlayers = () => {
 const renderVisitorPlayerList = () => {
   if (!visitorPlayersSection) return;
   if (!trackedPlayers.length) {
-    visitorPlayersSection.innerHTML = '<div class="visitor-player-list-card"><p>Aucun joueur suivi configuré pour le moment.</p></div>';
+    visitorPlayersSection.innerHTML = `<div class="visitor-player-list-card"><p>${t('tracker.noPlayers')}</p></div>`;
     return;
   }
 
   visitorPlayersSection.innerHTML = `
     <div class="visitor-player-list-card">
-      <h3>Joueurs suivis</h3>
+      <h3>${t('tracker.trackedTitle')}</h3>
       <ol>
         ${trackedPlayers.map((player) => `<li>${player}</li>`).join('')}
       </ol>
@@ -45,11 +46,11 @@ const parseStandings = (data) => {
 
   return data.standings.map((entry) => ({
     rank: entry.rank ?? '-',
-    player: entry.player ?? entry.name ?? 'Inconnu',
+    player: entry.player ?? entry.name ?? t('tracker.unknown'),
     score: entry.score ?? entry.points ?? '-',
     record: entry.record ?? '-',
-    hero: entry.hero ?? entry.character ?? 'Inconnu',
-    opponent: entry.opponent ?? entry.opponent_name ?? 'À définir',
+    hero: entry.hero ?? entry.character ?? t('tracker.unknown'),
+    opponent: entry.opponent ?? entry.opponent_name ?? t('tracker.tbd'),
     round: entry.round ?? entry.match_round ?? '-',
   }));
 };
@@ -57,7 +58,7 @@ const parseStandings = (data) => {
 const renderStandings = (rows) => {
   if (!standingsContainer) return;
   if (!rows?.length) {
-    standingsContainer.innerHTML = '<p>Aucune donnée de classement disponible pour ce round.</p>';
+    standingsContainer.innerHTML = `<p>${t('tracker.noStandings')}</p>`;
     return;
   }
 
@@ -81,12 +82,12 @@ const renderStandings = (rows) => {
     <table class="standings-table">
       <thead>
         <tr>
-          <th>Rang</th>
-          <th>Joueur</th>
-          <th>Héros</th>
-          <th>Adversaire</th>
-          <th>Score</th>
-          <th>Bilan</th>
+          <th>${t('tracker.col.rank')}</th>
+          <th>${t('tracker.col.player')}</th>
+          <th>${t('tracker.col.hero')}</th>
+          <th>${t('tracker.col.opponent')}</th>
+          <th>${t('tracker.col.score')}</th>
+          <th>${t('tracker.col.record')}</th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>
@@ -110,7 +111,7 @@ const renderTrackedPlayers = (rows) => {
   );
 
   if (!watchedRows.length) {
-    trackedPlayersContainer.innerHTML = '<p>Aucun joueur suivi trouvé dans les classements actuels.</p>';
+    trackedPlayersContainer.innerHTML = `<p>${t('tracker.noTrackedFound')}</p>`;
     return;
   }
 
@@ -120,12 +121,12 @@ const renderTrackedPlayers = (rows) => {
       <article class="player-card">
         <h3>${row.player}</h3>
         <dl>
-          <div><dt>Rang actuel</dt><dd>${row.rank}</dd></div>
-          <div><dt>Héros</dt><dd>${row.hero}</dd></div>
-          <div><dt>Adversaire</dt><dd>${row.opponent}</dd></div>
-          <div><dt>Score</dt><dd>${row.score}</dd></div>
-          <div><dt>Bilan</dt><dd>${row.record}</dd></div>
-          <div><dt>Round</dt><dd>${row.round}</dd></div>
+          <div><dt>${t('tracker.card.rank')}</dt><dd>${row.rank}</dd></div>
+          <div><dt>${t('tracker.card.hero')}</dt><dd>${row.hero}</dd></div>
+          <div><dt>${t('tracker.card.opponent')}</dt><dd>${row.opponent}</dd></div>
+          <div><dt>${t('tracker.card.score')}</dt><dd>${row.score}</dd></div>
+          <div><dt>${t('tracker.card.record')}</dt><dd>${row.record}</dd></div>
+          <div><dt>${t('tracker.card.round')}</dt><dd>${row.round}</dd></div>
         </dl>
       </article>`,
     )
@@ -134,28 +135,31 @@ const renderTrackedPlayers = (rows) => {
 
 const fetchStandings = async (slug, view, round) => {
   const url = buildApiUrl(slug, view, round);
-  setStatus('Chargement des classements…');
+  setStatus(t('tracker.loading'));
   if (standingsContainer) standingsContainer.innerHTML = '';
+  lastRows = null;
 
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`Impossible de charger les données (${response.status})`);
+    if (!response.ok) throw new Error(`${t('tracker.loadError')} (${response.status})`);
 
     const data = await response.json();
     const rows = parseStandings(data);
-    if (!rows) throw new Error('Le format des classements n\'est pas pris en charge par le tracker.');
+    if (!rows) throw new Error(t('tracker.formatError'));
 
+    lastRows = rows;
     renderStandings(rows);
     renderTrackedPlayers(rows);
+
     const count = rows.filter((row) =>
       trackedPlayers.some((name) => row.player.toLowerCase().includes(name.toLowerCase())),
     ).length;
-    setStatus(`Classements chargés. ${count} joueur${count === 1 ? '' : 's'} suivi${count === 1 ? '' : 's'} mis en avant.`);
+    const key = count === 1 ? 'tracker.loaded' : 'tracker.loaded.plural';
+    setStatus(t(key, { count }));
   } catch (error) {
-    setStatus(`Erreur lors du chargement des classements : ${error.message}`, true);
+    setStatus(`${t('tracker.fetchError')} ${error.message}`, true);
     if (standingsContainer)
-      standingsContainer.innerHTML =
-        '<p>Impossible de charger les classements en direct. Vérifiez le slug de l\'événement, la vue et le round, ou vérifiez l\'accès réseau au point de couverture.</p>';
+      standingsContainer.innerHTML = `<p>${t('tracker.networkError')}</p>`;
   }
 };
 
@@ -171,13 +175,21 @@ const initialize = () => {
       const round = document.getElementById('round-number').value.trim();
 
       if (!slug || !view || !round) {
-        setStatus('Veuillez remplir tous les champs du tracker.', true);
+        setStatus(t('tracker.fillFields'), true);
         return;
       }
 
       fetchStandings(slug, view, round);
     });
   }
+
+  document.addEventListener('langchange', () => {
+    renderVisitorPlayerList();
+    if (lastRows) {
+      renderStandings(lastRows);
+      renderTrackedPlayers(lastRows);
+    }
+  });
 };
 
 initialize();
