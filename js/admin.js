@@ -273,9 +273,9 @@ const loadAdminEvents = () => {
 
 const saveAdminEvents = (events) => localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
 
-const createAdminEvent = ({ name, slug, view, active }) => {
+const createAdminEvent = ({ name, slug, active }) => {
   const events = loadAdminEvents();
-  events.push({ id: randomUUID(), name: name.trim(), slug: slug.trim(), view: (view || 'main').trim(), active });
+  events.push({ id: randomUUID(), name: name.trim(), slug: slug.trim(), active });
   saveAdminEvents(events);
 };
 
@@ -417,7 +417,7 @@ const renderEventList = () => {
     <li class="admin-list-item">
       <div class="admin-list-item-info">
         <span class="admin-list-item-title">${escapeHtml(ev.name)}</span>
-        <span class="admin-list-item-meta">${escapeHtml(ev.slug)} · ${escapeHtml(ev.view || 'main')}${ev.active === false ? ' · masqué' : ''}</span>
+        <span class="admin-list-item-meta">${escapeHtml(ev.slug)}${ev.active === false ? ' · masqué' : ''}</span>
       </div>
       <div class="admin-list-item-actions">
         <button class="button" data-action="edit-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.edit')}</button>
@@ -436,7 +436,6 @@ const openEventForm = (event = null) => {
   $('event-id').value          = event ? event.id   : '';
   $('event-name').value        = event ? event.name : '';
   $('event-slug-input').value  = event ? event.slug : '';
-  $('event-view-input').value  = event ? (event.view || 'main') : 'main';
   $('event-active').checked    = event ? event.active !== false : true;
   $('event-form-container').classList.remove('hidden');
   $('event-name').focus();
@@ -553,7 +552,6 @@ const wireEvents = () => {
     const data = {
       name:   $('event-name').value,
       slug:   $('event-slug-input').value,
-      view:   $('event-view-input').value || 'main',
       active: $('event-active').checked,
     };
     if (editingEventId) {

@@ -31,7 +31,7 @@
             <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
             <h2 data-i18n="tracker.title">Classements en direct</h2>
           </div>
-          <p data-i18n="tracker.desc">Sélectionnez un événement pour charger les classements en direct. Le round en cours est détecté automatiquement.</p>
+          <p data-i18n="tracker.desc">Sélectionnez un événement pour afficher la couverture en direct.</p>
 
           <div class="tracker-controls">
             <div class="tracker-field">
@@ -40,17 +40,17 @@
                 <option value="" data-i18n="tracker.event.placeholder">Sélectionner un événement…</option>
               </select>
             </div>
-            <div class="tracker-round-nav hidden" id="round-nav">
-              <button id="round-prev" class="button tracker-round-btn" aria-label="Round précédent">‹</button>
-              <span id="round-display" class="tracker-round-display">Round 1</span>
-              <button id="round-next" class="button tracker-round-btn" aria-label="Round suivant">›</button>
-            </div>
           </div>
 
-          <div id="tracker-status" class="tracker-status"></div>
           <section id="visitor-player-list" class="visitor-player-list"></section>
-          <div id="standings-container" class="standings-container"></div>
-          <div id="tracked-players" class="tracked-players"></div>
+
+          <div id="coverage-container" class="coverage-container hidden">
+            <div class="coverage-header">
+              <h3 data-i18n="tracker.coverage.heading">Couverture en direct</h3>
+              <a id="coverage-external-link" href="#" target="_blank" rel="noopener noreferrer" class="button" data-i18n="tracker.coverage.external">Ouvrir ↗</a>
+            </div>
+            <iframe id="coverage-iframe" class="coverage-iframe" title="FaB Coverage" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+          </div>
         </div>
       </main>
 

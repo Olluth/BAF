@@ -97,7 +97,7 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Suivi',
     'tracker.title': 'Classements en direct',
-    'tracker.desc': 'Sélectionnez un événement pour charger les classements en direct. Le round en cours est détecté automatiquement.',
+    'tracker.desc': 'Sélectionnez un événement pour afficher la couverture en direct.',
     'tracker.event.label': 'Événement',
     'tracker.event.placeholder': 'Sélectionner un événement…',
     'tracker.event.empty': 'Aucun événement configuré.',
@@ -132,6 +132,8 @@ const translations = {
     'tracker.card.round': 'Round',
     'tracker.unknown': 'Inconnu',
     'tracker.tbd': 'À définir',
+    'tracker.coverage.heading': 'Couverture en direct',
+    'tracker.coverage.external': 'Ouvrir ↗',
 
     // Admin — login
     'admin.login.username': "Nom d'utilisateur",
@@ -289,7 +291,7 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Tracker',
     'tracker.title': 'Live Tournament Standings',
-    'tracker.desc': 'Select an event to load live standings. The current round is detected automatically.',
+    'tracker.desc': 'Select an event to display the live coverage.',
     'tracker.event.label': 'Event',
     'tracker.event.placeholder': 'Select an event…',
     'tracker.event.empty': 'No events configured.',
@@ -324,6 +326,8 @@ const translations = {
     'tracker.card.round': 'Round',
     'tracker.unknown': 'Unknown',
     'tracker.tbd': 'TBD',
+    'tracker.coverage.heading': 'Live Coverage',
+    'tracker.coverage.external': 'Open ↗',
 
     // Admin — login
     'admin.login.username': 'Username',
