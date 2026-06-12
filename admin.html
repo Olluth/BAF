@@ -37,6 +37,7 @@
         <nav class="site-nav" aria-label="Sections admin">
           <button class="admin-tab active" data-tab="articles" data-i18n="admin.tab.articles">Articles</button>
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs</button>
+          <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Événements</button>
         </nav>
         <div class="sidebar-bottom">
           <a href="index.html" class="button" data-i18n="admin.viewsite">Voir le site</a>
@@ -89,6 +90,38 @@
               </form>
 
               <ul id="player-list" class="admin-list"></ul>
+            </div>
+
+            <!-- Panneau Événements -->
+            <div id="panel-events" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2 data-i18n="admin.events.title">Événements suivis</h2>
+                <button id="new-event-btn" class="button button-primary" data-i18n="admin.events.new">+ Nouvel événement</button>
+              </div>
+              <p class="admin-panel-desc" data-i18n="admin.events.desc">Les événements listés ici apparaissent dans le sélecteur de la page de suivi.</p>
+
+              <div id="event-form-container" class="admin-form-container hidden">
+                <form id="event-form" class="admin-form" novalidate>
+                  <h3 id="event-form-title" data-i18n="admin.events.form.new">Nouvel événement</h3>
+                  <input type="hidden" id="event-id" />
+                  <label for="event-name" data-i18n="admin.events.name.label">Nom affiché</label>
+                  <input type="text" id="event-name" data-i18n-placeholder="admin.events.name.placeholder" placeholder="Ex : Championnats de France 2026" required />
+                  <label for="event-slug-input" data-i18n="admin.events.slug.label">Slug de l'événement</label>
+                  <input type="text" id="event-slug-input" data-i18n-placeholder="admin.events.slug.placeholder" placeholder="national-championship-2026-france" required />
+                  <label for="event-view-input" data-i18n="admin.events.view.label">Vue de couverture</label>
+                  <input type="text" id="event-view-input" placeholder="main" />
+                  <label class="admin-checkbox-row">
+                    <input type="checkbox" id="event-active" checked />
+                    <span data-i18n="admin.events.active.label">Afficher dans le sélecteur</span>
+                  </label>
+                  <div class="admin-form-actions">
+                    <button type="submit" class="button button-primary" data-i18n="admin.events.save">Enregistrer</button>
+                    <button type="button" id="cancel-event-btn" class="button" data-i18n="admin.events.cancel">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <ul id="event-list" class="admin-list"></ul>
             </div>
 
           </div>

@@ -291,6 +291,69 @@ textarea::placeholder {
   width: fit-content;
 }
 
+.tracker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.tracker-field {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 520px;
+}
+
+.tracker-field label {
+  font-weight: 600;
+  color: #f9e6c5;
+}
+
+.tracker-select {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 230, 197, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f9e6c5;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tracker-select option {
+  background: #1a0c02;
+  color: #f9e6c5;
+}
+
+.tracker-round-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tracker-round-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  border-radius: 50%;
+}
+
+.tracker-round-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tracker-round-display {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 1rem;
+  min-width: 90px;
+  text-align: center;
+}
+
 .tracker-status {
   margin-top: 1rem;
   padding: 1rem 1.25rem;
@@ -767,6 +830,22 @@ textarea::placeholder {
   margin-top: 1.25rem;
   color: rgba(249, 230, 197, 0.45);
   font-size: 1.1rem;
+}
+
+.admin-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #f9e6c5;
+  font-weight: 600;
+}
+
+.admin-checkbox-row input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #f9e6c5;
+  cursor: pointer;
 }
 
 .admin-btn-danger {

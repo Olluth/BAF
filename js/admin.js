@@ -4,6 +4,7 @@ const CREDS_KEY = 'baf-admin-credentials';
 const SESSION_KEY = 'baf-admin-session';
 const ARTICLES_KEY = 'baf-articles';
 const PLAYERS_KEY = 'baf-tracked-players';
+const EVENTS_KEY = 'baf-events';
 
 // --- Crypto ---
 
@@ -105,6 +106,30 @@ const removePlayer = (name) => {
   savePlayers(loadPlayers().filter((p) => p.toLowerCase() !== name.toLowerCase()));
 };
 
+// --- Events ---
+
+const loadAdminEvents = () => {
+  try {
+    const raw = localStorage.getItem(EVENTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch { return []; }
+};
+
+const saveAdminEvents = (events) => localStorage.setItem(EVENTS_KEY, JSON.stringify(events));
+
+const createAdminEvent = ({ name, slug, view, active }) => {
+  const events = loadAdminEvents();
+  events.push({ id: crypto.randomUUID(), name: name.trim(), slug: slug.trim(), view: (view || 'main').trim(), active });
+  saveAdminEvents(events);
+};
+
+const updateAdminEvent = (id, changes) => {
+  saveAdminEvents(loadAdminEvents().map((e) => (e.id === id ? { ...e, ...changes } : e)));
+};
+
+const deleteAdminEvent = (id) => saveAdminEvents(loadAdminEvents().filter((e) => e.id !== id));
+
 // --- Helpers ---
 
 const escapeHtml = (str) => {
@@ -137,6 +162,7 @@ const showDashboard = () => {
   $('dashboard').classList.remove('hidden');
   renderArticleList();
   renderPlayerList();
+  renderEventList();
 };
 
 const switchTab = (tab) => {
@@ -145,6 +171,7 @@ const switchTab = (tab) => {
   });
   $('panel-articles').classList.toggle('hidden', tab !== 'articles');
   $('panel-players').classList.toggle('hidden', tab !== 'players');
+  $('panel-events').classList.toggle('hidden', tab !== 'events');
 };
 
 // --- Articles UI ---
@@ -215,6 +242,56 @@ const renderPlayerList = () => {
     </li>`,
     )
     .join('');
+};
+
+// --- Events UI ---
+
+let editingEventId = null;
+
+const renderEventList = () => {
+  const events = loadAdminEvents();
+  const list = $('event-list');
+  if (!list) return;
+  if (!events.length) {
+    list.innerHTML = `<li class="admin-list-empty">${t('admin.events.empty')}</li>`;
+    return;
+  }
+  list.innerHTML = events
+    .map(
+      (ev) => `
+    <li class="admin-list-item">
+      <div class="admin-list-item-info">
+        <span class="admin-list-item-title">${escapeHtml(ev.name)}</span>
+        <span class="admin-list-item-meta">${escapeHtml(ev.slug)} · ${escapeHtml(ev.view || 'main')}${ev.active === false ? ' · masqué' : ''}</span>
+      </div>
+      <div class="admin-list-item-actions">
+        <button class="button" data-action="edit-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.edit')}</button>
+        <button class="button admin-btn-danger" data-action="delete-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.delete')}</button>
+      </div>
+    </li>`,
+    )
+    .join('');
+};
+
+const openEventForm = (event = null) => {
+  editingEventId = event ? event.id : null;
+  const titleEl = $('event-form-title');
+  titleEl.textContent = t(event ? 'admin.events.form.edit' : 'admin.events.form.new');
+  titleEl.dataset.i18n = event ? 'admin.events.form.edit' : 'admin.events.form.new';
+  $('event-id').value          = event ? event.id   : '';
+  $('event-name').value        = event ? event.name : '';
+  $('event-slug-input').value  = event ? event.slug : '';
+  $('event-view-input').value  = event ? (event.view || 'main') : 'main';
+  $('event-active').checked    = event ? event.active !== false : true;
+  $('event-form-container').classList.remove('hidden');
+  $('event-name').focus();
+  $('event-form-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const closeEventForm = () => {
+  editingEventId = null;
+  $('event-form').reset();
+  $('event-form-container').classList.add('hidden');
 };
 
 // --- Event Wiring ---
@@ -308,9 +385,45 @@ const wireEvents = () => {
     }
   });
 
+  $('new-event-btn').addEventListener('click', () => openEventForm());
+  $('cancel-event-btn').addEventListener('click', closeEventForm);
+
+  $('event-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = {
+      name:   $('event-name').value,
+      slug:   $('event-slug-input').value,
+      view:   $('event-view-input').value || 'main',
+      active: $('event-active').checked,
+    };
+    if (editingEventId) {
+      updateAdminEvent(editingEventId, data);
+    } else {
+      createAdminEvent(data);
+    }
+    closeEventForm();
+    renderEventList();
+  });
+
+  $('event-list').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const { action, id } = btn.dataset;
+    if (action === 'edit-event') {
+      const ev = loadAdminEvents().find((ev) => ev.id === id);
+      if (ev) openEventForm(ev);
+    } else if (action === 'delete-event') {
+      if (confirm(t('admin.events.confirmDelete'))) {
+        deleteAdminEvent(id);
+        renderEventList();
+      }
+    }
+  });
+
   document.addEventListener('langchange', () => {
     renderArticleList();
     renderPlayerList();
+    renderEventList();
   });
 };
 

@@ -97,14 +97,14 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Suivi',
     'tracker.title': 'Classements en direct',
-    'tracker.desc': "Saisissez le slug de l'événement, la vue de couverture et le round pour charger les classements en direct de la couverture Flesh and Blood.",
-    'tracker.slug.label': "Slug de l'événement",
-    'tracker.slug.placeholder': 'exemple-regionals-2026',
-    'tracker.view.label': 'Vue de couverture',
-    'tracker.round.label': 'Round',
-    'tracker.submit': 'Charger les classements',
+    'tracker.desc': 'Sélectionnez un événement pour charger les classements en direct. Le round en cours est détecté automatiquement.',
+    'tracker.event.label': 'Événement',
+    'tracker.event.placeholder': 'Sélectionner un événement…',
+    'tracker.event.empty': 'Aucun événement configuré.',
+    'tracker.noEvents': 'Aucun événement configuré pour le moment. Revenez bientôt !',
 
     // Tournament tracker — JS strings
+    'tracker.round.detecting': 'Détection du round en cours…',
     'tracker.noPlayers': 'Aucun joueur suivi configuré pour le moment.',
     'tracker.trackedTitle': 'Joueurs suivis',
     'tracker.noStandings': 'Aucune donnée de classement disponible pour ce round.',
@@ -146,6 +146,26 @@ const translations = {
     // Admin — tabs
     'admin.tab.articles': 'Articles',
     'admin.tab.players': 'Joueurs',
+    'admin.tab.events': 'Événements',
+
+    // Admin — events panel
+    'admin.events.title': 'Événements suivis',
+    'admin.events.desc': "Les événements listés ici apparaissent dans le sélecteur de la page de suivi.",
+    'admin.events.new': '+ Nouvel événement',
+    'admin.events.empty': "Aucun événement configuré. Cliquez sur « + Nouvel événement » pour en ajouter un.",
+    'admin.events.form.new': 'Nouvel événement',
+    'admin.events.form.edit': "Modifier l'événement",
+    'admin.events.name.label': 'Nom affiché',
+    'admin.events.name.placeholder': 'Ex : Championnats de France 2026',
+    'admin.events.slug.label': "Slug de l'événement",
+    'admin.events.slug.placeholder': 'national-championship-2026-france',
+    'admin.events.view.label': 'Vue de couverture',
+    'admin.events.active.label': 'Afficher dans le sélecteur',
+    'admin.events.edit': 'Modifier',
+    'admin.events.delete': 'Supprimer',
+    'admin.events.confirmDelete': 'Supprimer définitivement cet événement ?',
+    'admin.events.save': 'Enregistrer',
+    'admin.events.cancel': 'Annuler',
 
     // Admin — articles panel
     'admin.articles.title': 'Articles',
@@ -268,14 +288,14 @@ const translations = {
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Tracker',
     'tracker.title': 'Live Tournament Standings',
-    'tracker.desc': 'Enter an event slug, coverage view, and round to load live standings from Flesh and Blood coverage.',
-    'tracker.slug.label': 'Event Slug',
-    'tracker.slug.placeholder': 'example-regionals-2026',
-    'tracker.view.label': 'Coverage View',
-    'tracker.round.label': 'Round',
-    'tracker.submit': 'Load Standings',
+    'tracker.desc': 'Select an event to load live standings. The current round is detected automatically.',
+    'tracker.event.label': 'Event',
+    'tracker.event.placeholder': 'Select an event…',
+    'tracker.event.empty': 'No events configured.',
+    'tracker.noEvents': 'No events configured yet. Check back soon!',
 
     // Tournament tracker — JS strings
+    'tracker.round.detecting': 'Detecting current round…',
     'tracker.noPlayers': 'No tracked players configured yet.',
     'tracker.trackedTitle': 'Tracked Players',
     'tracker.noStandings': 'No standings data available for this round.',
@@ -317,6 +337,26 @@ const translations = {
     // Admin — tabs
     'admin.tab.articles': 'Articles',
     'admin.tab.players': 'Players',
+    'admin.tab.events': 'Events',
+
+    // Admin — events panel
+    'admin.events.title': 'Tracked Events',
+    'admin.events.desc': 'Events listed here appear in the tournament tracker page selector.',
+    'admin.events.new': '+ New Event',
+    'admin.events.empty': 'No events configured. Click "+ New Event" to add one.',
+    'admin.events.form.new': 'New Event',
+    'admin.events.form.edit': 'Edit Event',
+    'admin.events.name.label': 'Display name',
+    'admin.events.name.placeholder': 'e.g. French Nationals 2026',
+    'admin.events.slug.label': 'Event slug',
+    'admin.events.slug.placeholder': 'national-championship-2026-france',
+    'admin.events.view.label': 'Coverage view',
+    'admin.events.active.label': 'Show in selector',
+    'admin.events.edit': 'Edit',
+    'admin.events.delete': 'Delete',
+    'admin.events.confirmDelete': 'Permanently delete this event?',
+    'admin.events.save': 'Save',
+    'admin.events.cancel': 'Cancel',
 
     // Admin — articles panel
     'admin.articles.title': 'Articles',

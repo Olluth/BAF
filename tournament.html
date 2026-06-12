@@ -31,17 +31,21 @@
             <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
             <h2 data-i18n="tracker.title">Classements en direct</h2>
           </div>
-          <p data-i18n="tracker.desc">Saisissez le slug de l'événement, la vue de couverture et le round pour charger les classements en direct de la couverture Flesh and Blood.</p>
+          <p data-i18n="tracker.desc">Sélectionnez un événement pour charger les classements en direct. Le round en cours est détecté automatiquement.</p>
 
-          <form id="tracker-form" class="tracker-form">
-            <label for="event-slug" data-i18n="tracker.slug.label">Slug de l'événement</label>
-            <input type="text" id="event-slug" data-i18n-placeholder="tracker.slug.placeholder" placeholder="exemple-regionals-2026" required />
-            <label for="coverage-view" data-i18n="tracker.view.label">Vue de couverture</label>
-            <input type="text" id="coverage-view" placeholder="main" required />
-            <label for="round-number" data-i18n="tracker.round.label">Round</label>
-            <input type="number" id="round-number" min="1" placeholder="1" required />
-            <button type="submit" class="button button-primary" data-i18n="tracker.submit">Charger les classements</button>
-          </form>
+          <div class="tracker-controls">
+            <div class="tracker-field">
+              <label for="event-select" data-i18n="tracker.event.label">Événement</label>
+              <select id="event-select" class="tracker-select">
+                <option value="" data-i18n="tracker.event.placeholder">Sélectionner un événement…</option>
+              </select>
+            </div>
+            <div class="tracker-round-nav hidden" id="round-nav">
+              <button id="round-prev" class="button tracker-round-btn" aria-label="Round précédent">‹</button>
+              <span id="round-display" class="tracker-round-display">Round 1</span>
+              <button id="round-next" class="button tracker-round-btn" aria-label="Round suivant">›</button>
+            </div>
+          </div>
 
           <div id="tracker-status" class="tracker-status"></div>
           <section id="visitor-player-list" class="visitor-player-list"></section>
