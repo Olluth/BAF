@@ -30,8 +30,14 @@ const loadEvents = () => {
 
 // --- API ---
 
-const buildApiUrl = (slug, view, round) =>
-  `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/${encodeURIComponent(view)}/${encodeURIComponent(round)}/`;
+// fabtcg.com does not send CORS headers, so requests from the browser
+// are blocked. We route through corsproxy.io which adds the missing header.
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+const buildApiUrl = (slug, view, round) => {
+  const target = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/${encodeURIComponent(view)}/${encodeURIComponent(round)}/`;
+  return `${CORS_PROXY}${target}`;
+};
 
 const parseStandings = (data) => {
   if (!data || !Array.isArray(data.standings)) return null;
