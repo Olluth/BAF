@@ -4,14 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="page.title.tournament">Suivi de tournoi | BAF TCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <div class="site-layout">
-
-    <aside class="site-sidebar">
+  <header class="site-header">
+    <div class="container header-inner">
       <a href="index.html" class="brand">BAF TCG</a>
-      <nav class="site-nav">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
         <a href="about.html" data-i18n="nav.about">La BAF</a>
         <a href="events.html" data-i18n="nav.events">Événements</a>
         <a href="news.html" data-i18n="nav.news">Actualités</a>
@@ -19,49 +24,46 @@
         <a href="contact.html" data-i18n="nav.contact">Contact</a>
         <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
       </nav>
-      <div class="sidebar-bottom">
-        <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+      <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
+          <h1 data-i18n="tracker.title">Classements en direct</h1>
+        </div>
+        <p data-i18n="tracker.desc">Sélectionnez un événement pour afficher la couverture en direct.</p>
+
+        <div class="tracker-controls">
+          <div class="tracker-field">
+            <label for="event-select" data-i18n="tracker.event.label">Événement</label>
+            <select id="event-select" class="tracker-select">
+              <option value="" data-i18n="tracker.event.placeholder">Sélectionner un événement…</option>
+            </select>
+          </div>
+        </div>
+
+        <section id="visitor-player-list" class="visitor-player-list"></section>
+
+        <div id="coverage-container" class="coverage-container hidden">
+          <div class="coverage-header">
+            <h3 data-i18n="tracker.coverage.heading">Couverture en direct</h3>
+            <a id="coverage-external-link" href="#" target="_blank" rel="noopener noreferrer" class="button" data-i18n="tracker.coverage.external">Ouvrir ↗</a>
+          </div>
+          <iframe id="coverage-iframe" class="coverage-iframe" title="FaB Coverage" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+        </div>
       </div>
-    </aside>
+    </section>
+  </main>
 
-    <div class="site-content">
-      <main class="section">
-        <div class="container">
-          <div class="section-header">
-            <span class="eyebrow" data-i18n="tracker.eyebrow">Suivi</span>
-            <h2 data-i18n="tracker.title">Classements en direct</h2>
-          </div>
-          <p data-i18n="tracker.desc">Sélectionnez un événement pour afficher la couverture en direct.</p>
-
-          <div class="tracker-controls">
-            <div class="tracker-field">
-              <label for="event-select" data-i18n="tracker.event.label">Événement</label>
-              <select id="event-select" class="tracker-select">
-                <option value="" data-i18n="tracker.event.placeholder">Sélectionner un événement…</option>
-              </select>
-            </div>
-          </div>
-
-          <section id="visitor-player-list" class="visitor-player-list"></section>
-
-          <div id="coverage-container" class="coverage-container hidden">
-            <div class="coverage-header">
-              <h3 data-i18n="tracker.coverage.heading">Couverture en direct</h3>
-              <a id="coverage-external-link" href="#" target="_blank" rel="noopener noreferrer" class="button" data-i18n="tracker.coverage.external">Ouvrir ↗</a>
-            </div>
-            <iframe id="coverage-iframe" class="coverage-iframe" title="FaB Coverage" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
-          </div>
-        </div>
-      </main>
-
-      <footer class="site-footer">
-        <div class="container">
-          <p data-i18n="footer.tournament">© 2026 BAF TCG Association. Suivi en direct pour les membres.</p>
-        </div>
-      </footer>
-    </div><!-- /.site-content -->
-
-  </div><!-- /.site-layout -->
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.tournament">© 2026 BAF TCG Association. Suivi en direct pour les membres.</p>
+    </div>
+  </footer>
 
   <script src="js/i18n.js"></script>
   <script src="js/tournament.js"></script>

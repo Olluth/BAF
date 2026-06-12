@@ -4,14 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="page.title.contact">Contact | BAF TCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <div class="site-layout">
-
-    <aside class="site-sidebar">
+  <header class="site-header">
+    <div class="container header-inner">
       <a href="index.html" class="brand">BAF TCG</a>
-      <nav class="site-nav">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
         <a href="about.html" data-i18n="nav.about">La BAF</a>
         <a href="events.html" data-i18n="nav.events">Événements</a>
         <a href="news.html" data-i18n="nav.news">Actualités</a>
@@ -19,49 +24,44 @@
         <a href="contact.html" data-i18n="nav.contact">Contact</a>
         <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
       </nav>
-      <div class="sidebar-bottom">
-        <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
-      </div>
-    </aside>
+      <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+    </div>
+  </header>
 
-    <div class="site-content">
-      <main>
-        <section class="section" id="contact">
-          <div class="container contact-grid">
-            <div>
-              <div class="section-header">
-                <span class="eyebrow" data-i18n="contact.eyebrow">Contact</span>
-                <h1 data-i18n="contact.title">Nous contacter</h1>
-              </div>
-              <p data-i18n="contact.desc">Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, envoyez-nous un message ou contactez-nous sur les réseaux sociaux.</p>
-              <ul class="contact-list">
-                <li><strong data-i18n="contact.email.label">Email :</strong> info@baf-tcg.org</li>
-                <li><strong data-i18n="contact.discord.label">Discord :</strong> discord.gg/bafcommunity</li>
-                <li><strong data-i18n="contact.venue.label">Lieu :</strong> <span data-i18n="contact.venue.value">Central Game Club, Centre-ville</span></li>
-              </ul>
-            </div>
-            <form class="contact-card" id="contact-form">
-              <label for="name" data-i18n="contact.form.name.label">Nom</label>
-              <input type="text" id="name" data-i18n-placeholder="contact.form.name.placeholder" placeholder="Votre nom" required />
-              <label for="email" data-i18n="contact.form.email.label">Email</label>
-              <input type="email" id="email" data-i18n-placeholder="contact.form.email.placeholder" placeholder="vous@exemple.com" required />
-              <label for="message" data-i18n="contact.form.message.label">Message</label>
-              <textarea id="message" rows="5" data-i18n-placeholder="contact.form.message.placeholder" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
-              <button type="submit" class="button" data-i18n="contact.form.submit">Envoyer</button>
-              <p class="form-note" id="form-note"></p>
-            </form>
+  <main>
+    <section class="section" id="contact">
+      <div class="container contact-grid">
+        <div>
+          <div class="section-header">
+            <span class="eyebrow" data-i18n="contact.eyebrow">Contact</span>
+            <h1 data-i18n="contact.title">Nous contacter</h1>
           </div>
-        </section>
-      </main>
-
-      <footer class="site-footer">
-        <div class="container">
-          <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
+          <p data-i18n="contact.desc">Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, envoyez-nous un message ou contactez-nous sur les réseaux sociaux.</p>
+          <ul class="contact-list">
+            <li><strong data-i18n="contact.email.label">Email :</strong> info@baf-tcg.org</li>
+            <li><strong data-i18n="contact.discord.label">Discord :</strong> discord.gg/bafcommunity</li>
+            <li><strong data-i18n="contact.venue.label">Lieu :</strong> <span data-i18n="contact.venue.value">Central Game Club, Centre-ville</span></li>
+          </ul>
         </div>
-      </footer>
-    </div><!-- /.site-content -->
+        <form class="contact-card" id="contact-form">
+          <label for="name" data-i18n="contact.form.name.label">Nom</label>
+          <input type="text" id="name" data-i18n-placeholder="contact.form.name.placeholder" placeholder="Votre nom" required />
+          <label for="email" data-i18n="contact.form.email.label">Email</label>
+          <input type="email" id="email" data-i18n-placeholder="contact.form.email.placeholder" placeholder="vous@exemple.com" required />
+          <label for="message" data-i18n="contact.form.message.label">Message</label>
+          <textarea id="message" rows="5" data-i18n-placeholder="contact.form.message.placeholder" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
+          <button type="submit" class="button" data-i18n="contact.form.submit">Envoyer</button>
+          <p class="form-note" id="form-note"></p>
+        </form>
+      </div>
+    </section>
+  </main>
 
-  </div><!-- /.site-layout -->
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
+    </div>
+  </footer>
 
   <script src="js/i18n.js"></script>
   <script src="js/main.js"></script>

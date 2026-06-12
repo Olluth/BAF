@@ -4,14 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title data-i18n="page.title.about">La BAF | BAF TCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <div class="site-layout">
-
-    <aside class="site-sidebar">
+  <header class="site-header">
+    <div class="container header-inner">
       <a href="index.html" class="brand">BAF TCG</a>
-      <nav class="site-nav">
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
         <a href="about.html" data-i18n="nav.about">La BAF</a>
         <a href="events.html" data-i18n="nav.events">Événements</a>
         <a href="news.html" data-i18n="nav.news">Actualités</a>
@@ -19,38 +24,33 @@
         <a href="contact.html" data-i18n="nav.contact">Contact</a>
         <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
       </nav>
-      <div class="sidebar-bottom">
-        <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
-      </div>
-    </aside>
+      <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+    </div>
+  </header>
 
-    <div class="site-content">
-      <main>
-        <section class="section" id="about">
-          <div class="container">
-            <div class="section-header">
-              <span class="eyebrow" data-i18n="about.eyebrow">Association</span>
-              <h1 data-i18n="about.title">La BAF</h1>
-            </div>
-            <p data-i18n="about.desc">BAF est une association communautaire dédiée aux joueurs et passionnés de Flesh and Blood. Nous organisons des événements réguliers — des Armories hebdomadaires aux grands tournois nationaux — et fédérons une communauté de joueurs compétitifs et amateurs.</p>
-
-            <div class="card" style="margin-top: 2.5rem; max-width: 640px;">
-              <h2 data-i18n="about.join.title">Rejoindre la BAF</h2>
-              <p data-i18n="about.join.desc">Participez à nos événements hebdomadaires ou contactez-nous pour en savoir plus sur l'adhésion à l'association.</p>
-              <a href="contact.html" class="button button-primary" style="margin-top: 1rem;" data-i18n="about.join.cta">Nous contacter</a>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <footer class="site-footer">
-        <div class="container">
-          <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
+  <main>
+    <section class="section" id="about">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow" data-i18n="about.eyebrow">Association</span>
+          <h1 data-i18n="about.title">La BAF</h1>
         </div>
-      </footer>
-    </div><!-- /.site-content -->
+        <p data-i18n="about.desc">BAF est une association communautaire dédiée aux joueurs et passionnés de Flesh and Blood. Nous organisons des événements réguliers — des Armories hebdomadaires aux grands tournois nationaux — et fédérons une communauté de joueurs compétitifs et amateurs.</p>
 
-  </div><!-- /.site-layout -->
+        <div class="card" style="margin-top: 2.5rem; max-width: 640px;">
+          <h2 data-i18n="about.join.title">Rejoindre la BAF</h2>
+          <p data-i18n="about.join.desc">Participez à nos événements hebdomadaires ou contactez-nous pour en savoir plus sur l'adhésion à l'association.</p>
+          <a href="contact.html" class="button button-primary" style="margin-top: 1rem;" data-i18n="about.join.cta">Nous contacter</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
+    </div>
+  </footer>
 
   <script src="js/i18n.js"></script>
 </body>
