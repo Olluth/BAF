@@ -214,8 +214,7 @@ textarea {
 }
 
 .tracker-form,
-#contact-form,
-.admin-panel {
+#contact-form {
   display: grid;
   gap: 1rem;
   background: rgba(255, 255, 255, 0.04);
@@ -225,56 +224,16 @@ textarea {
 }
 
 .tracker-form label,
-#contact-form label,
-.admin-panel p {
+#contact-form label {
   font-weight: 600;
   color: #f9e6c5;
-}
-
-.admin-panel h3 {
-  margin: 0;
-  color: #ffffff;
-}
-
-.admin-controls {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.admin-player-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.admin-player-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.95rem 1rem;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 230, 197, 0.14);
-  color: #f9e6c5;
-}
-
-.admin-player-list button {
-  border: none;
-  background: transparent;
-  color: #f9e6c5;
-  cursor: pointer;
 }
 
 textarea,
 .tracker-form input,
 #contact-form input,
 #contact-form textarea,
-.tracker-form textarea,
-#admin-player-input {
+.tracker-form textarea {
   width: 100%;
   padding: 0.95rem 1rem;
   border-radius: 16px;
@@ -370,6 +329,270 @@ textarea::placeholder {
   font-size: 0.95rem;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.news-meta {
+  color: rgba(249, 230, 197, 0.5);
+  font-size: 0.85rem;
+  margin: -0.25rem 0 0.5rem;
+}
+
+/* ---- Admin: Login ---- */
+
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.admin-login-card {
+  width: min(420px, 100%);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 230, 197, 0.14);
+  border-radius: 28px;
+  padding: 2.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-login-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-login-form label {
+  font-weight: 600;
+  color: #f9e6c5;
+}
+
+.admin-login-form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 230, 197, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f9e6c5;
+}
+
+.admin-login-error {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+  font-size: 0.9rem;
+}
+
+/* ---- Admin: Dashboard ---- */
+
+.admin-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-badge {
+  background: rgba(255, 230, 197, 0.12);
+  border: 1px solid rgba(255, 230, 197, 0.2);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f9e6c5;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.admin-main {
+  padding-top: 2rem;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 230, 197, 0.12);
+  margin-bottom: 2rem;
+}
+
+.admin-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: rgba(249, 230, 197, 0.55);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: -1px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-tab:hover {
+  color: #f9e6c5;
+}
+
+.admin-tab.active {
+  color: #ffffff;
+  border-bottom-color: #f9e6c5;
+}
+
+.admin-panel-section {
+  max-width: 860px;
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.admin-panel-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.admin-panel-desc {
+  margin: -0.75rem 0 1.5rem;
+  color: #e7d7b0;
+}
+
+.admin-form-container {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 230, 197, 0.12);
+  border-radius: 24px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-form h3 {
+  margin: 0 0 0.25rem;
+  color: #ffffff;
+}
+
+.admin-form label {
+  font-weight: 600;
+  color: #f9e6c5;
+}
+
+.admin-form input,
+.admin-form textarea {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 230, 197, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f9e6c5;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.admin-add-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-add-form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 230, 197, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f9e6c5;
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 230, 197, 0.1);
+  border-radius: 16px;
+}
+
+.admin-list-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.admin-list-item-title {
+  color: #ffffff;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-list-item-meta {
+  color: rgba(249, 230, 197, 0.5);
+  font-size: 0.83rem;
+}
+
+.admin-list-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-list-empty {
+  color: rgba(249, 230, 197, 0.4);
+  padding: 1.5rem 0;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.admin-btn-danger {
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+}
+
+.admin-btn-danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.6);
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .contact-grid {
@@ -385,5 +608,18 @@ textarea::placeholder {
   .nav {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .admin-add-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-list-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-list-item-actions {
+    width: 100%;
   }
 }
