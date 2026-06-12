@@ -321,8 +321,9 @@ const applyTranslations = (lang = getLang()) => {
     if (value !== undefined) el.placeholder = value;
   });
 
-  const toggle = document.getElementById('lang-toggle');
-  if (toggle) toggle.textContent = lang === 'fr' ? 'EN' : 'FR';
+  document.querySelectorAll('.lang-toggle').forEach((btn) => {
+    btn.textContent = lang === 'fr' ? 'EN' : 'FR';
+  });
 };
 
 const setLang = (lang) => {
@@ -336,12 +337,9 @@ const setLang = (lang) => {
 document.addEventListener('DOMContentLoaded', () => {
   applyTranslations();
 
-  const toggle = document.getElementById('lang-toggle');
-  if (toggle) {
-    toggle.addEventListener('click', () => {
-      setLang(getLang() === 'fr' ? 'en' : 'fr');
-    });
-  }
+  document.querySelectorAll('.lang-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => setLang(getLang() === 'fr' ? 'en' : 'fr'));
+  });
 });
 
 window.t = t;

@@ -8,12 +8,12 @@
 </head>
 <body>
 
-  <!-- Page de connexion -->
+  <!-- Page de connexion (plein écran, pas de sidebar) -->
   <div id="login-page" class="admin-login-page">
     <div class="admin-login-card">
       <div class="admin-login-top">
         <a href="index.html" class="brand">BAF TCG</a>
-        <button id="lang-toggle" type="button" class="button lang-toggle-btn">EN</button>
+        <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
       </div>
       <h1 class="admin-login-title">Admin</h1>
       <div id="login-error" class="admin-login-error hidden"></div>
@@ -27,72 +27,76 @@
     </div>
   </div>
 
-  <!-- Tableau de bord (affiché après connexion) -->
+  <!-- Tableau de bord avec sidebar -->
   <div id="dashboard" class="hidden">
-    <header class="site-header admin-header">
-      <div class="container header-inner">
+    <div class="site-layout">
+
+      <aside class="site-sidebar">
         <a href="index.html" class="brand">BAF TCG</a>
-        <span class="admin-badge">Admin</span>
-        <div class="admin-header-actions">
-          <a href="index.html" class="button" data-i18n="admin.viewsite">Voir le site</a>
-          <button id="logout-btn" type="button" class="button" data-i18n="admin.logout">Déconnexion</button>
-        </div>
-      </div>
-    </header>
-
-    <main class="admin-main section">
-      <div class="container">
-
-        <nav class="admin-tabs" aria-label="Sections admin">
+        <span class="admin-badge" style="margin: -0.75rem 0 0.75rem 0.5rem; align-self: flex-start;">Admin</span>
+        <nav class="site-nav" aria-label="Sections admin">
           <button class="admin-tab active" data-tab="articles" data-i18n="admin.tab.articles">Articles</button>
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs</button>
         </nav>
+        <div class="sidebar-bottom">
+          <a href="index.html" class="button" data-i18n="admin.viewsite">Voir le site</a>
+          <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+          <button id="logout-btn" type="button" class="button" data-i18n="admin.logout">Déconnexion</button>
+        </div>
+      </aside>
 
-        <!-- Panneau Articles -->
-        <div id="panel-articles" class="admin-panel-section">
-          <div class="admin-panel-header">
-            <h2 data-i18n="admin.articles.title">Articles</h2>
-            <button id="new-article-btn" class="button button-primary" data-i18n="admin.articles.new">+ Nouvel article</button>
-          </div>
+      <div class="site-content">
+        <main class="admin-main section">
+          <div class="container">
 
-          <div id="article-form-container" class="admin-form-container hidden">
-            <form id="article-form" class="admin-form" novalidate>
-              <h3 id="article-form-title" data-i18n="admin.articles.form.new">Nouvel article</h3>
-              <input type="hidden" id="article-id" />
-              <label for="article-title" data-i18n="admin.form.title.label">Titre</label>
-              <input type="text" id="article-title" data-i18n-placeholder="admin.form.title.placeholder" placeholder="Titre de l'article" required />
-              <label for="article-excerpt" data-i18n="admin.form.excerpt.label">Extrait</label>
-              <input type="text" id="article-excerpt" data-i18n-placeholder="admin.form.excerpt.placeholder" placeholder="Courte description affichée sur la page d'accueil (facultatif)" />
-              <label for="article-content" data-i18n="admin.form.content.label">Contenu</label>
-              <textarea id="article-content" rows="8" data-i18n-placeholder="admin.form.content.placeholder" placeholder="Contenu complet de l'article" required></textarea>
-              <div class="admin-form-actions">
-                <button type="submit" class="button button-primary" data-i18n="admin.form.save">Enregistrer</button>
-                <button type="button" id="cancel-article-btn" class="button" data-i18n="admin.form.cancel">Annuler</button>
+            <!-- Panneau Articles -->
+            <div id="panel-articles" class="admin-panel-section">
+              <div class="admin-panel-header">
+                <h2 data-i18n="admin.articles.title">Articles</h2>
+                <button id="new-article-btn" class="button button-primary" data-i18n="admin.articles.new">+ Nouvel article</button>
               </div>
-            </form>
+
+              <div id="article-form-container" class="admin-form-container hidden">
+                <form id="article-form" class="admin-form" novalidate>
+                  <h3 id="article-form-title" data-i18n="admin.articles.form.new">Nouvel article</h3>
+                  <input type="hidden" id="article-id" />
+                  <label for="article-title" data-i18n="admin.form.title.label">Titre</label>
+                  <input type="text" id="article-title" data-i18n-placeholder="admin.form.title.placeholder" placeholder="Titre de l'article" required />
+                  <label for="article-excerpt" data-i18n="admin.form.excerpt.label">Extrait</label>
+                  <input type="text" id="article-excerpt" data-i18n-placeholder="admin.form.excerpt.placeholder" placeholder="Courte description affichée sur la page d'accueil (facultatif)" />
+                  <label for="article-content" data-i18n="admin.form.content.label">Contenu</label>
+                  <textarea id="article-content" rows="8" data-i18n-placeholder="admin.form.content.placeholder" placeholder="Contenu complet de l'article" required></textarea>
+                  <div class="admin-form-actions">
+                    <button type="submit" class="button button-primary" data-i18n="admin.form.save">Enregistrer</button>
+                    <button type="button" id="cancel-article-btn" class="button" data-i18n="admin.form.cancel">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <ul id="article-list" class="admin-list"></ul>
+            </div>
+
+            <!-- Panneau Joueurs -->
+            <div id="panel-players" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2 data-i18n="admin.players.title">Joueurs suivis</h2>
+              </div>
+              <p class="admin-panel-desc" data-i18n="admin.players.desc">Les joueurs listés ici sont mis en avant sur la page de suivi de tournoi.</p>
+
+              <form id="add-player-form" class="admin-add-form" novalidate>
+                <input type="text" id="player-input" data-i18n-placeholder="admin.players.placeholder" placeholder="Nom du joueur" required />
+                <button type="submit" class="button button-primary" data-i18n="admin.players.add">Ajouter</button>
+              </form>
+
+              <ul id="player-list" class="admin-list"></ul>
+            </div>
+
           </div>
+        </main>
+      </div><!-- /.site-content -->
 
-          <ul id="article-list" class="admin-list"></ul>
-        </div>
-
-        <!-- Panneau Joueurs -->
-        <div id="panel-players" class="admin-panel-section hidden">
-          <div class="admin-panel-header">
-            <h2 data-i18n="admin.players.title">Joueurs suivis</h2>
-          </div>
-          <p class="admin-panel-desc" data-i18n="admin.players.desc">Les joueurs listés ici sont mis en avant sur la page de suivi de tournoi.</p>
-
-          <form id="add-player-form" class="admin-add-form" novalidate>
-            <input type="text" id="player-input" data-i18n-placeholder="admin.players.placeholder" placeholder="Nom du joueur" required />
-            <button type="submit" class="button button-primary" data-i18n="admin.players.add">Ajouter</button>
-          </form>
-
-          <ul id="player-list" class="admin-list"></ul>
-        </div>
-
-      </div>
-    </main>
-  </div>
+    </div><!-- /.site-layout -->
+  </div><!-- /#dashboard -->
 
   <script src="js/i18n.js"></script>
   <script src="js/admin.js"></script>

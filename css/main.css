@@ -38,20 +38,32 @@ textarea {
   margin: 0 auto;
 }
 
-.site-header {
-  background: rgba(18, 6, 0, 0.96);
-  border-bottom: 1px solid rgba(255, 230, 197, 0.12);
+/* ---- Sidebar layout ---- */
+
+.site-layout {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+
+.site-sidebar {
+  width: 220px;
+  height: 100vh;
   position: sticky;
   top: 0;
+  flex-shrink: 0;
+  background: rgba(18, 6, 0, 0.96);
+  border-right: 1px solid rgba(255, 230, 197, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem 1.25rem;
+  gap: 0.2rem;
   z-index: 10;
 }
 
-.header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0;
+.site-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .brand {
@@ -59,26 +71,53 @@ textarea {
   text-decoration: none;
   color: #f9e6c5;
   letter-spacing: -0.02em;
+  display: block;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.nav {
+.site-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
 }
 
-.nav a {
-  color: #f2f2f2;
+.site-nav a {
+  display: block;
+  color: rgba(249, 230, 197, 0.65);
   text-decoration: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 999px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.92rem;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.nav a:hover {
-  background: rgba(255, 230, 197, 0.14);
+.site-nav a:hover {
+  background: rgba(255, 230, 197, 0.1);
   color: #ffffff;
+}
+
+.site-nav a.button {
+  display: flex;
+  justify-content: center;
+  border-radius: 999px;
+  margin-top: 0.75rem;
+  color: #f9e6c5;
+}
+
+.site-nav a.button:hover {
+  transform: none;
+  background: rgba(255, 230, 197, 0.14);
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 230, 197, 0.1);
 }
 
 .button {
@@ -408,12 +447,6 @@ textarea::placeholder {
 
 /* ---- Admin: Dashboard ---- */
 
-.admin-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
 .admin-badge {
   background: rgba(255, 230, 197, 0.12);
   border: 1px solid rgba(255, 230, 197, 0.2);
@@ -606,6 +639,38 @@ textarea::placeholder {
   border-color: rgba(248, 113, 113, 0.6);
 }
 
+/* Admin tabs inside sidebar */
+.site-nav .admin-tab {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-bottom: none;
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: rgba(249, 230, 197, 0.65);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  margin-bottom: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.site-nav .admin-tab:hover {
+  background: rgba(255, 230, 197, 0.1);
+  color: #ffffff;
+  border-bottom-color: transparent;
+}
+
+.site-nav .admin-tab.active {
+  background: rgba(255, 230, 197, 0.12);
+  color: #ffffff;
+  border-bottom-color: transparent;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .contact-grid {
@@ -613,14 +678,53 @@ textarea::placeholder {
   }
 }
 
-@media (max-width: 640px) {
-  .header-inner {
+@media (max-width: 768px) {
+  .site-layout {
     flex-direction: column;
-    align-items: flex-start;
   }
-  .nav {
+
+  .site-sidebar {
     width: 100%;
-    justify-content: flex-start;
+    height: auto;
+    position: sticky;
+    top: 0;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0.6rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .brand {
+    margin-bottom: 0;
+  }
+
+  .site-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    flex: 1;
+    gap: 0.2rem;
+  }
+
+  .site-nav a {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .site-nav a.button {
+    margin-top: 0;
+  }
+
+  .site-nav .admin-tab {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .sidebar-bottom {
+    flex-direction: row;
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
   }
 
   .admin-add-form {

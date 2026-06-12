@@ -7,121 +7,127 @@
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
-  <header class="site-header">
-    <div class="container header-inner">
+  <div class="site-layout">
+
+    <aside class="site-sidebar">
       <a href="index.html" class="brand">BAF TCG</a>
-      <nav class="nav">
+      <nav class="site-nav">
         <a href="#about" data-i18n="nav.about">À propos</a>
         <a href="#events" data-i18n="nav.events">Événements</a>
         <a href="#news" data-i18n="nav.news">Actualités</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
         <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
-        <button id="lang-toggle" type="button" class="button lang-toggle-btn">EN</button>
       </nav>
-    </div>
-  </header>
-
-  <main>
-    <section class="hero" id="hero">
-      <div class="container hero-grid">
-        <div>
-          <p class="eyebrow" data-i18n="hero.eyebrow">Communauté Flesh and Blood</p>
-          <h1>BAF Association</h1>
-          <p data-i18n="hero.desc">Accompagner les joueurs, organiser des événements et célébrer la compétition Flesh and Blood.</p>
-          <a class="button button-primary" href="tournament.html" data-i18n="hero.cta">Voir le suivi de tournoi</a>
-        </div>
-        <div class="hero-card">
-          <h2 data-i18n="hero.card.title">Rejoindre la communauté</h2>
-          <p data-i18n="hero.card.desc">Connectez-vous avec les joueurs locaux, suivez les classements en direct et restez informé des tournois à venir.</p>
-        </div>
+      <div class="sidebar-bottom">
+        <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
       </div>
-    </section>
+    </aside>
 
-    <section class="section" id="about">
-      <div class="container">
-        <div class="section-header">
-          <span class="eyebrow" data-i18n="about.eyebrow">À propos</span>
-          <h2 data-i18n="about.title">L'Association</h2>
-        </div>
-        <p data-i18n="about.desc">BAF est une association communautaire pour les joueurs et organisateurs de Flesh and Blood. Nous aidons nos membres à trouver des événements, améliorer leurs compétences et profiter du jeu de cartes à travers une compétition structurée et conviviale.</p>
-      </div>
-    </section>
-
-    <section class="section alt" id="events">
-      <div class="container">
-        <div class="section-header">
-          <span class="eyebrow" data-i18n="events.eyebrow">À venir</span>
-          <h2 data-i18n="events.title">Événements à venir</h2>
-        </div>
-        <div class="cards-grid">
-          <article class="card">
-            <h3 data-i18n="events.card1.title">Soirée de ligue mensuelle</h3>
-            <p data-i18n="events.card1.desc">Vendredi, 19h00 au Game Hall. Pods Construit Standard et Draft disponibles.</p>
-          </article>
-          <article class="card">
-            <h3 data-i18n="events.card2.title">Championnat régional</h3>
-            <p data-i18n="events.card2.desc">Samedi, 14h00. Couverture en direct et classements disponibles sur le suivi de tournoi.</p>
-          </article>
-          <article class="card">
-            <h3 data-i18n="events.card3.title">Rencontre des membres</h3>
-            <p data-i18n="events.card3.desc">Dimanche, 13h00. Jeu libre, discussion de decks et moments forts des membres.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="news">
-      <div class="container">
-        <div class="section-header">
-          <span class="eyebrow" data-i18n="news.eyebrow">Actualités</span>
-          <h2 data-i18n="news.title">Dernières actualités</h2>
-        </div>
-        <div id="news-list" class="news-list">
-          <article class="news-item">
-            <h3 data-i18n="news.item1.title">Classements en direct disponibles</h3>
-            <p data-i18n="news.item1.desc">Suivez nos membres pendant les tournois avec le flux de classements en direct. Mettez en avant vos joueurs préférés et restez informé.</p>
-          </article>
-          <article class="news-item">
-            <h3 data-i18n="news.item2.title">Nouveaux avantages membres</h3>
-            <p data-i18n="news.item2.desc">Les membres bénéficient désormais de sessions de construction de deck exclusives, de cartes promo et de réductions sur les inscriptions aux tournois.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section alt" id="contact">
-      <div class="container contact-grid">
-        <div>
-          <div class="section-header">
-            <span class="eyebrow" data-i18n="contact.eyebrow">Contact</span>
-            <h2 data-i18n="contact.title">Nous contacter</h2>
+    <div class="site-content">
+      <main>
+        <section class="hero" id="hero">
+          <div class="container hero-grid">
+            <div>
+              <p class="eyebrow" data-i18n="hero.eyebrow">Communauté Flesh and Blood</p>
+              <h1>BAF Association</h1>
+              <p data-i18n="hero.desc">Accompagner les joueurs, organiser des événements et célébrer la compétition Flesh and Blood.</p>
+              <a class="button button-primary" href="tournament.html" data-i18n="hero.cta">Voir le suivi de tournoi</a>
+            </div>
+            <div class="hero-card">
+              <h2 data-i18n="hero.card.title">Rejoindre la communauté</h2>
+              <p data-i18n="hero.card.desc">Connectez-vous avec les joueurs locaux, suivez les classements en direct et restez informé des tournois à venir.</p>
+            </div>
           </div>
-          <p data-i18n="contact.desc">Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, envoyez-nous un message ou contactez-nous sur les réseaux sociaux.</p>
-          <ul class="contact-list">
-            <li><strong data-i18n="contact.email.label">Email :</strong> info@baf-tcg.org</li>
-            <li><strong data-i18n="contact.discord.label">Discord :</strong> discord.gg/bafcommunity</li>
-            <li><strong data-i18n="contact.venue.label">Lieu :</strong> <span data-i18n="contact.venue.value">Central Game Club, Centre-ville</span></li>
-          </ul>
-        </div>
-        <form class="contact-card" id="contact-form">
-          <label for="name" data-i18n="contact.form.name.label">Nom</label>
-          <input type="text" id="name" data-i18n-placeholder="contact.form.name.placeholder" placeholder="Votre nom" required />
-          <label for="email" data-i18n="contact.form.email.label">Email</label>
-          <input type="email" id="email" data-i18n-placeholder="contact.form.email.placeholder" placeholder="vous@exemple.com" required />
-          <label for="message" data-i18n="contact.form.message.label">Message</label>
-          <textarea id="message" rows="5" data-i18n-placeholder="contact.form.message.placeholder" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
-          <button type="submit" class="button" data-i18n="contact.form.submit">Envoyer</button>
-          <p class="form-note" id="form-note"></p>
-        </form>
-      </div>
-    </section>
-  </main>
+        </section>
 
-  <footer class="site-footer">
-    <div class="container">
-      <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
-    </div>
-  </footer>
+        <section class="section" id="about">
+          <div class="container">
+            <div class="section-header">
+              <span class="eyebrow" data-i18n="about.eyebrow">À propos</span>
+              <h2 data-i18n="about.title">L'Association</h2>
+            </div>
+            <p data-i18n="about.desc">BAF est une association communautaire pour les joueurs et organisateurs de Flesh and Blood. Nous aidons nos membres à trouver des événements, améliorer leurs compétences et profiter du jeu de cartes à travers une compétition structurée et conviviale.</p>
+          </div>
+        </section>
+
+        <section class="section alt" id="events">
+          <div class="container">
+            <div class="section-header">
+              <span class="eyebrow" data-i18n="events.eyebrow">À venir</span>
+              <h2 data-i18n="events.title">Événements à venir</h2>
+            </div>
+            <div class="cards-grid">
+              <article class="card">
+                <h3 data-i18n="events.card1.title">Soirée de ligue mensuelle</h3>
+                <p data-i18n="events.card1.desc">Vendredi, 19h00 au Game Hall. Pods Construit Standard et Draft disponibles.</p>
+              </article>
+              <article class="card">
+                <h3 data-i18n="events.card2.title">Championnat régional</h3>
+                <p data-i18n="events.card2.desc">Samedi, 14h00. Couverture en direct et classements disponibles sur le suivi de tournoi.</p>
+              </article>
+              <article class="card">
+                <h3 data-i18n="events.card3.title">Rencontre des membres</h3>
+                <p data-i18n="events.card3.desc">Dimanche, 13h00. Jeu libre, discussion de decks et moments forts des membres.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="news">
+          <div class="container">
+            <div class="section-header">
+              <span class="eyebrow" data-i18n="news.eyebrow">Actualités</span>
+              <h2 data-i18n="news.title">Dernières actualités</h2>
+            </div>
+            <div id="news-list" class="news-list">
+              <article class="news-item">
+                <h3 data-i18n="news.item1.title">Classements en direct disponibles</h3>
+                <p data-i18n="news.item1.desc">Suivez nos membres pendant les tournois avec le flux de classements en direct. Mettez en avant vos joueurs préférés et restez informé.</p>
+              </article>
+              <article class="news-item">
+                <h3 data-i18n="news.item2.title">Nouveaux avantages membres</h3>
+                <p data-i18n="news.item2.desc">Les membres bénéficient désormais de sessions de construction de deck exclusives, de cartes promo et de réductions sur les inscriptions aux tournois.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section alt" id="contact">
+          <div class="container contact-grid">
+            <div>
+              <div class="section-header">
+                <span class="eyebrow" data-i18n="contact.eyebrow">Contact</span>
+                <h2 data-i18n="contact.title">Nous contacter</h2>
+              </div>
+              <p data-i18n="contact.desc">Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, envoyez-nous un message ou contactez-nous sur les réseaux sociaux.</p>
+              <ul class="contact-list">
+                <li><strong data-i18n="contact.email.label">Email :</strong> info@baf-tcg.org</li>
+                <li><strong data-i18n="contact.discord.label">Discord :</strong> discord.gg/bafcommunity</li>
+                <li><strong data-i18n="contact.venue.label">Lieu :</strong> <span data-i18n="contact.venue.value">Central Game Club, Centre-ville</span></li>
+              </ul>
+            </div>
+            <form class="contact-card" id="contact-form">
+              <label for="name" data-i18n="contact.form.name.label">Nom</label>
+              <input type="text" id="name" data-i18n-placeholder="contact.form.name.placeholder" placeholder="Votre nom" required />
+              <label for="email" data-i18n="contact.form.email.label">Email</label>
+              <input type="email" id="email" data-i18n-placeholder="contact.form.email.placeholder" placeholder="vous@exemple.com" required />
+              <label for="message" data-i18n="contact.form.message.label">Message</label>
+              <textarea id="message" rows="5" data-i18n-placeholder="contact.form.message.placeholder" placeholder="Comment pouvons-nous vous aider ?" required></textarea>
+              <button type="submit" class="button" data-i18n="contact.form.submit">Envoyer</button>
+              <p class="form-note" id="form-note"></p>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="container">
+          <p data-i18n="footer.index">© 2026 BAF TCG Association. Construit pour la communauté.</p>
+        </div>
+      </footer>
+    </div><!-- /.site-content -->
+
+  </div><!-- /.site-layout -->
 
   <script src="js/i18n.js"></script>
   <script src="js/main.js"></script>
