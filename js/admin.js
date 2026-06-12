@@ -8,38 +8,193 @@ const EVENTS_KEY = 'baf-events';
 
 // --- Crypto ---
 
-const sha256 = async (text) => {
-  const encoded = new TextEncoder().encode(text);
-  const buffer = await crypto.subtle.digest('SHA-256', encoded);
-  return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-};
+const supportsWebCrypto = () => typeof crypto !== 'undefined' && crypto?.subtle && typeof crypto.subtle.digest === 'function';
+const supportsRandomUUID = () => typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function';
 
-// Sets default credentials (admin / baf-admin) on first run.
-const initCredentials = async () => {
-  if (localStorage.getItem(CREDS_KEY)) return;
-  const hash = await sha256('baf-admin');
-  localStorage.setItem(CREDS_KEY, JSON.stringify({ username: 'admin', passwordHash: hash }));
-};
-
-const verifyLogin = async (username, password) => {
-  const raw = localStorage.getItem(CREDS_KEY);
-  if (!raw) return false;
+const storageAvailable = (type) => {
   try {
-    const { username: storedUser, passwordHash } = JSON.parse(raw);
-    const hash = await sha256(password);
-    return username === storedUser && hash === passwordHash;
+    const storage = window[type];
+    const key = '__baf_storage_check__';
+    storage.setItem(key, key);
+    storage.removeItem(key);
+    return true;
   } catch {
     return false;
   }
 };
 
+const getStorage = (type) => {
+  if (!storageAvailable(type)) {
+    throw new Error(`Le stockage ${type} est désactivé ou bloqué. Activez les cookies/localStorage dans votre navigateur ou utilisez un autre navigateur.`);
+  }
+  return window[type];
+};
+
+const showLoginError = (message) => {
+  const errorEl = $('login-error');
+  if (!errorEl) return;
+  errorEl.textContent = message;
+  errorEl.classList.remove('hidden');
+};
+
+const randomBytes = (length) => {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    return bytes;
+  }
+  const bytes = new Uint8Array(length);
+  for (let i = 0; i < length; i += 1) {
+    bytes[i] = Math.floor(Math.random() * 256);
+  }
+  return bytes;
+};
+
+const randomUUID = () => {
+  if (supportsRandomUUID()) return crypto.randomUUID();
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes).map((b) => b.toString(16).padStart(2, '0'));
+  return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
+};
+
+const jsSha256 = (text) => {
+  const utf8 = new TextEncoder().encode(text);
+  const K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+  ];
+
+  const H = [
+    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
+  ];
+
+  const rightRotate = (value, amount) => (value >>> amount) | (value << (32 - amount));
+
+  const padded = [...utf8];
+  padded.push(0x80);
+  const bitLength = utf8.length * 8;
+  while ((padded.length % 64) !== 56) padded.push(0x00);
+  for (let i = 7; i >= 0; i -= 1) {
+    padded.push((bitLength >>> (i * 8)) & 0xff);
+  }
+
+  for (let i = 0; i < padded.length; i += 64) {
+    const chunk = padded.slice(i, i + 64);
+    const w = new Array(64);
+    for (let j = 0; j < 16; j += 1) {
+      w[j] = (chunk[j * 4] << 24) | (chunk[j * 4 + 1] << 16) | (chunk[j * 4 + 2] << 8) | chunk[j * 4 + 3];
+    }
+    for (let j = 16; j < 64; j += 1) {
+      const s0 = rightRotate(w[j - 15], 7) ^ rightRotate(w[j - 15], 18) ^ (w[j - 15] >>> 3);
+      const s1 = rightRotate(w[j - 2], 17) ^ rightRotate(w[j - 2], 19) ^ (w[j - 2] >>> 10);
+      w[j] = (w[j - 16] + s0 + w[j - 7] + s1) >>> 0;
+    }
+
+    let [a, b, c, d, e, f, g, h] = H;
+
+    for (let j = 0; j < 64; j += 1) {
+      const S1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + K[j] + w[j]) >>> 0;
+      const S0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temp1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (temp1 + temp2) >>> 0;
+    }
+
+    H[0] = (H[0] + a) >>> 0;
+    H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0;
+    H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0;
+    H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0;
+    H[7] = (H[7] + h) >>> 0;
+  }
+
+  return H.map((h) => h.toString(16).padStart(8, '0')).join('');
+};
+
+const sha256 = async (text) => {
+  if (supportsWebCrypto()) {
+    const encoded = new TextEncoder().encode(text);
+    const buffer = await crypto.subtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(buffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  return jsSha256(text);
+};
+
+// Sets default credentials (admin / baf-admin) on first run.
+const initCredentials = async () => {
+  const storage = getStorage('localStorage');
+  if (storage.getItem(CREDS_KEY)) return;
+  const hash = await sha256('baf-admin');
+  storage.setItem(CREDS_KEY, JSON.stringify({ username: 'admin', passwordHash: hash }));
+};
+
+const verifyLogin = async (username, password) => {
+  const storage = getStorage('localStorage');
+  const raw = storage.getItem(CREDS_KEY);
+  if (!raw) {
+    throw new Error('Aucun identifiant admin trouvé dans le stockage local. Les paramètres n’ont pas été initialisés.')
+  }
+  let storedUser;
+  let passwordHash;
+  try {
+    ({ username: storedUser, passwordHash } = JSON.parse(raw));
+  } catch (err) {
+    throw new Error('Les informations d’identification stockées sont corrompues ou invalides. Réinitialisez le stockage du navigateur.');
+  }
+  const hash = await sha256(password);
+  if (username !== storedUser || hash !== passwordHash) {
+    return false;
+  }
+  return true;
+};
+
 // --- Session ---
 
-const isLoggedIn = () => !!sessionStorage.getItem(SESSION_KEY);
-const createSession = () => sessionStorage.setItem(SESSION_KEY, crypto.randomUUID());
-const destroySession = () => sessionStorage.removeItem(SESSION_KEY);
+const isLoggedIn = () => {
+  try {
+    return !!getStorage('sessionStorage').getItem(SESSION_KEY);
+  } catch {
+    return false;
+  }
+};
+const createSession = () => getStorage('sessionStorage').setItem(SESSION_KEY, randomUUID());
+const destroySession = () => {
+  try {
+    getStorage('sessionStorage').removeItem(SESSION_KEY);
+  } catch {
+    // ignore
+  }
+};
 
 // --- Articles ---
 
@@ -58,7 +213,7 @@ const saveArticles = (articles) => localStorage.setItem(ARTICLES_KEY, JSON.strin
 const createArticle = ({ title, excerpt, content }) => {
   const articles = loadArticles();
   const article = {
-    id: crypto.randomUUID(),
+    id: randomUUID(),
     title: title.trim(),
     excerpt: excerpt.trim(),
     content: content.trim(),
@@ -120,7 +275,7 @@ const saveAdminEvents = (events) => localStorage.setItem(EVENTS_KEY, JSON.string
 
 const createAdminEvent = ({ name, slug, view, active }) => {
   const events = loadAdminEvents();
-  events.push({ id: crypto.randomUUID(), name: name.trim(), slug: slug.trim(), view: (view || 'main').trim(), active });
+  events.push({ id: randomUUID(), name: name.trim(), slug: slug.trim(), view: (view || 'main').trim(), active });
   saveAdminEvents(events);
 };
 
@@ -309,7 +464,8 @@ const wireEvents = () => {
     errorEl.classList.add('hidden');
 
     try {
-      if (await verifyLogin(username, password)) {
+      const result = await verifyLogin(username, password);
+      if (result === true) {
         createSession();
         showDashboard();
       } else {
@@ -318,6 +474,10 @@ const wireEvents = () => {
         $('login-password').value = '';
         $('login-password').focus();
       }
+    } catch (err) {
+      errorEl.textContent = `Erreur de connexion : ${err.message}`;
+      errorEl.classList.remove('hidden');
+      console.error('Admin login error:', err);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = t('admin.login.submit');
@@ -430,12 +590,18 @@ const wireEvents = () => {
 // --- Initialize ---
 
 const initialize = async () => {
-  await initCredentials();
   wireEvents();
-  if (isLoggedIn()) {
-    showDashboard();
-  } else {
+  try {
+    await initCredentials();
+    if (isLoggedIn()) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  } catch (err) {
     showLogin();
+    showLoginError(`Impossible de démarrer l’admin : ${err.message}`);
+    console.error('Admin initialization error:', err);
   }
 };
 
