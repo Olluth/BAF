@@ -419,11 +419,28 @@ textarea::placeholder {
 }
 
 .event-featured-card {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
   background: rgba(255, 230, 197, 0.06);
   border: 1px solid rgba(255, 230, 197, 0.25);
   border-radius: 28px;
   padding: 2.5rem;
   margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.event-featured-img {
+  width: 300px;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 16px;
+  flex-shrink: 0;
+}
+
+.event-featured-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .event-featured-card h2 {
@@ -452,19 +469,28 @@ textarea::placeholder {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 230, 197, 0.1);
   border-radius: 20px;
-  padding: 1.25rem 1.5rem;
+  overflow: hidden;
+}
+
+.event-more-img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  display: block;
 }
 
 .event-more-item h3 {
   margin: 0 0 0.5rem;
   color: #ffffff;
   font-size: 1rem;
+  padding: 1rem 1.25rem 0;
 }
 
 .event-more-item p {
   margin: 0;
   color: #e7d7b0;
   font-size: 0.9rem;
+  padding: 0 1.25rem 1.25rem;
 }
 
 /* ---- Admin: Login ---- */
@@ -751,6 +777,16 @@ textarea::placeholder {
   .hero-grid,
   .contact-grid {
     grid-template-columns: 1fr;
+  }
+
+  .event-featured-card {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .event-featured-img {
+    width: 100%;
+    height: 200px;
   }
 }
 
