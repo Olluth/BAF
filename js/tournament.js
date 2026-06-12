@@ -8,6 +8,7 @@ const CACHE_TTL    = 5 * 60 * 1000;
 const PROXIES = [
   'https://corsproxy.io/?url=',
   'https://api.allorigins.win/raw?url=',
+  'https://thingproxy.freeboard.io/fetch/',
 ];
 
 /* ---- Storage ---- */
@@ -44,13 +45,18 @@ const setCache = (slug, data) => {
 /* ---- Network ---- */
 
 const proxiedFetch = async (url) => {
+  const errors = [];
   for (const proxy of PROXIES) {
     try {
       const r = await fetch(proxy + encodeURIComponent(url));
       if (r.ok) return r.text();
-    } catch {}
+      errors.push(`HTTP ${r.status}`);
+    } catch (e) {
+      errors.push(e.message);
+    }
   }
-  throw new Error(t('tracker.loadError'));
+  const detail = errors.length ? ` (${errors.join(', ')})` : '';
+  throw new Error('PROXY_FAILED' + detail);
 };
 
 /* ---- Parsers ---- */
@@ -445,7 +451,10 @@ const loadEvent = async (slug) => {
 
   } catch (err) {
     if (gen !== _generation) return;
-    setStatus(`${t('tracker.loadError')}: ${err.message}`, true);
+    const msg = err.message.startsWith('PROXY_FAILED')
+      ? `${t('tracker.networkError')}${err.message.slice('PROXY_FAILED'.length)}`
+      : `${t('tracker.loadError')}: ${err.message}`;
+    setStatus(msg, true);
   }
 };
 
