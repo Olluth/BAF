@@ -7,6 +7,11 @@ const translations = {
   fr: {
     // Page titles
     'page.title.index': 'BAF TCG Association',
+    'page.title.about': 'La BAF | BAF TCG',
+    'page.title.events': 'Événements | BAF TCG',
+    'page.title.news': 'Actualités | BAF TCG',
+    'page.title.contact': 'Contact | BAF TCG',
+    'page.title.resources': 'Ressources | BAF TCG',
     'page.title.tournament': 'Suivi de tournoi | BAF TCG',
     'page.title.admin': 'Admin | BAF TCG',
 
@@ -14,6 +19,7 @@ const translations = {
     'nav.about': 'La BAF',
     'nav.events': 'Événements',
     'nav.news': 'Actualités',
+    'nav.resources': 'Ressources',
     'nav.contact': 'Contact',
     'nav.tracker': 'Suivi de tournoi',
 
@@ -25,9 +31,12 @@ const translations = {
     'hero.card.desc': 'Connectez-vous avec les joueurs locaux, suivez les classements en direct et restez informé des tournois à venir.',
 
     // About
-    'about.eyebrow': 'À propos',
-    'about.title': "L'Association",
-    'about.desc': "BAF est une association communautaire pour les joueurs et organisateurs de Flesh and Blood. Nous aidons nos membres à trouver des événements, améliorer leurs compétences et profiter du jeu de cartes à travers une compétition structurée et conviviale.",
+    'about.eyebrow': 'Association',
+    'about.title': 'La BAF',
+    'about.desc': "BAF est une association communautaire dédiée aux joueurs et passionnés de Flesh and Blood. Nous organisons des événements réguliers — des Armories hebdomadaires aux grands tournois nationaux — et fédérons une communauté de joueurs compétitifs et amateurs.",
+    'about.join.title': 'Rejoindre la BAF',
+    'about.join.desc': "Participez à nos événements hebdomadaires ou contactez-nous pour en savoir plus sur l'adhésion à l'association.",
+    'about.join.cta': 'Nous contacter',
 
     // Events
     'events.eyebrow': 'À venir',
@@ -67,6 +76,19 @@ const translations = {
     'contact.form.message.placeholder': 'Comment pouvons-nous vous aider ?',
     'contact.form.submit': 'Envoyer',
     'contact.form.success': 'Merci ! Votre message a bien été reçu. Nous vous répondrons rapidement.',
+
+    // Resources
+    'resources.eyebrow': 'Liens utiles',
+    'resources.title': 'Ressources',
+    'resources.desc': 'Retrouvez ici les liens essentiels pour les joueurs de Flesh and Blood.',
+    'resources.official.title': 'Site officiel Flesh and Blood',
+    'resources.official.desc': 'Actualités, lore, règles et calendrier des tournois officiels.',
+    'resources.rules.title': 'Règles et politiques',
+    'resources.rules.desc': 'Règles complètes, FAQ et documents de politique de tournoi.',
+    'resources.cards.title': 'Base de données des cartes',
+    'resources.cards.desc': 'Recherchez, filtrez et explorez toutes les cartes Flesh and Blood.',
+    'resources.events.title': 'Calendrier des événements',
+    'resources.events.desc': 'Tournois officiels, Armories et événements organisés par la communauté.',
 
     // Footer
     'footer.index': '© 2026 BAF TCG Association. Construit pour la communauté.',
@@ -156,6 +178,11 @@ const translations = {
   en: {
     // Page titles
     'page.title.index': 'BAF TCG Association',
+    'page.title.about': 'La BAF | BAF TCG',
+    'page.title.events': 'Events | BAF TCG',
+    'page.title.news': 'News | BAF TCG',
+    'page.title.contact': 'Contact | BAF TCG',
+    'page.title.resources': 'Resources | BAF TCG',
     'page.title.tournament': 'Tournament Tracker | BAF TCG',
     'page.title.admin': 'Admin | BAF TCG',
 
@@ -163,6 +190,7 @@ const translations = {
     'nav.about': 'La BAF',
     'nav.events': 'Events',
     'nav.news': 'News',
+    'nav.resources': 'Resources',
     'nav.contact': 'Contact',
     'nav.tracker': 'Tournament Tracker',
 
@@ -174,9 +202,12 @@ const translations = {
     'hero.card.desc': 'Connect with local players, follow live standings, and stay up to date with upcoming tournaments.',
 
     // About
-    'about.eyebrow': 'About',
-    'about.title': 'About the Association',
-    'about.desc': 'BAF is a community-led association for Flesh and Blood players and organizers. We help members find events, improve their skills, and enjoy the trading card game through structured play and friendly competition.',
+    'about.eyebrow': 'Association',
+    'about.title': 'La BAF',
+    'about.desc': 'BAF is a community association dedicated to Flesh and Blood players and enthusiasts. We organize regular events — from weekly Armories to national championships — and bring together a community of competitive and casual players.',
+    'about.join.title': 'Join La BAF',
+    'about.join.desc': 'Come join us at our weekly events or reach out to learn more about becoming a member of the association.',
+    'about.join.cta': 'Get in Touch',
 
     // Events
     'events.eyebrow': 'Upcoming',
@@ -216,6 +247,19 @@ const translations = {
     'contact.form.message.placeholder': 'How can we help?',
     'contact.form.submit': 'Send Message',
     'contact.form.success': 'Thanks! Your message has been received. We will follow up shortly.',
+
+    // Resources
+    'resources.eyebrow': 'Useful links',
+    'resources.title': 'Resources',
+    'resources.desc': 'Essential links for Flesh and Blood players.',
+    'resources.official.title': 'Official Flesh and Blood site',
+    'resources.official.desc': 'News, lore, rules, and official tournament calendar.',
+    'resources.rules.title': 'Rules and policy',
+    'resources.rules.desc': 'Complete rulebook, FAQ, and tournament policy documents.',
+    'resources.cards.title': 'Card database',
+    'resources.cards.desc': 'Search, filter, and browse all Flesh and Blood cards.',
+    'resources.events.title': 'Event calendar',
+    'resources.events.desc': 'Official tournaments, Armories, and community-run events.',
 
     // Footer
     'footer.index': '© 2026 BAF TCG Association. Built for the community.',
