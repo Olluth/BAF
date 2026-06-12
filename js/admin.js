@@ -153,7 +153,7 @@ const renderArticleList = () => {
   const articles = loadArticles();
   const list = $('article-list');
   if (!articles.length) {
-    list.innerHTML = '<li class="admin-list-empty">No articles yet. Click "+ New Article" to create one.</li>';
+    list.innerHTML = '<li class="admin-list-empty">Aucun article pour le moment. Cliquez sur « + Nouvel article » pour en créer un.</li>';
     return;
   }
   list.innerHTML = articles
@@ -165,8 +165,8 @@ const renderArticleList = () => {
         <span class="admin-list-item-meta">${escapeHtml(a.date)}</span>
       </div>
       <div class="admin-list-item-actions">
-        <button class="button" data-action="edit" data-id="${escapeAttr(a.id)}">Edit</button>
-        <button class="button admin-btn-danger" data-action="delete" data-id="${escapeAttr(a.id)}">Delete</button>
+        <button class="button" data-action="edit" data-id="${escapeAttr(a.id)}">Modifier</button>
+        <button class="button admin-btn-danger" data-action="delete" data-id="${escapeAttr(a.id)}">Supprimer</button>
       </div>
     </li>`,
     )
@@ -175,7 +175,7 @@ const renderArticleList = () => {
 
 const openArticleForm = (article = null) => {
   editingArticleId = article ? article.id : null;
-  $('article-form-title').textContent = article ? 'Edit Article' : 'New Article';
+  $('article-form-title').textContent = article ? 'Modifier l\'article' : 'Nouvel article';
   $('article-id').value = article ? article.id : '';
   $('article-title').value = article ? article.title : '';
   $('article-excerpt').value = article ? article.excerpt : '';
@@ -197,7 +197,7 @@ const renderPlayerList = () => {
   const players = loadPlayers();
   const list = $('player-list');
   if (!players.length) {
-    list.innerHTML = '<li class="admin-list-empty">No tracked players yet. Add one above.</li>';
+    list.innerHTML = '<li class="admin-list-empty">Aucun joueur suivi pour le moment. Ajoutez-en un ci-dessus.</li>';
     return;
   }
   list.innerHTML = players
@@ -208,7 +208,7 @@ const renderPlayerList = () => {
         <span class="admin-list-item-title">${escapeHtml(name)}</span>
       </div>
       <div class="admin-list-item-actions">
-        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">Remove</button>
+        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">Retirer</button>
       </div>
     </li>`,
     )
@@ -226,7 +226,7 @@ const wireEvents = () => {
     const submitBtn = $('login-submit');
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in…';
+    submitBtn.textContent = 'Connexion en cours…';
     errorEl.classList.add('hidden');
 
     try {
@@ -234,14 +234,14 @@ const wireEvents = () => {
         createSession();
         showDashboard();
       } else {
-        errorEl.textContent = 'Invalid username or password.';
+        errorEl.textContent = 'Nom d\'utilisateur ou mot de passe incorrect.';
         errorEl.classList.remove('hidden');
         $('login-password').value = '';
         $('login-password').focus();
       }
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Sign in';
+      submitBtn.textContent = 'Se connecter';
     }
   });
 
@@ -281,7 +281,7 @@ const wireEvents = () => {
       const article = loadArticles().find((a) => a.id === id);
       if (article) openArticleForm(article);
     } else if (action === 'delete') {
-      if (confirm('Permanently delete this article?')) {
+      if (confirm('Supprimer définitivement cet article ?')) {
         deleteArticle(id);
         renderArticleList();
       }
@@ -300,7 +300,7 @@ const wireEvents = () => {
     const btn = e.target.closest('[data-action="remove-player"]');
     if (!btn) return;
     const name = btn.dataset.name;
-    if (confirm(`Remove "${name}" from the tracked player list?`)) {
+    if (confirm(`Retirer « ${name} » de la liste des joueurs suivis ?`)) {
       removePlayer(name);
       renderPlayerList();
     }

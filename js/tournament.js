@@ -22,13 +22,13 @@ const loadTrackedPlayers = () => {
 const renderVisitorPlayerList = () => {
   if (!visitorPlayersSection) return;
   if (!trackedPlayers.length) {
-    visitorPlayersSection.innerHTML = '<div class="visitor-player-list-card"><p>No tracked players configured yet.</p></div>';
+    visitorPlayersSection.innerHTML = '<div class="visitor-player-list-card"><p>Aucun joueur suivi configuré pour le moment.</p></div>';
     return;
   }
 
   visitorPlayersSection.innerHTML = `
     <div class="visitor-player-list-card">
-      <h3>Tracked Players</h3>
+      <h3>Joueurs suivis</h3>
       <ol>
         ${trackedPlayers.map((player) => `<li>${player}</li>`).join('')}
       </ol>
@@ -45,11 +45,11 @@ const parseStandings = (data) => {
 
   return data.standings.map((entry) => ({
     rank: entry.rank ?? '-',
-    player: entry.player ?? entry.name ?? 'Unknown',
+    player: entry.player ?? entry.name ?? 'Inconnu',
     score: entry.score ?? entry.points ?? '-',
     record: entry.record ?? '-',
-    hero: entry.hero ?? entry.character ?? 'Unknown',
-    opponent: entry.opponent ?? entry.opponent_name ?? 'TBD',
+    hero: entry.hero ?? entry.character ?? 'Inconnu',
+    opponent: entry.opponent ?? entry.opponent_name ?? 'À définir',
     round: entry.round ?? entry.match_round ?? '-',
   }));
 };
@@ -57,7 +57,7 @@ const parseStandings = (data) => {
 const renderStandings = (rows) => {
   if (!standingsContainer) return;
   if (!rows?.length) {
-    standingsContainer.innerHTML = '<p>No standings data available for this round.</p>';
+    standingsContainer.innerHTML = '<p>Aucune donnée de classement disponible pour ce round.</p>';
     return;
   }
 
@@ -81,12 +81,12 @@ const renderStandings = (rows) => {
     <table class="standings-table">
       <thead>
         <tr>
-          <th>Rank</th>
-          <th>Player</th>
-          <th>Hero</th>
-          <th>Opponent</th>
+          <th>Rang</th>
+          <th>Joueur</th>
+          <th>Héros</th>
+          <th>Adversaire</th>
           <th>Score</th>
-          <th>Record</th>
+          <th>Bilan</th>
         </tr>
       </thead>
       <tbody>${tableRows}</tbody>
@@ -110,7 +110,7 @@ const renderTrackedPlayers = (rows) => {
   );
 
   if (!watchedRows.length) {
-    trackedPlayersContainer.innerHTML = '<p>No tracked players found in the current standings.</p>';
+    trackedPlayersContainer.innerHTML = '<p>Aucun joueur suivi trouvé dans les classements actuels.</p>';
     return;
   }
 
@@ -120,11 +120,11 @@ const renderTrackedPlayers = (rows) => {
       <article class="player-card">
         <h3>${row.player}</h3>
         <dl>
-          <div><dt>Current Rank</dt><dd>${row.rank}</dd></div>
-          <div><dt>Hero</dt><dd>${row.hero}</dd></div>
-          <div><dt>Opponent</dt><dd>${row.opponent}</dd></div>
+          <div><dt>Rang actuel</dt><dd>${row.rank}</dd></div>
+          <div><dt>Héros</dt><dd>${row.hero}</dd></div>
+          <div><dt>Adversaire</dt><dd>${row.opponent}</dd></div>
           <div><dt>Score</dt><dd>${row.score}</dd></div>
-          <div><dt>Record</dt><dd>${row.record}</dd></div>
+          <div><dt>Bilan</dt><dd>${row.record}</dd></div>
           <div><dt>Round</dt><dd>${row.round}</dd></div>
         </dl>
       </article>`,
@@ -134,28 +134,28 @@ const renderTrackedPlayers = (rows) => {
 
 const fetchStandings = async (slug, view, round) => {
   const url = buildApiUrl(slug, view, round);
-  setStatus('Loading standings…');
+  setStatus('Chargement des classements…');
   if (standingsContainer) standingsContainer.innerHTML = '';
 
   try {
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(`Unable to load data (${response.status})`);
+    if (!response.ok) throw new Error(`Impossible de charger les données (${response.status})`);
 
     const data = await response.json();
     const rows = parseStandings(data);
-    if (!rows) throw new Error('Standings format is not supported by the tracker.');
+    if (!rows) throw new Error('Le format des classements n\'est pas pris en charge par le tracker.');
 
     renderStandings(rows);
     renderTrackedPlayers(rows);
     const count = rows.filter((row) =>
       trackedPlayers.some((name) => row.player.toLowerCase().includes(name.toLowerCase())),
     ).length;
-    setStatus(`Standings loaded. Highlighted ${count} tracked player${count === 1 ? '' : 's'}.`);
+    setStatus(`Classements chargés. ${count} joueur${count === 1 ? '' : 's'} suivi${count === 1 ? '' : 's'} mis en avant.`);
   } catch (error) {
-    setStatus(`Error loading standings: ${error.message}`, true);
+    setStatus(`Erreur lors du chargement des classements : ${error.message}`, true);
     if (standingsContainer)
       standingsContainer.innerHTML =
-        '<p>Unable to load live standings. Verify the event slug, view, and round, or check network access to the coverage endpoint.</p>';
+        '<p>Impossible de charger les classements en direct. Vérifiez le slug de l\'événement, la vue et le round, ou vérifiez l\'accès réseau au point de couverture.</p>';
   }
 };
 
@@ -171,7 +171,7 @@ const initialize = () => {
       const round = document.getElementById('round-number').value.trim();
 
       if (!slug || !view || !round) {
-        setStatus('Please fill in all tracker fields.', true);
+        setStatus('Veuillez remplir tous les champs du tracker.', true);
         return;
       }
 

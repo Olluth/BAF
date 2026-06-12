@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tournament Tracker | BAF TCG</title>
+  <title>Suivi de tournoi | BAF TCG</title>
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
@@ -11,11 +11,11 @@
     <div class="container header-inner">
       <a href="index.html" class="brand">BAF TCG</a>
       <nav class="nav">
-        <a href="index.html#about">About</a>
-        <a href="index.html#events">Events</a>
-        <a href="index.html#news">News</a>
+        <a href="index.html#about">À propos</a>
+        <a href="index.html#events">Événements</a>
+        <a href="index.html#news">Actualités</a>
         <a href="index.html#contact">Contact</a>
-        <a href="tournament.html" class="button">Tournament Tracker</a>
+        <a href="tournament.html" class="button">Suivi de tournoi</a>
       </nav>
     </div>
   </header>
@@ -23,19 +23,19 @@
   <main class="section">
     <div class="container">
       <div class="section-header">
-        <span class="eyebrow">Tracker</span>
-        <h2>Live Tournament Standings</h2>
+        <span class="eyebrow">Suivi</span>
+        <h2>Classements en direct</h2>
       </div>
-      <p>Enter an event slug, coverage view, and round to load live standings from Flesh and Blood coverage.</p>
+      <p>Saisissez le slug de l'événement, la vue de couverture et le round pour charger les classements en direct de la couverture Flesh and Blood.</p>
 
       <form id="tracker-form" class="tracker-form">
-        <label for="event-slug">Event Slug</label>
-        <input type="text" id="event-slug" placeholder="example-regionals-2026" required />
-        <label for="coverage-view">Coverage View</label>
+        <label for="event-slug">Slug de l'événement</label>
+        <input type="text" id="event-slug" placeholder="exemple-regionals-2026" required />
+        <label for="coverage-view">Vue de couverture</label>
         <input type="text" id="coverage-view" placeholder="main" required />
         <label for="round-number">Round</label>
         <input type="number" id="round-number" min="1" placeholder="1" required />
-        <button type="submit" class="button button-primary">Load Standings</button>
+        <button type="submit" class="button button-primary">Charger les classements</button>
       </form>
 
       <div id="tracker-status" class="tracker-status"></div>
@@ -47,7 +47,7 @@
 
   <footer class="site-footer">
     <div class="container">
-      <p>&copy; 2026 BAF TCG Association. Live tracker for members.</p>
+      <p>&copy; 2026 BAF TCG Association. Suivi en direct pour les membres.</p>
     </div>
   </footer>
 

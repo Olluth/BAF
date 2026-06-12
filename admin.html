@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,31 +8,31 @@
 </head>
 <body>
 
-  <!-- Login page -->
+  <!-- Page de connexion -->
   <div id="login-page" class="admin-login-page">
     <div class="admin-login-card">
       <a href="index.html" class="brand">BAF TCG</a>
       <h1 class="admin-login-title">Admin</h1>
       <div id="login-error" class="admin-login-error hidden"></div>
       <form id="login-form" class="admin-login-form" novalidate>
-        <label for="login-username">Username</label>
+        <label for="login-username">Nom d'utilisateur</label>
         <input type="text" id="login-username" autocomplete="username" required />
-        <label for="login-password">Password</label>
+        <label for="login-password">Mot de passe</label>
         <input type="password" id="login-password" autocomplete="current-password" required />
-        <button type="submit" id="login-submit" class="button button-primary">Sign in</button>
+        <button type="submit" id="login-submit" class="button button-primary">Se connecter</button>
       </form>
     </div>
   </div>
 
-  <!-- Dashboard (shown after login) -->
+  <!-- Tableau de bord (affiché après connexion) -->
   <div id="dashboard" class="hidden">
     <header class="site-header admin-header">
       <div class="container header-inner">
         <a href="index.html" class="brand">BAF TCG</a>
         <span class="admin-badge">Admin</span>
         <div class="admin-header-actions">
-          <a href="index.html" class="button">View Site</a>
-          <button id="logout-btn" type="button" class="button">Logout</button>
+          <a href="index.html" class="button">Voir le site</a>
+          <button id="logout-btn" type="button" class="button">Déconnexion</button>
         </div>
       </div>
     </header>
@@ -40,31 +40,31 @@
     <main class="admin-main section">
       <div class="container">
 
-        <nav class="admin-tabs" aria-label="Admin sections">
+        <nav class="admin-tabs" aria-label="Sections admin">
           <button class="admin-tab active" data-tab="articles">Articles</button>
-          <button class="admin-tab" data-tab="players">Players</button>
+          <button class="admin-tab" data-tab="players">Joueurs</button>
         </nav>
 
-        <!-- Articles panel -->
+        <!-- Panneau Articles -->
         <div id="panel-articles" class="admin-panel-section">
           <div class="admin-panel-header">
             <h2>Articles</h2>
-            <button id="new-article-btn" class="button button-primary">+ New Article</button>
+            <button id="new-article-btn" class="button button-primary">+ Nouvel article</button>
           </div>
 
           <div id="article-form-container" class="admin-form-container hidden">
             <form id="article-form" class="admin-form" novalidate>
-              <h3 id="article-form-title">New Article</h3>
+              <h3 id="article-form-title">Nouvel article</h3>
               <input type="hidden" id="article-id" />
-              <label for="article-title">Title</label>
-              <input type="text" id="article-title" placeholder="Article title" required />
-              <label for="article-excerpt">Excerpt</label>
-              <input type="text" id="article-excerpt" placeholder="Short description shown on the homepage (optional)" />
-              <label for="article-content">Content</label>
-              <textarea id="article-content" rows="8" placeholder="Full article content" required></textarea>
+              <label for="article-title">Titre</label>
+              <input type="text" id="article-title" placeholder="Titre de l'article" required />
+              <label for="article-excerpt">Extrait</label>
+              <input type="text" id="article-excerpt" placeholder="Courte description affichée sur la page d'accueil (facultatif)" />
+              <label for="article-content">Contenu</label>
+              <textarea id="article-content" rows="8" placeholder="Contenu complet de l'article" required></textarea>
               <div class="admin-form-actions">
-                <button type="submit" class="button button-primary">Save</button>
-                <button type="button" id="cancel-article-btn" class="button">Cancel</button>
+                <button type="submit" class="button button-primary">Enregistrer</button>
+                <button type="button" id="cancel-article-btn" class="button">Annuler</button>
               </div>
             </form>
           </div>
@@ -72,16 +72,16 @@
           <ul id="article-list" class="admin-list"></ul>
         </div>
 
-        <!-- Players panel -->
+        <!-- Panneau Joueurs -->
         <div id="panel-players" class="admin-panel-section hidden">
           <div class="admin-panel-header">
-            <h2>Tracked Players</h2>
+            <h2>Joueurs suivis</h2>
           </div>
-          <p class="admin-panel-desc">Players listed here are highlighted on the Tournament Tracker page.</p>
+          <p class="admin-panel-desc">Les joueurs listés ici sont mis en avant sur la page de suivi de tournoi.</p>
 
           <form id="add-player-form" class="admin-add-form" novalidate>
-            <input type="text" id="player-input" placeholder="Player name" required />
-            <button type="submit" class="button button-primary">Add Player</button>
+            <input type="text" id="player-input" placeholder="Nom du joueur" required />
+            <button type="submit" class="button button-primary">Ajouter</button>
           </form>
 
           <ul id="player-list" class="admin-list"></ul>

@@ -11,7 +11,7 @@ const initContactForm = () => {
 
   contactForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    formNote.textContent = 'Thanks! Your message has been received. We will follow up shortly.';
+    formNote.textContent = 'Merci ! Votre message a bien été reçu. Nous vous répondrons rapidement.';
     formNote.style.color = '#047857';
     contactForm.reset();
   });
@@ -51,6 +51,6 @@ const loadNewsFromStorage = () => {
       newsList.appendChild(item);
     });
   } catch {
-    // Keep static fallback content on error
+    // Conserver le contenu statique en cas d'erreur
   }
 };
