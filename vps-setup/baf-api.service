@@ -1,0 +1,18 @@
+[Unit]
+Description=BAF API Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/baf-api
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=PORT=3001
+Environment=DATA_DIR=/opt/baf-api/data
+# Set your secret key below — generate one with: openssl rand -hex 32
+Environment=API_KEY=CHANGE_ME
+
+[Install]
+WantedBy=multi-user.target

@@ -1,10 +1,11 @@
 'use strict';
 
-const CREDS_KEY = 'baf-admin-credentials';
-const SESSION_KEY = 'baf-admin-session';
+const CREDS_KEY    = 'baf-admin-credentials';
+const SESSION_KEY  = 'baf-admin-session';
 const ARTICLES_KEY = 'baf-articles';
-const PLAYERS_KEY = 'baf-tracked-players';
-const EVENTS_KEY = 'baf-events';
+const PLAYERS_KEY  = 'baf-tracked-players';
+const EVENTS_KEY   = 'baf-events';
+const ANALYTICS_KEY_STORE = 'baf-analytics-key';
 
 // --- Crypto ---
 
@@ -318,6 +319,8 @@ const showDashboard = () => {
   renderArticleList();
   renderPlayerList();
   renderEventList();
+  const keyInput = $('analytics-key-input');
+  if (keyInput) keyInput.value = getAnalyticsKey();
 };
 
 const switchTab = (tab) => {
@@ -327,6 +330,64 @@ const switchTab = (tab) => {
   $('panel-articles').classList.toggle('hidden', tab !== 'articles');
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
+  $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
+  if (tab === 'analytics') loadAnalytics();
+};
+
+// --- Analytics ---
+
+let _analyticsDays = 7;
+
+const getAnalyticsKey = () => { try { return localStorage.getItem(ANALYTICS_KEY_STORE) || ''; } catch { return ''; } };
+
+const setAnalyticsStatus = (msg, isError = false) => {
+  const el = $('analytics-status');
+  if (!el) return;
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.textContent = msg;
+};
+
+const renderAnalytics = ({ overview, daily, pages }) => {
+  $('stat-views').textContent    = overview.views.toLocaleString('fr-FR');
+  $('stat-visitors').textContent = overview.visitors.toLocaleString('fr-FR');
+
+  const maxViews = Math.max(...daily.map(d => d.views), 1);
+  $('analytics-chart').innerHTML = daily.map(d => `
+    <div class="analytics-bar-wrap" title="${d.day} — ${d.views} vues">
+      <div class="analytics-bar" style="height:${Math.round((d.views / maxViews) * 100)}%"></div>
+      <span class="analytics-bar-label">${d.day.slice(5)}</span>
+    </div>`).join('');
+
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  $('analytics-pages').innerHTML = pages.map(p => `
+    <tr>
+      <td>${esc(p.page || '/')}</td>
+      <td>${p.views.toLocaleString('fr-FR')}</td>
+      <td>${p.visitors.toLocaleString('fr-FR')}</td>
+    </tr>`).join('');
+
+  $('analytics-data').classList.remove('hidden');
+};
+
+const loadAnalytics = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setAnalyticsStatus('Entrez votre clé API ci-dessus pour voir les statistiques.'); return; }
+  setAnalyticsStatus('Chargement…');
+  $('analytics-data').classList.add('hidden');
+  try {
+    const r = await fetch(`/api/stats?days=${_analyticsDays}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (r.status === 401) { setAnalyticsStatus('Clé API incorrecte.', true); return; }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    setAnalyticsStatus('');
+    renderAnalytics(data);
+  } catch (err) {
+    setAnalyticsStatus(`Erreur : ${err.message}`, true);
+  }
 };
 
 // --- Articles UI ---
@@ -614,6 +675,29 @@ const wireEvents = () => {
     } catch (err) {
       showProxyStatus(err.message, false);
     }
+  });
+
+  // Analytics controls
+  $('analytics-key-save')?.addEventListener('click', () => {
+    const val = $('analytics-key-input')?.value.trim() || '';
+    try {
+      if (val) localStorage.setItem(ANALYTICS_KEY_STORE, val);
+      else localStorage.removeItem(ANALYTICS_KEY_STORE);
+      loadAnalytics();
+    } catch (err) {
+      setAnalyticsStatus(err.message, true);
+    }
+  });
+
+  $('analytics-refresh')?.addEventListener('click', loadAnalytics);
+
+  document.querySelectorAll('.analytics-period-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.analytics-period-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _analyticsDays = parseInt(btn.dataset.days);
+      loadAnalytics();
+    });
   });
 
   document.addEventListener('langchange', () => {

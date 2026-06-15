@@ -1436,3 +1436,111 @@ textarea::placeholder {
     width: 100%;
   }
 }
+
+/* ---- Analytics panel ---- */
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  flex-wrap: wrap;
+}
+
+.analytics-period-btns {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.analytics-period-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(249, 230, 197, 0.2);
+  background: transparent;
+  color: rgba(249, 230, 197, 0.6);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.analytics-period-btn.active,
+.analytics-period-btn:hover {
+  background: rgba(249, 230, 197, 0.1);
+  border-color: rgba(249, 230, 197, 0.4);
+  color: #f9e6c5;
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.analytics-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 230, 197, 0.1);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+.analytics-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.analytics-card-label {
+  font-size: 0.8rem;
+  color: rgba(249, 230, 197, 0.5);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.analytics-section-title {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.8rem;
+  color: rgba(249, 230, 197, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+}
+
+.analytics-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+.analytics-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 3px;
+}
+
+.analytics-bar {
+  width: 100%;
+  background: rgba(249, 230, 197, 0.35);
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: background 0.15s;
+}
+
+.analytics-bar-wrap:hover .analytics-bar {
+  background: rgba(249, 230, 197, 0.7);
+}
+
+.analytics-bar-label {
+  font-size: 0.6rem;
+  color: rgba(249, 230, 197, 0.3);
+  white-space: nowrap;
+}
