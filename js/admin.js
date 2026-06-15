@@ -313,6 +313,18 @@ const showLogin = () => {
   $('login-username').focus();
 };
 
+const renderBookmarklet = () => {
+  const wrap = $('bookmarklet-wrap');
+  if (!wrap) return;
+  const key = getAnalyticsKey();
+  if (!key) {
+    wrap.innerHTML = `<p class="admin-panel-desc" style="color:rgba(249,230,197,.45)">Configure ta clé API dans l'onglet Analytics d'abord.</p>`;
+    return;
+  }
+  const loader = `javascript:(function(){var s=document.createElement('script');s.src='https://bafbordeaux.fr/js/bookmarklet.js?key=${encodeURIComponent(key)}&t='+Date.now();document.head.appendChild(s)})()`;
+  wrap.innerHTML = `<a href="${loader}" class="button button-primary" style="display:inline-block;cursor:grab" draggable="true">🎴 BAF — Mettre à jour les standings</a><p class="admin-panel-desc" style="margin-top:.6rem;font-size:.8rem">Ne clique pas ici — glisse-le dans ta barre de favoris.</p>`;
+};
+
 const showDashboard = () => {
   $('login-page').classList.add('hidden');
   $('dashboard').classList.remove('hidden');
@@ -321,6 +333,7 @@ const showDashboard = () => {
   renderEventList();
   const keyInput = $('analytics-key-input');
   if (keyInput) keyInput.value = getAnalyticsKey();
+  renderBookmarklet();
 };
 
 const switchTab = (tab) => {
@@ -683,6 +696,7 @@ const wireEvents = () => {
     try {
       if (val) localStorage.setItem(ANALYTICS_KEY_STORE, val);
       else localStorage.removeItem(ANALYTICS_KEY_STORE);
+      renderBookmarklet();
       loadAnalytics();
     } catch (err) {
       setAnalyticsStatus(err.message, true);

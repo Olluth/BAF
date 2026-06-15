@@ -1,8 +1,8 @@
 'use strict';
 
-const STORAGE_KEY   = 'baf-tracked-players';
-const EVENTS_KEY    = 'baf-events';
-const STANDINGS_URL = 'https://raw.githubusercontent.com/Olluth/BAF/main/data/standings.json';
+const STORAGE_KEY    = 'baf-tracked-players';
+const EVENTS_KEY     = 'baf-events';
+const STANDINGS_BASE = '/api/standings/';
 
 /* ---- Storage ---- */
 
@@ -200,15 +200,12 @@ const loadEvent = async (slug) => {
   setStatus(t('tracker.loading'));
 
   try {
-    const r = await fetch(`${STANDINGS_URL}?_=${Date.now()}`);
+    const r = await fetch(`${STANDINGS_BASE}${encodeURIComponent(slug)}?_=${Date.now()}`);
+    if (gen !== _generation) return;
+    if (r.status === 404) { setStatus(t('tracker.noStandings'), true); return; }
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const data = await r.json();
     if (gen !== _generation) return;
-
-    if (!data || data.slug !== slug) {
-      setStatus(t('tracker.noStandings'), true);
-      return;
-    }
 
     setStatus('');
     const droppedSet = new Set(data.droppedPlayers || []);
