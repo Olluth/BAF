@@ -75,6 +75,8 @@ textarea {
   white-space: nowrap;
   position: relative;
   z-index: 101;
+  align-self: flex-start;
+  margin-top: -0.5rem;
 }
 
 .brand img {
