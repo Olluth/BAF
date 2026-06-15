@@ -1,7 +1,9 @@
 'use strict';
 const http       = require('http');
 const { URL }    = require('url');
-const puppeteer  = require('puppeteer');
+const puppeteer  = require('puppeteer-extra');
+const Stealth    = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(Stealth());
 
 const PORT         = process.env.PORT || 3000;
 const ALLOWED_HOST = 'fabtcg.com';
@@ -77,5 +79,5 @@ http.createServer(async (req, res) => {
   }
 
 }).listen(PORT, '127.0.0.1', () => {
-  console.log(`fabtcg proxy (puppeteer) listening on 127.0.0.1:${PORT}`);
+  console.log(`fabtcg proxy (puppeteer+stealth) listening on 127.0.0.1:${PORT}`);
 });
