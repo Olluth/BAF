@@ -1457,6 +1457,91 @@ textarea::placeholder {
   .admin-list-item-actions {
     width: 100%;
   }
+
+  /* Logo: compact for mobile, no straddling */
+  .brand {
+    margin-top: 0.25rem;
+  }
+
+  .brand img {
+    height: 3.5rem;
+    max-width: 45vw;
+    filter: none;
+  }
+
+  .header-inner {
+    height: 3.5rem;
+    padding: 0.4rem 0;
+  }
+
+  /* Standings table: horizontal scroll */
+  .standings-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .standings-table {
+    min-width: 480px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 2.5rem 0 1.5rem;
+  }
+
+  .hero-card {
+    padding: 1.25rem;
+  }
+
+  /* Sections */
+  .section {
+    padding: 2.5rem 0;
+  }
+
+  .event-banner {
+    padding: 2rem 0 1.5rem;
+  }
+
+  .event-featured-card {
+    gap: 1.25rem;
+    padding: 1.5rem;
+  }
+
+  /* Cards and forms */
+  .card,
+  .news-item,
+  .contact-card,
+  .tracker-form,
+  #contact-form,
+  .admin-form-container,
+  .admin-login-card {
+    padding: 1.25rem;
+  }
+
+  /* Admin proxy: stack input full width */
+  .admin-proxy-row {
+    flex-direction: column;
+  }
+
+  .admin-proxy-row input[type="url"] {
+    flex: 1 1 100%;
+  }
+
+  /* Admin panel header: stack on small screens */
+  .admin-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Analytics: single column */
+  .analytics-cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* Coverage iframe: shorter on mobile */
+  .coverage-iframe {
+    height: 340px;
+  }
 }
 
 /* ---- Analytics panel ---- */
@@ -1565,4 +1650,34 @@ textarea::placeholder {
   font-size: 0.6rem;
   color: rgba(245, 208, 216, 0.3);
   white-space: nowrap;
+}
+
+@media (max-width: 400px) {
+  .brand img {
+    height: 2.75rem;
+    max-width: 50vw;
+  }
+
+  .card,
+  .news-item,
+  .contact-card,
+  .tracker-form,
+  #contact-form,
+  .admin-form-container,
+  .admin-login-card {
+    padding: 1rem;
+  }
+
+  .event-featured-card {
+    padding: 1rem;
+  }
+
+  .hero-card {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
+  .admin-login-card {
+    border-radius: 20px;
+  }
 }
