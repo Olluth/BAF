@@ -53,13 +53,16 @@ textarea {
   border-bottom: 1px solid rgba(245, 208, 216, 0.1);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  overflow: visible;
 }
 
 .header-inner {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  padding: 0.875rem 0;
+  padding: 0.5rem 0;
+  height: 4.5rem;
+  overflow: visible;
 }
 
 .brand {
@@ -70,12 +73,17 @@ textarea {
   letter-spacing: 0.03em;
   flex-shrink: 0;
   white-space: nowrap;
+  position: relative;
+  z-index: 101;
 }
 
 .brand img {
-  height: 5rem;
+  height: 9rem;
+  max-width: 40vw;
   width: auto;
+  object-fit: contain;
   display: block;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5));
 }
 
 .site-nav {
@@ -176,6 +184,12 @@ textarea {
   margin-bottom: 1.25rem;
   font-size: 1rem;
   letter-spacing: -0.02em;
+}
+
+.site-sidebar .brand img {
+  height: 3rem;
+  max-width: 100%;
+  filter: none;
 }
 
 .site-sidebar .site-nav {
