@@ -13,10 +13,12 @@ const getBrowser = async () => {
   if (browser && browser.isConnected()) return browser;
   browser = await puppeteer.launch({
     headless: 'new',
+    executablePath: process.env.CHROMIUM_PATH ||
+      '/opt/fabtcg-proxy/.cache/chrome/linux-148.0.7778.97/chrome-linux64/chrome',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',   // évite les crashs sur VPS low-RAM
+      '--disable-dev-shm-usage',
       '--disable-gpu',
     ],
   });
@@ -55,7 +57,7 @@ http.createServer(async (req, res) => {
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
     );
 
-    await page.goto(target, { waitUntil: 'domcontentloaded', timeout: PAGE_TIMEOUT });
+    await page.goto(target, { waitUntil: 'networkidle2', timeout: PAGE_TIMEOUT });
     const html = await page.content();
 
     res.writeHead(200, {

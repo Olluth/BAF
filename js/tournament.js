@@ -72,8 +72,14 @@ const proxiedFetch = async (url) => {
   for (const { buildUrl, extract } of configs) {
     try {
       const r = await fetch(buildUrl(url));
-      if (r.ok) return extract(r);
-      errors.push(`HTTP ${r.status}`);
+      if (!r.ok) { errors.push(`HTTP ${r.status}`); continue; }
+      const content = await extract(r);
+      // Reject Cloudflare challenge pages served as HTTP 200
+      if (/<title>[^<]*just a moment/i.test(content)) {
+        errors.push('Cloudflare challenge');
+        continue;
+      }
+      return content;
     } catch (e) {
       errors.push(e.message);
     }
@@ -84,21 +90,25 @@ const proxiedFetch = async (url) => {
 
 /* ---- Parsers ---- */
 
+const resolveHref = href =>
+  href ? new URL(href, 'https://fabtcg.com').href : null;
+
 const parseRoundsIndex = (html, slug) => {
   const doc  = new DOMParser().parseFromString(html, 'text/html');
   const rows = Array.from(doc.querySelectorAll('table tbody tr'));
-  const base = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}`;
-  return rows.reduce((acc, row, idx) => {
+  return rows.reduce((acc, row) => {
     const nameCell    = row.querySelector('td.rounds');
     const pairingsLnk = row.querySelector('td.pairings a');
     if (!nameCell || !pairingsLnk) return acc;
-    const n = idx + 1;
+    const resultsLnk = row.querySelector('td.results a');
+    const pairingsUrl = resolveHref(pairingsLnk.getAttribute('href'));
+    if (!pairingsUrl) return acc;
     acc.push({
-      roundNum:    n,
+      roundNum:    acc.length + 1,
       roundName:   nameCell.textContent.trim(),
-      pairingsUrl: `${base}/pairings/${n}/`,
-      resultsUrl:  row.querySelector('td.results a') ? `${base}/results/${n}/` : null,
-      hasResults:  !!row.querySelector('td.results a'),
+      pairingsUrl,
+      resultsUrl:  resolveHref(resultsLnk?.getAttribute('href')),
+      hasResults:  !!resultsLnk,
     });
     return acc;
   }, []);
