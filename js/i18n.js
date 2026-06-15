@@ -16,7 +16,7 @@ const translations = {
     'page.title.admin': 'Admin | BAF TCG',
 
     // Navigation
-    'nav.about': 'La BAF',
+    'nav.about': "L'Asso",
     'nav.events': 'Événements',
     'nav.news': 'Actualités',
     'nav.resources': 'Ressources',
@@ -228,7 +228,7 @@ const translations = {
     'page.title.admin': 'Admin | BAF TCG',
 
     // Navigation
-    'nav.about': 'La BAF',
+    'nav.about': "L'Asso",
     'nav.events': 'Events',
     'nav.news': 'News',
     'nav.resources': 'Resources',
