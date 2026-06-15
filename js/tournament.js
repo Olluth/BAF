@@ -80,7 +80,12 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
   const trackedSet = new Set(trackedNames.map(n => n.toLowerCase().trim()));
   const hasLive    = Object.keys(liveMatches).length > 0;
 
-  const sorted = [...standings].sort((a, b) => {
+  // When tracked players are configured, show only them
+  const filtered = trackedSet.size > 0
+    ? standings.filter(p => trackedSet.has(p.name.toLowerCase().trim()))
+    : standings;
+
+  const sorted = [...filtered].sort((a, b) => {
     const aD = droppedSet.has(a.name);
     const bD = droppedSet.has(b.name);
     if (aD !== bD) return aD ? 1 : -1;
@@ -151,7 +156,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
   container.innerHTML = `
     <div class="standings-container">
       <div class="standings-header">
-        <h3>${standings.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
+        <h3>${filtered.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
         <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
       </div>
       ${hasLive ? '<div id="tracker-live-status" class="tracker-live-status"></div>' : ''}
