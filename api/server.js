@@ -15,10 +15,6 @@ fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
 
-// Same-origin CORS for most endpoints
-const sameCors = cors({ origin: /^https?:\/\/(www\.)?bafbordeaux\.fr(:\d+)?$/, methods: ['GET', 'POST'] });
-app.use(sameCors);
-
 const requireAuth = (req, res, next) => {
   if (!API_KEY) return res.status(503).json({ error: 'API_KEY not set' });
   if (req.headers['authorization'] !== `Bearer ${API_KEY}`) return res.status(401).json({ error: 'unauthorized' });
@@ -48,7 +44,12 @@ app.get('/api/stats', requireAuth, (req, res) => {
 /* ---- Standings ---- */
 
 // Open CORS for standings POST (bookmarklet runs from fabtcg.com origin)
-const openCors = cors({ origin: '*', methods: ['POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] });
+const openCors = cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
+});
 
 app.options('/api/standings', openCors);
 
