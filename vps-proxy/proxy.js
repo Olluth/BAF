@@ -20,6 +20,9 @@ const getBrowser = async () => {
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--disable-crash-reporter',
+      '--no-first-run',
+      '--no-zygote',
     ],
   });
   return browser;
