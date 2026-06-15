@@ -141,7 +141,7 @@ const translations = {
     'tracker.openCoverage': 'Voir sur fabtcg.com ↗',
     'tracker.roundsLoaded': '{done}/{total} rondes chargées…',
     'tracker.vs': 'vs',
-    'tracker.refresh.in': 'Actualisation dans {n}s',
+    'tracker.updated': 'Mis à jour il y a {min}m',
     'tracker.dropped': 'Abandon',
 
     // Admin — login
@@ -353,7 +353,7 @@ const translations = {
     'tracker.openCoverage': 'View on fabtcg.com ↗',
     'tracker.roundsLoaded': '{done}/{total} rounds loaded…',
     'tracker.vs': 'vs',
-    'tracker.refresh.in': 'Refreshing in {n}s',
+    'tracker.updated': 'Updated {min}m ago',
     'tracker.dropped': 'Dropped',
 
     // Admin — login

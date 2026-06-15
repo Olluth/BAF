@@ -1,0 +1,54 @@
+name: Fetch Tournament Standings
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 minutes
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: 'Tournament slug (e.g. calling-toulouse). Overrides data/config.json.'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --prefix scripts
+
+      - name: Override slug from workflow_dispatch input
+        if: ${{ inputs.slug != '' }}
+        run: |
+          echo "Activating slug: ${{ inputs.slug }}"
+          node -e "
+            const fs = require('fs');
+            const p  = 'data/config.json';
+            const c  = JSON.parse(fs.readFileSync(p, 'utf8'));
+            c.active_slug = '${{ inputs.slug }}';
+            c.active = true;
+            fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
+          "
+
+      - name: Fetch standings
+        run: node scripts/fetch-standings.js
+
+      - name: Commit updated standings
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/standings.json data/config.json
+          git diff --cached --quiet || git commit -m 'chore(data): update standings [skip ci]'
+          git push

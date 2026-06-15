@@ -1,32 +1,8 @@
 'use strict';
 
-const STORAGE_KEY  = 'baf-tracked-players';
-const EVENTS_KEY   = 'baf-events';
-const CACHE_PREFIX = 'baf-tracker-';
-const CACHE_TTL    = 5 * 60 * 1000;
-
-// Each proxy entry: buildUrl(url) → fetch URL, extract(response) → HTML string
-const PROXY_CONFIGS = [
-  // allorigins JSON endpoint — wraps response in JSON, avoids raw CORS issues
-  {
-    buildUrl: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-    extract:  async r => {
-      const d = await r.json();
-      if (!d.contents || (d.status && d.status.http_code >= 400)) throw new Error(`HTTP ${d.status?.http_code}`);
-      return d.contents;
-    },
-  },
-  // corsproxy.io — fast but IPs may be blocked by Cloudflare-protected sites
-  {
-    buildUrl: u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-    extract:  r => r.text(),
-  },
-  // codetabs — alternative datacenter proxy
-  {
-    buildUrl: u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-    extract:  r => r.text(),
-  },
-];
+const STORAGE_KEY   = 'baf-tracked-players';
+const EVENTS_KEY    = 'baf-events';
+const STANDINGS_URL = 'https://raw.githubusercontent.com/Olluth/BAF/main/data/standings.json';
 
 /* ---- Storage ---- */
 
@@ -46,154 +22,6 @@ const loadEvents = () => {
   } catch { return []; }
 };
 
-const getCached = (slug) => {
-  try {
-    const raw = localStorage.getItem(CACHE_PREFIX + slug);
-    if (!raw) return null;
-    const { ts, data } = JSON.parse(raw);
-    return Date.now() - ts < CACHE_TTL ? data : null;
-  } catch { return null; }
-};
-
-const setCache = (slug, data) => {
-  try { localStorage.setItem(CACHE_PREFIX + slug, JSON.stringify({ ts: Date.now(), data })); } catch {}
-};
-
-/* ---- Network ---- */
-
-const proxiedFetch = async (url) => {
-  // Check for admin-configured custom proxy (stored as plain prefix string)
-  const custom = (() => { try { return localStorage.getItem('baf-proxy-url') || ''; } catch { return ''; } })();
-  const configs = custom
-    ? [{ buildUrl: u => custom + encodeURIComponent(u), extract: r => r.text() }, ...PROXY_CONFIGS]
-    : PROXY_CONFIGS;
-
-  const errors = [];
-  for (const { buildUrl, extract } of configs) {
-    try {
-      const r = await fetch(buildUrl(url));
-      if (!r.ok) { errors.push(`HTTP ${r.status}`); continue; }
-      const content = await extract(r);
-      // Reject Cloudflare challenge pages served as HTTP 200
-      if (/<title>[^<]*just a moment/i.test(content)) {
-        errors.push('Cloudflare challenge');
-        continue;
-      }
-      return content;
-    } catch (e) {
-      errors.push(e.message);
-    }
-  }
-  const detail = errors.length ? ` (${errors.join(', ')})` : '';
-  throw new Error('PROXY_FAILED' + detail);
-};
-
-/* ---- Parsers ---- */
-
-const resolveHref = href =>
-  href ? new URL(href, 'https://fabtcg.com').href : null;
-
-const parseRoundsIndex = (html, slug) => {
-  const doc  = new DOMParser().parseFromString(html, 'text/html');
-  const rows = Array.from(doc.querySelectorAll('table tbody tr'));
-  return rows.reduce((acc, row) => {
-    const nameCell    = row.querySelector('td.rounds');
-    const pairingsLnk = row.querySelector('td.pairings a');
-    if (!nameCell || !pairingsLnk) return acc;
-    const resultsLnk = row.querySelector('td.results a');
-    const pairingsUrl = resolveHref(pairingsLnk.getAttribute('href'));
-    if (!pairingsUrl) return acc;
-    acc.push({
-      roundNum:    acc.length + 1,
-      roundName:   nameCell.textContent.trim(),
-      pairingsUrl,
-      resultsUrl:  resolveHref(resultsLnk?.getAttribute('href')),
-      hasResults:  !!resultsLnk,
-    });
-    return acc;
-  }, []);
-};
-
-// Shared extractor used by both results and pairings parsers
-const extractMatchRow = (row) => {
-  const p1El = row.querySelector('.player-details.player-left');
-  const p2El = row.querySelector('.player-details.player-right');
-  if (!p1El || !p2El) return null;
-  const getName = el => {
-    const strong = el.querySelector('.player-text strong');
-    if (!strong) return '';
-    const clone = strong.cloneNode(true);
-    clone.querySelectorAll('i').forEach(i => i.remove());
-    return clone.textContent.trim();
-  };
-  const getHero = el => el.querySelector('.player-text span')?.textContent.trim() ?? '';
-  const p1Name = getName(p1El);
-  const p2Name = getName(p2El);
-  if (!p1Name || !p2Name) return null;
-  return {
-    p1Name, p2Name,
-    p1Hero: getHero(p1El),
-    p2Hero: getHero(p2El),
-    p1Won: p1El.classList.contains('winner'),
-    p2Won: p2El.classList.contains('winner'),
-  };
-};
-
-const parseResultsPage = (html) => {
-  const doc     = new DOMParser().parseFromString(html, 'text/html');
-  const matches = [];
-  doc.querySelectorAll('tr.match-row').forEach(row => {
-    const data = extractMatchRow(row);
-    if (data) matches.push(data);
-  });
-  return matches;
-};
-
-const parsePairingsPage = (html) => {
-  const doc      = new DOMParser().parseFromString(html, 'text/html');
-  const pairings = {};
-  doc.querySelectorAll('tr.match-row').forEach(row => {
-    const data = extractMatchRow(row);
-    if (!data) return;
-    pairings[data.p1Name] = { opponent: data.p2Name, opponentHero: data.p2Hero };
-    pairings[data.p2Name] = { opponent: data.p1Name, opponentHero: data.p1Hero };
-  });
-  return pairings;
-};
-
-/* ---- Standings builder ---- */
-
-const buildStandings = (allRounds) => {
-  const map = {};
-  const get = (name, hero) => {
-    if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] };
-    return map[name];
-  };
-  allRounds.forEach(({ roundName, matches }) => {
-    matches.forEach(({ p1Name, p1Hero, p2Name, p2Hero, p1Won, p2Won }) => {
-      const p1   = get(p1Name, p1Hero);
-      const p2   = get(p2Name, p2Hero);
-      const draw = !p1Won && !p2Won;
-      if (draw) {
-        p1.draws++; p2.draws++;
-        p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' });
-        p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' });
-      } else if (p1Won) {
-        p1.wins++; p2.losses++;
-        p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'win' });
-        p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'loss' });
-      } else {
-        p2.wins++; p1.losses++;
-        p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'loss' });
-        p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'win' });
-      }
-    });
-  });
-  return Object.values(map).sort((a, b) =>
-    b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses
-  );
-};
-
 /* ---- UI helpers ---- */
 
 const esc  = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -202,7 +30,7 @@ const toId = s => 'h' + s.replace(/[^a-zA-Z0-9]/g, '-');
 let _refreshTimer = null;
 
 const clearRefreshTimer = () => {
-  if (_refreshTimer) { clearInterval(_refreshTimer); _refreshTimer = null; }
+  if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
 };
 
 const setStatus = (msg, isError = false) => {
@@ -212,12 +40,6 @@ const setStatus = (msg, isError = false) => {
   el.classList.remove('hidden');
   el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
   el.textContent = msg;
-};
-
-const updateLiveStatus = (secondsLeft, roundName) => {
-  const el = document.getElementById('tracker-live-status');
-  if (!el) return;
-  el.textContent = `● ${roundName} — ${t('tracker.refresh.in', { n: secondsLeft })}`;
 };
 
 const clearStandings = () => {
@@ -258,7 +80,6 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
   const trackedSet = new Set(trackedNames.map(n => n.toLowerCase().trim()));
   const hasLive    = Object.keys(liveMatches).length > 0;
 
-  // Active players first (sorted by W-L), dropped players at the bottom
   const sorted = [...standings].sort((a, b) => {
     const aD = droppedSet.has(a.name);
     const bD = droppedSet.has(b.name);
@@ -361,25 +182,6 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
   });
 };
 
-/* ---- Auto-refresh ---- */
-
-const startAutoRefresh = (slug, gen, liveRoundName) => {
-  clearRefreshTimer();
-  let secondsLeft = 60;
-  updateLiveStatus(secondsLeft, liveRoundName);
-
-  _refreshTimer = setInterval(() => {
-    if (gen !== _generation) { clearRefreshTimer(); return; }
-    secondsLeft--;
-    updateLiveStatus(secondsLeft, liveRoundName);
-    if (secondsLeft <= 0) {
-      clearRefreshTimer();
-      try { localStorage.removeItem(CACHE_PREFIX + slug); } catch {}
-      loadEvent(slug);
-    }
-  }, 1000);
-};
-
 /* ---- Load event ---- */
 
 let _generation = 0;
@@ -388,106 +190,44 @@ const loadEvent = async (slug) => {
   _currentSlug = slug;
   const gen = ++_generation;
   clearRefreshTimer();
-
   clearStandings();
   renderVisitorPlayerList(false);
   setStatus(t('tracker.loading'));
 
   try {
-    // 1. Fetch coverage index
-    const indexHtml = await proxiedFetch(`https://fabtcg.com/coverage/${encodeURIComponent(slug)}/`);
+    const r = await fetch(`${STANDINGS_URL}?_=${Date.now()}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
     if (gen !== _generation) return;
 
-    const rounds = parseRoundsIndex(indexHtml, slug);
-    if (!rounds.length) { setStatus(t('tracker.noStandings'), true); return; }
-
-    const completedRounds = rounds.filter(r => r.hasResults);
-    const liveRound       = rounds[rounds.length - 1]; // last announced round
-
-    // 2. Base standings from cache or fetch
-    let standings = getCached(slug);
-
-    if (!standings) {
-      if (completedRounds.length) {
-        setStatus(t('tracker.roundsLoaded', { done: 0, total: completedRounds.length }));
-        let done = 0;
-        const fetches = await Promise.allSettled(
-          completedRounds.map(r =>
-            proxiedFetch(r.resultsUrl).then(html => {
-              done++;
-              if (gen === _generation) setStatus(t('tracker.roundsLoaded', { done, total: completedRounds.length }));
-              return html;
-            })
-          )
-        );
-        if (gen !== _generation) return;
-
-        const allRounds = completedRounds.map((r, i) => ({
-          roundName: r.roundName,
-          matches:   fetches[i].status === 'fulfilled' ? parseResultsPage(fetches[i].value) : [],
-        }));
-        standings = buildStandings(allRounds);
-        setCache(slug, standings);
-      } else {
-        standings = [];
-      }
+    if (!data || data.slug !== slug) {
+      setStatus(t('tracker.noStandings'), true);
+      return;
     }
 
-    // 3. Live round: fetch pairings (always fresh), and results if available
-    let liveMatches   = {};
-    let liveRoundName = '';
-    let droppedSet    = new Set();
-
-    setStatus(t('tracker.loading'));
-    try {
-      const pairingsHtml = await proxiedFetch(liveRound.pairingsUrl);
-      if (gen !== _generation) return;
-
-      const allPairings = parsePairingsPage(pairingsHtml);
-
-      // Identify already-resolved matches in this round
-      const resolvedSet = new Set();
-      if (liveRound.hasResults) {
-        const resultsHtml = await proxiedFetch(liveRound.resultsUrl);
-        if (gen !== _generation) return;
-        parseResultsPage(resultsHtml).forEach(m => {
-          resolvedSet.add(m.p1Name);
-          resolvedSet.add(m.p2Name);
-        });
-      }
-
-      Object.entries(allPairings).forEach(([player, pairing]) => {
-        if (!resolvedSet.has(player)) liveMatches[player] = pairing;
-      });
-      liveRoundName = liveRound.roundName;
-
-      // Detect dropped players: played before but absent from this round entirely
-      if (Object.keys(liveMatches).length > 0) {
-        const activeInRound = new Set([...Object.keys(allPairings), ...resolvedSet]);
-        standings.forEach(p => {
-          if (!activeInRound.has(p.name)) droppedSet.add(p.name);
-        });
-      }
-
-    } catch {
-      // Pairings unavailable — event not live or proxy issue
-    }
-
-    // 4. Render
     setStatus('');
-    renderStandings(standings, slug, loadTrackedPlayers(), liveMatches, liveRoundName, droppedSet);
+    const droppedSet = new Set(data.droppedPlayers || []);
+    renderStandings(
+      data.standings    || [],
+      slug,
+      loadTrackedPlayers(),
+      data.liveMatches  || {},
+      data.liveRoundName || '',
+      droppedSet
+    );
 
-    // 5. Auto-refresh only when matches are still in progress
-    if (Object.keys(liveMatches).length > 0) {
-      startAutoRefresh(slug, gen, liveRoundName);
+    if (data.liveRoundName) {
+      const ageMin = Math.round((Date.now() - new Date(data.lastUpdated).getTime()) / 60000);
+      const liveEl = document.getElementById('tracker-live-status');
+      if (liveEl) liveEl.textContent = `● ${data.liveRoundName} — ${t('tracker.updated', { min: ageMin })}`;
+      _refreshTimer = setTimeout(() => {
+        if (gen === _generation) loadEvent(slug);
+      }, 60 * 1000);
     }
 
   } catch (err) {
     if (gen !== _generation) return;
-    const msg = err.message.startsWith('PROXY_FAILED')
-      ? `${t('tracker.networkError')}${err.message.slice('PROXY_FAILED'.length)}`
-      : `${t('tracker.loadError')}: ${err.message}`;
-    setStatus(msg, true);
+    setStatus(`${t('tracker.loadError')}: ${err.message}`, true);
   }
 };
 
@@ -532,12 +272,8 @@ const initialize = () => {
 
   document.addEventListener('langchange', () => {
     populateEventDropdown();
-    if (_currentSlug) {
-      const cached = getCached(_currentSlug);
-      if (cached) renderStandings(cached, _currentSlug, loadTrackedPlayers());
-    } else {
-      renderVisitorPlayerList();
-    }
+    if (_currentSlug) loadEvent(_currentSlug);
+    else renderVisitorPlayerList();
   });
 };
 
