@@ -95,13 +95,10 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
 
   const rows = sorted.map((p, i) => {
     const tracked   = trackedSet.has(p.name.toLowerCase().trim());
-    const liveMatch  = liveMatches[p.name];
-    const dropped    = droppedSet.has(p.name);
-    const record     = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
-    const hid        = toId(p.name);
-    const heroImgHtml = p.heroImage
-      ? `<img src="${esc(p.heroImage)}" alt="${esc(p.hero)}" class="hero-portrait" loading="lazy">`
-      : '';
+    const liveMatch = liveMatches[p.name];
+    const dropped   = droppedSet.has(p.name);
+    const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
+    const hid       = toId(p.name);
 
     const liveIndicator = liveMatch
       ? `<span class="live-match-indicator">● ${t('tracker.vs')} ${esc(liveMatch.opponent)}</span>`
@@ -130,7 +127,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
             <span class="row-chevron" aria-hidden="true">›</span>
           </span>
         </td>
-        <td><div class="hero-cell">${heroImgHtml}<span class="hero-name-text">${esc(p.hero)}</span></div></td>
+        <td>${esc(p.hero)}</td>
         <td class="record-cell">${record}${liveIndicator}</td>
       </tr>
       <tr class="history-panel-row hidden" id="${hid}">

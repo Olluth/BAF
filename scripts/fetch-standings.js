@@ -49,18 +49,14 @@ const extractMatchRow = (row) => {
     clone.querySelectorAll('i').forEach(i => i.remove());
     return clone.textContent.trim();
   };
-  const getHero    = el => el.querySelector('.player-text span')?.textContent.trim() ?? '';
-  const getHeroImg = el => {
-    const img = el.querySelector('img');
-    return img ? resolveHref(img.getAttribute('src')) : null;
-  };
+  const getHero = el => el.querySelector('.player-text span')?.textContent.trim() ?? '';
   const p1Name = getName(p1El);
   const p2Name = getName(p2El);
   if (!p1Name || !p2Name) return null;
   return {
     p1Name, p2Name,
-    p1Hero: getHero(p1El),    p2Hero: getHero(p2El),
-    p1HeroImg: getHeroImg(p1El), p2HeroImg: getHeroImg(p2El),
+    p1Hero: getHero(p1El),
+    p2Hero: getHero(p2El),
     p1Won: p1El.classList.contains('winner'),
     p2Won: p2El.classList.contains('winner'),
   };
@@ -90,15 +86,14 @@ const parsePairingsPage = (html) => {
 
 const buildStandings = (allRounds) => {
   const map = {};
-  const get = (name, hero, heroImage) => {
-    if (!map[name]) map[name] = { name, hero, heroImage: heroImage || null, wins: 0, losses: 0, draws: 0, history: [] };
-    else if (heroImage && !map[name].heroImage) map[name].heroImage = heroImage;
+  const get = (name, hero) => {
+    if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] };
     return map[name];
   };
   allRounds.forEach(({ roundName, matches }) => {
-    matches.forEach(({ p1Name, p1Hero, p1HeroImg, p2Name, p2Hero, p2HeroImg, p1Won, p2Won }) => {
-      const p1   = get(p1Name, p1Hero, p1HeroImg);
-      const p2   = get(p2Name, p2Hero, p2HeroImg);
+    matches.forEach(({ p1Name, p1Hero, p2Name, p2Hero, p1Won, p2Won }) => {
+      const p1   = get(p1Name, p1Hero);
+      const p2   = get(p2Name, p2Hero);
       const draw = !p1Won && !p2Won;
       if (draw) {
         p1.draws++; p2.draws++;
