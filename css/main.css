@@ -61,7 +61,7 @@ textarea {
   align-items: center;
   gap: 1.25rem;
   padding: 0.5rem 0;
-  height: 4.5rem;
+  height: 6rem;
   overflow: visible;
 }
 
@@ -76,11 +76,11 @@ textarea {
   position: relative;
   z-index: 101;
   align-self: center;
-  margin-top: 2rem;
+  margin-top: 0;
 }
 
 .brand img {
-  height: 7rem;
+  height: 6rem;
   max-width: 40vw;
   width: auto;
   object-fit: contain;
@@ -1460,7 +1460,7 @@ textarea::placeholder {
 
   /* Logo: compact for mobile, no straddling */
   .brand {
-    margin-top: 0.25rem;
+    margin-top: 0;
   }
 
   .brand img {
