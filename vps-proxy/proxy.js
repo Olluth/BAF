@@ -12,7 +12,7 @@ let browser = null;
 const getBrowser = async () => {
   if (browser && browser.isConnected()) return browser;
   browser = await puppeteer.launch({
-    headless: 'new',
+    headless: true,
     executablePath: process.env.CHROMIUM_PATH ||
       '/opt/fabtcg-proxy/.cache/chrome/linux-148.0.7778.97/chrome-linux64/chrome',
     args: [
@@ -22,7 +22,6 @@ const getBrowser = async () => {
       '--disable-gpu',
       '--disable-crash-reporter',
       '--no-first-run',
-      '--no-zygote',
     ],
   });
   return browser;
