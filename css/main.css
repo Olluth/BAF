@@ -1251,6 +1251,28 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+.hero-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.hero-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero-portrait {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
 .row-chevron {
   flex-shrink: 0;
   color: rgba(249, 230, 197, 0.35);
