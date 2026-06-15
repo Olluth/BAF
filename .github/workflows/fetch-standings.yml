@@ -53,8 +53,8 @@ jobs:
         run: |
           git config user.name  'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git fetch origin main
-          git rebase origin/main
           git add data/standings.json data/config.json
           git diff --cached --quiet || git commit -m 'chore(data): update standings [skip ci]'
+          git fetch origin main
+          git rebase origin/main
           git push --force-with-lease origin main
