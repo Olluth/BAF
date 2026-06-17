@@ -33,6 +33,23 @@
   </header>
 
   <main>
+    <!-- Member flash card (visible when logged in) -->
+    <section id="member-flash-card" class="member-flash-section hidden">
+      <div class="container">
+        <div class="member-flash">
+          <div class="member-flash-left">
+            <div class="member-flash-avatar" id="flash-avatar"></div>
+            <div class="member-flash-meta">
+              <span class="member-flash-name" id="flash-name"></span>
+              <span class="profile-title-badge hidden" id="flash-title"></span>
+            </div>
+          </div>
+          <div class="member-flash-heroes" id="flash-heroes"></div>
+          <a href="members.html" class="button member-flash-link">Mon espace</a>
+        </div>
+      </div>
+    </section>
+
     <section class="event-banner" id="events">
       <div class="container">
         <div class="section-header">
@@ -130,5 +147,6 @@
   <script src="js/tracker.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/nav-auth.js"></script>
+  <script src="js/member-card.js"></script>
 </body>
 </html>

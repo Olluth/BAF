@@ -602,6 +602,78 @@ textarea::placeholder {
   min-height: 8rem;
 }
 
+/* ---- Member flash card (index page) ---- */
+
+.member-flash-section {
+  border-bottom: 1px solid rgba(249, 230, 197, .1);
+  background: rgba(249, 230, 197, .025);
+}
+
+.member-flash {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: .85rem 0;
+  flex-wrap: wrap;
+}
+
+.member-flash-left {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  flex-shrink: 0;
+}
+
+.member-flash-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(201, 134, 10, .18);
+  border: 2px solid rgba(201, 134, 10, .4);
+  color: #e0b84a;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.member-flash-meta {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
+.member-flash-name {
+  font-weight: 600;
+  color: #f9e6c5;
+  font-size: .95rem;
+}
+
+.member-flash-heroes {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.member-flash-heroes img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(249, 230, 197, .06);
+  border: 1px solid rgba(249, 230, 197, .15);
+}
+
+.member-flash-link {
+  flex-shrink: 0;
+  font-size: .85rem;
+  padding: .45rem 1rem;
+}
+
 /* ---- Profile card ---- */
 
 .profile-card {
