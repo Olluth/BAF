@@ -410,7 +410,8 @@ const TIER_ORDER = ['Silver', 'Gold', 'Diamond'];
 const TIER_LABELS = { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' };
 
 const loadAllAchievements = async () => {
-  const { data } = await _sb.from('achievements').select('*').order('category').order('name');
+  const { data, error } = await _sb.from('achievements').select('*').order('category').order('name');
+  if (error) console.error('achievements load error:', error.message);
   return data || [];
 };
 
@@ -429,6 +430,11 @@ const renderAchievementsSection = (all, unlockedIds) => {
   const grouped = {};
   TIER_ORDER.forEach(t => { grouped[t] = []; });
   all.forEach(a => { if (grouped[a.tier]) grouped[a.tier].push(a); });
+
+  if (!all.length) {
+    container.innerHTML = '';
+    return;
+  }
 
   container.innerHTML = `
     <div class="achievements-section">
