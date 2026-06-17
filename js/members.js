@@ -138,15 +138,18 @@ const clearStatus = id => $(id)?.classList.add('hidden');
 let _currentUser = null;
 let _selectedHeroes = [];
 
+const TITLES = ['Newcomer', 'Oldtimer', 'Judge', 'BAF Staff'];
+
 const loadProfile = async (userId) => {
   const { data } = await _sb
     .from('profiles')
-    .select('discord_pseudo, favorite_heroes')
+    .select('discord_pseudo, favorite_heroes, title')
     .eq('id', userId)
     .single();
   return {
     discord_pseudo: data?.discord_pseudo || '',
     favorite_heroes: Array.isArray(data?.favorite_heroes) ? data.favorite_heroes : [],
+    title: data?.title || '',
   };
 };
 
@@ -155,6 +158,7 @@ const heroById = id => HEROES.find(h => h.id === id);
 const renderProfileDisplay = (profile) => {
   const content = $('member-content');
   const discord = profile.discord_pseudo || '';
+  const title   = profile.title || '';
   const heroes  = (profile.favorite_heroes || []).map(heroById).filter(Boolean);
 
   const heroHTML = heroes.length
@@ -170,6 +174,12 @@ const renderProfileDisplay = (profile) => {
       <div class="profile-header">
         <h3>Mon profil</h3>
         <button id="profile-edit-btn" class="button">Modifier</button>
+      </div>
+      <div class="profile-field">
+        <span class="profile-label">Titre</span>
+        ${title
+          ? `<span class="profile-title-badge">${title.replace(/</g, '&lt;')}</span>`
+          : '<span style="opacity:.4;font-style:italic">Aucun titre</span>'}
       </div>
       <div class="profile-field">
         <span class="profile-label">Discord</span>
@@ -188,13 +198,23 @@ const renderProfileDisplay = (profile) => {
 
 const renderProfileEdit = (profile) => {
   _selectedHeroes = [...(profile.favorite_heroes || [])];
-  const content   = $('member-content');
+  const content    = $('member-content');
   const discordVal = (profile.discord_pseudo || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const currentTitle = profile.title || '';
+
+  const titleOptions = ['', ...TITLES].map(t =>
+    `<option value="${t}"${t === currentTitle ? ' selected' : ''}>${t || '— Aucun titre —'}</option>`
+  ).join('');
 
   content.innerHTML = `
     <div class="profile-card">
       <div class="profile-header">
         <h3>Modifier mon profil</h3>
+      </div>
+      <div class="profile-field">
+        <label class="profile-label" for="edit-title">Titre</label>
+        <select id="edit-title" class="profile-input profile-select">${titleOptions}</select>
+        <p class="profile-hint">D'autres titres seront disponibles selon vos accomplissements.</p>
       </div>
       <div class="profile-field">
         <label class="profile-label" for="edit-discord">Discord</label>
@@ -269,10 +289,11 @@ const saveProfile = async () => {
 
   const discord_pseudo  = $('edit-discord').value.trim();
   const favorite_heroes = _selectedHeroes;
+  const title           = $('edit-title').value;
 
   const { error } = await _sb
     .from('profiles')
-    .update({ discord_pseudo, favorite_heroes })
+    .update({ discord_pseudo, favorite_heroes, title })
     .eq('id', _currentUser.id);
 
   if (error) {
@@ -282,7 +303,7 @@ const saveProfile = async () => {
     return;
   }
 
-  renderProfileDisplay({ discord_pseudo, favorite_heroes });
+  renderProfileDisplay({ discord_pseudo, favorite_heroes, title });
 };
 
 /* ---- Auth UI ---- */
