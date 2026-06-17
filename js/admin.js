@@ -314,7 +314,13 @@ const loadEventsFromServer = async () => {
     const r = await fetch('/api/events');
     if (!r.ok) return;
     const serverEvents = await r.json();
-    if (!Array.isArray(serverEvents) || !serverEvents.length) return;
+    if (!Array.isArray(serverEvents)) return;
+    if (serverEvents.length === 0) {
+      // Server has no events — push all local events up to seed it
+      const local = loadAdminEvents();
+      for (const ev of local) await syncEventToServer(ev);
+      return;
+    }
     const local = loadAdminEvents();
     const merged = serverEvents.map(sv => {
       const existing = local.find(l => l.slug === sv.slug);
