@@ -354,7 +354,7 @@ const searchByHero = async () => {
   const { data, error } = await _sb
     .from('profiles')
     .select('pseudo, discord_pseudo, title')
-    .contains('favorite_heroes', [heroId])
+    .filter('favorite_heroes', 'cs', JSON.stringify([heroId]))
     .limit(20);
   if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
   const hero = heroById(heroId);
