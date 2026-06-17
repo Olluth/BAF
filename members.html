@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espace membre | BAF TCG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" href="images/baf_logo_mini.png" type="image/png" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><img src="images/baf_logo.png" alt="LA BAF" /></a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
+        <a href="about.html" data-i18n="nav.about">L'Asso</a>
+        <a href="events.html" data-i18n="nav.events">Évènements</a>
+        <a href="news.html" data-i18n="nav.news">Actualités</a>
+        <a href="resources.html" data-i18n="nav.resources">Ressources</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
+      </nav>
+      <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow">BAF</span>
+          <h1>Espace membre</h1>
+        </div>
+
+        <!-- Auth card (shown when logged out) -->
+        <div id="auth-container" class="admin-login-page">
+          <div class="admin-login-card">
+
+            <div class="admin-tabs" style="margin-bottom:1.5rem">
+              <button class="admin-tab active" data-tab="signin">Se connecter</button>
+              <button class="admin-tab" data-tab="signup">Créer un compte</button>
+            </div>
+
+            <!-- Sign in -->
+            <div id="signin-panel">
+              <form id="signin-form" class="admin-login-form">
+                <label for="signin-email">Email</label>
+                <input type="email" id="signin-email" required autocomplete="email" placeholder="votre@email.com" />
+                <label for="signin-password" style="margin-top:1rem">Mot de passe</label>
+                <input type="password" id="signin-password" required autocomplete="current-password" placeholder="••••••••" />
+                <div id="signin-status" class="admin-login-error hidden"></div>
+                <button type="submit" class="button button-primary" id="signin-btn" style="width:100%;margin-top:1.25rem">Se connecter</button>
+              </form>
+            </div>
+
+            <!-- Sign up -->
+            <div id="signup-panel" class="hidden">
+              <form id="signup-form" class="admin-login-form">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" required autocomplete="email" placeholder="votre@email.com" />
+                <label for="signup-password" style="margin-top:1rem">Mot de passe <small style="opacity:.5">(8 caractères min.)</small></label>
+                <input type="password" id="signup-password" required autocomplete="new-password" placeholder="••••••••" minlength="8" />
+                <div id="signup-status" class="admin-login-error hidden"></div>
+                <button type="submit" class="button button-primary" id="signup-btn" style="width:100%;margin-top:1.25rem">Créer mon compte</button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Member dashboard (shown when logged in) -->
+        <div id="member-dashboard" class="hidden">
+          <div class="member-header">
+            <p id="member-email" class="member-email"></p>
+            <button class="button" id="signout-btn">Se déconnecter</button>
+          </div>
+          <div id="member-content" class="member-content">
+            <p style="opacity:.5;font-style:italic">Contenu membre à venir…</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2026 BAF TCG Association.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/members.js"></script>
+</body>
+</html>
