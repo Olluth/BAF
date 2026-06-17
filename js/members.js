@@ -11,8 +11,8 @@ const $ = id => document.getElementById(id);
 /* ---- Hero data ---- */
 
 const CLASS_ORDER = [
-  'Assassin', 'Brute', 'Guardian', 'Illusionist',
-  'Mechanologist', 'Ninja', 'Ranger', 'Runeblade', 'Warrior', 'Wizard',
+  'Assassin', 'Brute', 'Guardian', 'Illusionist', 'Marchand',
+  'Mechanologist', 'Ninja', 'Ranger', 'Runeblade', 'Warrior', 'Wizard', 'Autres',
 ];
 
 const CLASS_COLORS = {
@@ -20,12 +20,14 @@ const CLASS_COLORS = {
   Brute:         '#e08a4a',
   Guardian:      '#e0c84a',
   Illusionist:   '#a8d8e8',
+  Marchand:      '#e0a84a',
   Mechanologist: '#4ae0d8',
   Ninja:         '#e04a4a',
   Ranger:        '#5ad870',
   Runeblade:     '#c04ae0',
   Warrior:       '#5a90e0',
   Wizard:        '#5ab4f0',
+  Autres:        '#888888',
 };
 
 const HEROES = [
@@ -33,12 +35,9 @@ const HEROES = [
   { id: 'arakni_m',    name: 'Arakni, Marionette',           img: 'icon_arakni_m.webp',        class: 'Assassin' },
   { id: 'arakni_sttc', name: 'Arakni, Sow the Seeds',        img: 'icon_arakni_sttc-1.webp',   class: 'Assassin' },
   { id: 'arakni_th',   name: 'Arakni, Thousand Hands',       img: 'icon_arakni_th-1.webp',     class: 'Assassin' },
-  { id: 'kavdaen',     name: 'Kavdaen',                       img: 'icon_kavdaen.webp',          class: 'Assassin' },
-  { id: 'marlynn',     name: 'Marlynn',                       img: 'icon_marlynn.webp',          class: 'Assassin' },
+  { id: 'marlynn',     name: 'Marlynn',                       img: 'icon_marlynn.webp',          class: 'Ranger' },
   { id: 'uzuri',       name: 'Uzuri',                         img: 'icon_uzuri.webp',            class: 'Assassin' },
   // Brute
-  { id: 'baalghor',    name: "Baal'Ghor",                     img: 'icon_baalghor_oote.webp',   class: 'Brute' },
-  { id: 'genis',       name: 'Genis',                         img: 'icon_genis.webp',            class: 'Brute' },
   { id: 'gravybones',  name: 'Gravy Bones',                   img: 'icon_gravybones.webp',       class: 'Brute' },
   { id: 'kayo_ad',     name: 'Kayo, Armed Diplomacy',         img: 'icon_kayo_ad.webp',          class: 'Brute' },
   { id: 'kayo_br',     name: 'Kayo, Berserker Runt',          img: 'icon_kayo_br_resized.png',  class: 'Brute' },
@@ -58,22 +57,25 @@ const HEROES = [
   { id: 'oldhim',      name: 'Oldhim',                        img: 'icon_oldhim-1.webp',        class: 'Guardian' },
   { id: 'terra',       name: 'Terra',                         img: 'icon_terra.webp',            class: 'Guardian' },
   { id: 'valda',       name: 'Valda',                         img: 'icon_valda.webp',            class: 'Guardian' },
-  { id: 'verdance',    name: 'Verdance',                      img: 'icon_verdance.webp',         class: 'Guardian' },
+  { id: 'verdance',    name: 'Verdance',                      img: 'icon_verdance.webp',         class: 'Wizard' },
   // Illusionist
   { id: 'dromai',      name: 'Dromai',                        img: 'icon_dromai.webp',           class: 'Illusionist' },
   { id: 'enigma',      name: 'Enigma',                        img: 'icon_enigma.webp',           class: 'Illusionist' },
   { id: 'lyath',       name: 'Lyath',                         img: 'icon_lyath-2.webp',         class: 'Illusionist' },
   { id: 'melody',      name: 'Melody',                        img: 'icon_melody.webp',           class: 'Illusionist' },
-  { id: 'pleiades',    name: 'Pleiades',                      img: 'icon_pleiades-1.webp',      class: 'Illusionist' },
+  { id: 'pleiades',    name: 'Pleiades',                      img: 'icon_pleiades-1.webp',      class: 'Guardian' },
   { id: 'prism_soa',   name: 'Prism, Sculptor of Arc Light',  img: 'icon_prism_soa.webp',       class: 'Illusionist' },
   { id: 'prism_aos',   name: 'Prism, Advent of Thrones',      img: 'icon_prism_aos.webp',       class: 'Illusionist' },
+  // Marchand
+  { id: 'genis',       name: 'Genis',                         img: 'icon_genis.webp',            class: 'Marchand' },
+  { id: 'kavdaen',     name: 'Kavdaen',                       img: 'icon_kavdaen.webp',          class: 'Marchand' },
   // Mechanologist
   { id: 'dash_ie',     name: 'Dash, Inventor Extraordinaire', img: 'icon_dash_ie.webp',          class: 'Mechanologist' },
   { id: 'dash_io',     name: 'Dash, Into Oblivion',           img: 'icon_dash_io.webp',          class: 'Mechanologist' },
   { id: 'datadoll',    name: 'Data Doll',                     img: 'icon_datadoll.webp',         class: 'Mechanologist' },
   { id: 'frankie',     name: 'Frankie',                       img: 'icon_frankie.webp',          class: 'Mechanologist' },
   { id: 'maxxnitro',   name: 'Maxx Nitro',                    img: 'icon_maxxnitro.webp',        class: 'Mechanologist' },
-  { id: 'riptide',     name: 'Riptide',                       img: 'icon_riptide.webp',          class: 'Mechanologist' },
+  { id: 'riptide',     name: 'Riptide',                       img: 'icon_riptide.webp',          class: 'Ranger' },
   { id: 'teklovossen', name: 'Teklovossen',                   img: 'icon_teklovossen.webp',      class: 'Mechanologist' },
   { id: 'zyggy',       name: 'Zyggy',                         img: 'icon_zyggy-1.webp',         class: 'Mechanologist' },
   // Ninja
@@ -82,11 +84,11 @@ const HEROES = [
   { id: 'fang',        name: 'Fang',                          img: 'icon_fang.webp',             class: 'Ninja' },
   { id: 'katsu',       name: 'Katsu',                         img: 'icon_katsu.webp',            class: 'Ninja' },
   { id: 'nuu',         name: 'Nuu',                           img: 'icon_nuu.webp',              class: 'Ninja' },
-  { id: 'yoji',        name: 'Yoji',                          img: 'icon_yoji.webp',             class: 'Ninja' },
+  { id: 'yoji',        name: 'Yoji',                          img: 'icon_yoji.webp',             class: 'Guardian' },
   { id: 'zen',         name: 'Zen',                           img: 'icon_zen.webp',              class: 'Ninja' },
   // Ranger
   { id: 'azalea',      name: 'Azalea',                        img: 'icon_azalea.webp',           class: 'Ranger' },
-  { id: 'betsy',       name: 'Betsy',                         img: 'icon_betsy.webp',            class: 'Ranger' },
+  { id: 'betsy',       name: 'Betsy',                         img: 'icon_betsy.webp',            class: 'Guardian' },
   { id: 'lexi',        name: 'Lexi',                          img: 'icon_lexi.webp',             class: 'Ranger' },
   // Runeblade
   { id: 'briar',       name: 'Briar',                         img: 'icon_briar.webp',            class: 'Runeblade' },
@@ -94,7 +96,7 @@ const HEROES = [
   { id: 'viserai',     name: 'Viserai',                       img: 'icon_viserai.webp',          class: 'Runeblade' },
   { id: 'vynnset',     name: 'Vynnset',                       img: 'icon_vynnset.webp',          class: 'Runeblade' },
   // Warrior
-  { id: 'blaze',       name: 'Blaze',                         img: 'icon_blaze.webp',            class: 'Warrior' },
+  { id: 'blaze',       name: 'Blaze',                         img: 'icon_blaze.webp',            class: 'Wizard' },
   { id: 'boltyn',      name: 'Boltyn',                        img: 'icon_boltyn.webp',           class: 'Warrior' },
   { id: 'cindra',      name: 'Cindra',                        img: 'icon_cindra.webp',           class: 'Warrior' },
   { id: 'dorinthea',   name: 'Dorinthea',                     img: 'icon_dorinthea.webp',        class: 'Warrior' },
@@ -105,7 +107,9 @@ const HEROES = [
   { id: 'kassai_gs',   name: 'Kassai of Goldsteel',           img: 'icon_kassai_gs.webp',       class: 'Warrior' },
   { id: 'olympia',     name: 'Olympia',                       img: 'icon_olympia.webp',          class: 'Warrior' },
   { id: 'shiyana',     name: 'Shiyana',                       img: 'icon_shiyana.webp',          class: 'Warrior' },
-  { id: 'victor',      name: 'Victor',                        img: 'icon_victor.webp',           class: 'Warrior' },
+  { id: 'victor',      name: 'Victor',                        img: 'icon_victor.webp',           class: 'Guardian' },
+  // Autres
+  { id: 'baalghor',    name: "Baal'Ghor",                     img: 'icon_baalghor_oote.webp',   class: 'Autres' },
   // Wizard
   { id: 'aurora',      name: 'Aurora',                        img: 'icon_aurora.webp',           class: 'Wizard' },
   { id: 'aurora_lot',  name: 'Aurora, Legacy of Tempest',     img: 'icon_aurora_lot-2.webp',    class: 'Wizard' },
