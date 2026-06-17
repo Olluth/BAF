@@ -43,7 +43,7 @@ const translations = {
     'events.title': 'Événements à venir',
     'events.next': 'Prochain grand événement',
     'events.weekly': 'Rendez-vous hebdomadaires',
-    'events.card1.title': 'Championnats de France',
+    'events.card1.title': 'France National',
     'events.card1.desc': '26–28 juin 2026 — Grand tournoi national Flesh and Blood. Partenaire : Uchronies Games.',
     'events.card2.title': 'Armory du mardi',
     'events.card2.desc': 'Chaque mardi à 19h30 — Decaféine',
