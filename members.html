@@ -49,8 +49,8 @@
             <!-- Sign in -->
             <div id="signin-panel">
               <form id="signin-form" class="admin-login-form">
-                <label for="signin-email">Email</label>
-                <input type="email" id="signin-email" required autocomplete="email" placeholder="votre@email.com" />
+                <label for="signin-pseudo">Pseudo</label>
+                <input type="text" id="signin-pseudo" required autocomplete="username" placeholder="votre pseudo" />
                 <label for="signin-password" style="margin-top:1rem">Mot de passe</label>
                 <input type="password" id="signin-password" required autocomplete="current-password" placeholder="••••••••" />
                 <div id="signin-status" class="admin-login-error hidden"></div>
@@ -61,7 +61,9 @@
             <!-- Sign up -->
             <div id="signup-panel" class="hidden">
               <form id="signup-form" class="admin-login-form">
-                <label for="signup-email">Email</label>
+                <label for="signup-pseudo">Pseudo</label>
+                <input type="text" id="signup-pseudo" required autocomplete="username" placeholder="votre pseudo" />
+                <label for="signup-email" style="margin-top:1rem">Email</label>
                 <input type="email" id="signup-email" required autocomplete="email" placeholder="votre@email.com" />
                 <label for="signup-password" style="margin-top:1rem">Mot de passe <small style="opacity:.5">(8 caractères min.)</small></label>
                 <input type="password" id="signup-password" required autocomplete="new-password" placeholder="••••••••" minlength="8" />
