@@ -8,7 +8,9 @@ const db      = require('./db');
 
 const app          = express();
 const PORT         = Number(process.env.PORT) || 3001;
-const API_KEY      = process.env.API_KEY || '';
+const API_KEY              = process.env.API_KEY || '';
+const SUPABASE_URL         = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 const DATA_DIR      = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
 const EVENTS_FILE   = path.join(DATA_DIR, 'events.json');
@@ -119,6 +121,34 @@ app.post('/api/players', requireAuth, (req, res) => {
   const cleaned = players.map(p => String(p).trim()).filter(Boolean);
   savePlayersData(cleaned);
   res.json({ ok: true, count: cleaned.length });
+});
+
+/* ---- Members ---- */
+
+const supabaseAdminHeaders = () => ({
+  'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+  'apikey': SUPABASE_SERVICE_KEY,
+});
+
+app.get('/api/members', requireAuth, async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return res.status(503).json({ error: 'Supabase not configured' });
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=1000`, { headers: supabaseAdminHeaders() });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    const data = await r.json();
+    res.json(data.users || []);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/members/:id', requireAuth, async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return res.status(503).json({ error: 'Supabase not configured' });
+  const { id } = req.params;
+  if (!id || !/^[0-9a-f-]{36}$/.test(id)) return res.status(400).json({ error: 'invalid id' });
+  try {
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${id}`, { method: 'DELETE', headers: supabaseAdminHeaders() });
+    if (!r.ok) throw new Error(`Supabase ${r.status}`);
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 /* ---- Events ---- */

@@ -400,10 +400,12 @@ const switchTab = (tab) => {
   $('panel-articles').classList.toggle('hidden', tab !== 'articles');
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
+  $('panel-members').classList.toggle('hidden', tab !== 'members');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'events') loadEventsFromServer();
   if (tab === 'players') syncPlayersToServer();
+  if (tab === 'members') loadMembers();
 };
 
 // --- Analytics ---
@@ -581,6 +583,55 @@ const closeEventForm = () => {
   $('event-form-container').classList.add('hidden');
 };
 
+// --- Members ---
+
+const setMembersStatus = (msg, isError = false) => {
+  const el = $('members-status');
+  if (!el) return;
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.textContent = msg;
+};
+
+const renderMemberList = (members) => {
+  const list = $('member-list');
+  if (!list) return;
+  if (!members.length) {
+    list.innerHTML = `<li class="admin-list-empty">Aucun membre inscrit.</li>`;
+    return;
+  }
+  list.innerHTML = members.map(m => {
+    const date      = new Date(m.created_at).toLocaleDateString('fr-FR');
+    const confirmed = m.email_confirmed_at ? '✓ confirmé' : '⏳ en attente';
+    return `
+    <li class="admin-list-item">
+      <div class="admin-list-item-info">
+        <span class="admin-list-item-title">${escapeHtml(m.email)}</span>
+        <span class="admin-list-item-meta">${date} · ${confirmed}</span>
+      </div>
+      <div class="admin-list-item-actions">
+        <button class="button admin-btn-danger" data-action="delete-member" data-id="${escapeAttr(m.id)}" data-email="${escapeAttr(m.email)}">Supprimer</button>
+      </div>
+    </li>`;
+  }).join('');
+};
+
+const loadMembers = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setMembersStatus('Clé API requise (onglet Analytics).', true); return; }
+  setMembersStatus('Chargement…');
+  try {
+    const r = await fetch('/api/members', { headers: { Authorization: `Bearer ${key}` } });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const members = await r.json();
+    setMembersStatus('');
+    renderMemberList(members);
+  } catch (err) {
+    setMembersStatus(`Erreur : ${err.message}`, true);
+  }
+};
+
 // --- Event Wiring ---
 
 const wireEvents = () => {
@@ -676,6 +727,27 @@ const wireEvents = () => {
       removePlayer(name);
       renderPlayerList();
       await syncPlayersToServer();
+    }
+  });
+
+  $('member-list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action="delete-member"]');
+    if (!btn) return;
+    const { id, email } = btn.dataset;
+    if (!confirm(`Supprimer le compte de ${email} ? Cette action est irréversible.`)) return;
+    const key = getAnalyticsKey();
+    if (!key) return;
+    btn.disabled = true;
+    try {
+      const r = await fetch(`/api/members/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      await loadMembers();
+    } catch (err) {
+      setMembersStatus(`Erreur : ${err.message}`, true);
+      btn.disabled = false;
     }
   });
 

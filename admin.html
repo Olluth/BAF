@@ -42,6 +42,7 @@
           <button class="admin-tab active" data-tab="articles" data-i18n="admin.tab.articles">Articles</button>
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs</button>
           <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Événements</button>
+          <button class="admin-tab" data-tab="members">Membres</button>
           <button class="admin-tab" data-tab="analytics">Analytics</button>
         </nav>
         <div class="sidebar-bottom">
@@ -144,6 +145,15 @@
                   <p class="admin-panel-desc" style="color:rgba(249,230,197,.45)">Configure ta clé API dans l'onglet Analytics d'abord.</p>
                 </div>
               </div>
+            </div>
+
+            <!-- Panneau Membres -->
+            <div id="panel-members" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2>Membres</h2>
+              </div>
+              <div id="members-status" class="tracker-status hidden"></div>
+              <ul id="member-list" class="admin-list"></ul>
             </div>
 
             <!-- Panneau Analytics -->
