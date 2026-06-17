@@ -137,6 +137,7 @@ const clearStatus = id => $(id)?.classList.add('hidden');
 
 let _currentUser = null;
 let _selectedHeroes = [];
+let _cachedAchievements = null;
 
 const TITLES = ['Newcomer', 'Oldtimer', 'Judge', 'BAF Staff'];
 
@@ -468,18 +469,22 @@ const showDashboard = async (user) => {
   $('member-email').textContent = `Bonjour, ${pseudo} !`;
   const [profile, allAchievements, memberAchievements] = await Promise.all([
     loadProfile(user.id),
-    loadAllAchievements(),
+    _cachedAchievements ? Promise.resolve(_cachedAchievements) : loadAllAchievements(),
     loadMemberAchievements(user.id),
   ]);
+  _cachedAchievements = allAchievements;
   renderProfileDisplay(profile);
   renderSearchSection();
   renderAchievementsSection(allAchievements, memberAchievements);
 };
 
-const showAuth = () => {
+const showAuth = async () => {
   _currentUser = null;
   $('auth-container').classList.remove('hidden');
   $('member-dashboard').classList.add('hidden');
+  const all = _cachedAchievements || await loadAllAchievements();
+  _cachedAchievements = all;
+  renderAchievementsSection(all, []);
 };
 
 /* ---- Tab switching ---- */
