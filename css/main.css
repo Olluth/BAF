@@ -1032,6 +1032,66 @@ textarea::placeholder {
   display: block;
 }
 
+/* ---- Activity feed (index page) ---- */
+
+.activity-feed {
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .6rem .9rem;
+  background: rgba(249, 230, 197, .03);
+  border: 1px solid rgba(249, 230, 197, .08);
+  border-radius: 10px;
+  font-size: .88rem;
+  flex-wrap: wrap;
+}
+
+.feed-badge {
+  flex-shrink: 0;
+  padding: .15rem .55rem;
+  border-radius: 20px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.feed-badge-new {
+  background: rgba(94, 196, 130, .12);
+  border: 1px solid rgba(94, 196, 130, .3);
+  color: #5ec482;
+}
+
+.feed-text {
+  flex: 1;
+  color: rgba(249, 230, 197, .7);
+  min-width: 0;
+}
+
+.feed-text strong {
+  color: #f9e6c5;
+}
+
+.feed-time {
+  font-size: .72rem;
+  opacity: .38;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.feed-empty {
+  opacity: .38;
+  font-style: italic;
+  font-size: .88rem;
+}
+
 /* ---- Achievements (members page) ---- */
 
 .achievements-section {
