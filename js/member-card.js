@@ -56,14 +56,13 @@
     const title  = data?.title || '';
     const heroes = Array.isArray(data?.favorite_heroes) ? data.favorite_heroes : [];
 
-    document.getElementById('flash-name').textContent = pseudo;
+    const nameEl = document.getElementById('flash-name');
+    if (nameEl) nameEl.textContent = pseudo;
 
     const titleEl = document.getElementById('flash-title');
-    if (title) {
-      titleEl.textContent = title;
-      titleEl.classList.remove('hidden');
-    } else {
-      titleEl.classList.add('hidden');
+    if (titleEl) {
+      if (title) { titleEl.textContent = title; titleEl.classList.remove('hidden'); }
+      else titleEl.classList.add('hidden');
     }
 
     document.getElementById('flash-heroes').innerHTML = heroes
