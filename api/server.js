@@ -12,6 +12,7 @@ const API_KEY      = process.env.API_KEY || '';
 const DATA_DIR      = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
 const EVENTS_FILE   = path.join(DATA_DIR, 'events.json');
+const PLAYERS_FILE  = path.join(DATA_DIR, 'players.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
@@ -31,6 +32,14 @@ const loadEventsData = () => {
   } catch { return []; }
 };
 const saveEventsData = (events) => fs.writeFileSync(EVENTS_FILE, JSON.stringify(events, null, 2));
+
+const loadPlayersData = () => {
+  try {
+    if (!fs.existsSync(PLAYERS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+  } catch { return []; }
+};
+const savePlayersData = (players) => fs.writeFileSync(PLAYERS_FILE, JSON.stringify(players, null, 2));
 
 /* ---- Analytics ---- */
 
@@ -95,6 +104,21 @@ app.get('/api/standings/:slug', (req, res) => {
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(file);
+});
+
+/* ---- Players ---- */
+
+app.get('/api/players', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(loadPlayersData());
+});
+
+app.post('/api/players', requireAuth, (req, res) => {
+  const { players } = req.body || {};
+  if (!Array.isArray(players)) return res.status(400).json({ error: 'invalid data' });
+  const cleaned = players.map(p => String(p).trim()).filter(Boolean);
+  savePlayersData(cleaned);
+  res.json({ ok: true, count: cleaned.length });
 });
 
 /* ---- Events ---- */

@@ -6,13 +6,27 @@ const STANDINGS_BASE = '/api/standings/';
 
 /* ---- Storage ---- */
 
-const loadTrackedPlayers = () => {
+let _trackedPlayers = [];
+
+const fetchTrackedPlayers = async () => {
+  try {
+    const r = await fetch('/api/players');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (Array.isArray(data)) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+      _trackedPlayers = data.map(n => n.trim()).filter(Boolean);
+      return;
+    }
+  } catch {}
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const p   = raw ? JSON.parse(raw) : [];
-    return Array.isArray(p) ? p.map(n => n.trim()).filter(Boolean) : [];
-  } catch { return []; }
+    _trackedPlayers = Array.isArray(p) ? p.map(n => n.trim()).filter(Boolean) : [];
+  } catch { _trackedPlayers = []; }
 };
+
+const loadTrackedPlayers = () => _trackedPlayers;
 
 const fetchEvents = async () => {
   try {
@@ -277,6 +291,7 @@ const wireEvents = () => {
 };
 
 const initialize = async () => {
+  await fetchTrackedPlayers();
   renderVisitorPlayerList();
   await populateEventDropdown();
   wireEvents();

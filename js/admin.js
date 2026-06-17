@@ -286,6 +286,18 @@ const updateAdminEvent = (id, changes) => {
 
 const deleteAdminEvent = (id) => saveAdminEvents(loadAdminEvents().filter((e) => e.id !== id));
 
+const syncPlayersToServer = async () => {
+  const key = getAnalyticsKey();
+  if (!key) return;
+  try {
+    await fetch('/api/players', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ players: loadPlayers() }),
+    });
+  } catch {}
+};
+
 const syncEventToServer = async (event) => {
   const key = getAnalyticsKey();
   if (!key) return;
@@ -391,6 +403,7 @@ const switchTab = (tab) => {
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'events') loadEventsFromServer();
+  if (tab === 'players') syncPlayersToServer();
 };
 
 // --- Analytics ---
@@ -646,21 +659,23 @@ const wireEvents = () => {
     }
   });
 
-  $('add-player-form').addEventListener('submit', (e) => {
+  $('add-player-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = $('player-input');
     addPlayer(input.value);
     input.value = '';
     renderPlayerList();
+    await syncPlayersToServer();
   });
 
-  $('player-list').addEventListener('click', (e) => {
+  $('player-list').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action="remove-player"]');
     if (!btn) return;
     const name = btn.dataset.name;
     if (confirm(t('admin.players.confirmRemove', { name }))) {
       removePlayer(name);
       renderPlayerList();
+      await syncPlayersToServer();
     }
   });
 
