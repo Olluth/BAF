@@ -403,6 +403,61 @@ const renderSearchSection = () => {
   $('search-hero-btn').addEventListener('click', searchByHero);
 };
 
+/* ---- Achievements ---- */
+
+const TIER_ORDER = ['Silver', 'Gold', 'Diamond'];
+const TIER_LABELS = { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' };
+
+const loadAllAchievements = async () => {
+  const { data } = await _sb.from('achievements').select('*').order('category').order('name');
+  return data || [];
+};
+
+const loadMemberAchievements = async (userId) => {
+  const { data } = await _sb
+    .from('member_achievements')
+    .select('achievement_id')
+    .eq('member_id', userId);
+  return (data || []).map(r => r.achievement_id);
+};
+
+const renderAchievementsSection = (all, unlockedIds) => {
+  const container = $('member-achievements');
+  if (!container) return;
+  const unlocked = new Set(unlockedIds);
+  const grouped = {};
+  TIER_ORDER.forEach(t => { grouped[t] = []; });
+  all.forEach(a => { if (grouped[a.tier]) grouped[a.tier].push(a); });
+
+  container.innerHTML = `
+    <div class="achievements-section">
+      <div class="achievements-header">
+        <h3 class="search-title">Hauts faits</h3>
+        <span class="achievements-progress">${unlocked.size} / ${all.length}</span>
+      </div>
+      ${TIER_ORDER.map(tier => {
+        const list = grouped[tier];
+        if (!list.length) return '';
+        return `
+          <div class="achievements-tier">
+            <div class="ach-tier-badge ach-tier-${tier.toLowerCase()}">${TIER_LABELS[tier] || tier}</div>
+            <div class="achievements-grid">
+              ${list.map(a => {
+                const done = unlocked.has(a.id);
+                return `<div class="achievement-card${done ? ' achievement-unlocked' : ''}">
+                  <div class="achievement-status">${done ? '✓' : '○'}</div>
+                  <div class="achievement-body">
+                    <span class="achievement-name">${a.name.replace(/</g,'&lt;')}</span>
+                    <span class="achievement-desc">${a.description.replace(/</g,'&lt;')}</span>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      }).join('')}
+    </div>`;
+};
+
 /* ---- Auth UI ---- */
 
 const showDashboard = async (user) => {
@@ -411,9 +466,14 @@ const showDashboard = async (user) => {
   $('member-dashboard').classList.remove('hidden');
   const pseudo = user.user_metadata?.pseudo || user.email;
   $('member-email').textContent = `Bonjour, ${pseudo} !`;
-  const profile = await loadProfile(user.id);
+  const [profile, allAchievements, memberAchievements] = await Promise.all([
+    loadProfile(user.id),
+    loadAllAchievements(),
+    loadMemberAchievements(user.id),
+  ]);
   renderProfileDisplay(profile);
   renderSearchSection();
+  renderAchievementsSection(allAchievements, memberAchievements);
 };
 
 const showAuth = () => {

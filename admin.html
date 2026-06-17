@@ -43,6 +43,7 @@
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs</button>
           <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Événements</button>
           <button class="admin-tab" data-tab="members">Membres</button>
+          <button class="admin-tab" data-tab="achievements">Hauts faits</button>
           <button class="admin-tab" data-tab="analytics">Analytics</button>
         </nav>
         <div class="sidebar-bottom">
@@ -156,6 +157,33 @@
               <ul id="member-list" class="admin-list"></ul>
             </div>
 
+            <!-- Panneau Hauts faits -->
+            <div id="panel-achievements" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2>Hauts faits</h2>
+              </div>
+              <div id="achievements-status" class="tracker-status hidden"></div>
+
+              <!-- Connexion Supabase requise -->
+              <div id="ach-signin-section">
+                <p class="admin-panel-desc">Connectez-vous avec votre compte membre pour gérer les hauts faits.</p>
+                <form id="ach-signin-form" class="ach-signin-form" novalidate>
+                  <input type="email" id="ach-email" class="profile-input" placeholder="Email membre" required />
+                  <input type="password" id="ach-password" class="profile-input" placeholder="Mot de passe" required />
+                  <button type="submit" class="button button-primary">Se connecter</button>
+                </form>
+              </div>
+
+              <!-- Interface d'attribution -->
+              <div id="ach-grant-section" class="hidden">
+                <form id="ach-search-form" class="admin-add-form" novalidate>
+                  <input type="text" id="ach-member-search" placeholder="Pseudo exact du membre…" required />
+                  <button type="submit" class="button button-primary">Rechercher</button>
+                </form>
+                <div id="ach-member-result" class="hidden" style="margin-top:1.25rem"></div>
+              </div>
+            </div>
+
             <!-- Panneau Analytics -->
             <div id="panel-analytics" class="admin-panel-section hidden">
               <div class="admin-panel-header">
@@ -211,6 +239,7 @@
     </div><!-- /.site-layout -->
   </div><!-- /#dashboard -->
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/i18n.js"></script>
   <script src="js/admin.js"></script>
 </body>

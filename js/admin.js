@@ -401,11 +401,13 @@ const switchTab = (tab) => {
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
   $('panel-members').classList.toggle('hidden', tab !== 'members');
+  $('panel-achievements').classList.toggle('hidden', tab !== 'achievements');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'events') loadEventsFromServer();
   if (tab === 'players') syncPlayersToServer();
   if (tab === 'members') loadMembers();
+  if (tab === 'achievements') renderAchievementsPanel();
 };
 
 // --- Analytics ---
@@ -632,6 +634,164 @@ const loadMembers = async () => {
   }
 };
 
+// --- Achievements Admin ---
+
+const _ACH_SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
+const _ACH_SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
+let _achSb = null;
+const getAchSb = () => {
+  if (!_achSb && window.supabase) _achSb = window.supabase.createClient(_ACH_SUPABASE_URL, _ACH_SUPABASE_KEY);
+  return _achSb;
+};
+
+let _allAchievements = [];
+let _selectedMember = null;
+let _memberGranted = new Set();
+let _memberPending = new Set();
+
+const TIER_ORDER_ADM = ['Silver', 'Gold', 'Diamond'];
+const TIER_LABELS_ADM = { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' };
+
+const setAchStatus = (msg, isError = false) => {
+  const el = $('achievements-status');
+  if (!el) return;
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.textContent = msg;
+};
+
+const renderAchievementsPanel = async () => {
+  const sb = getAchSb();
+  if (!sb) return;
+  const { data: { session } } = await sb.auth.getSession();
+
+  if (!session) {
+    $('ach-signin-section')?.classList.remove('hidden');
+    $('ach-grant-section')?.classList.add('hidden');
+    setAchStatus('');
+    return;
+  }
+
+  const { data: profile } = await sb
+    .from('profiles').select('pseudo, is_admin').eq('id', session.user.id).single();
+
+  if (!profile?.is_admin) {
+    setAchStatus('Accès refusé — ce compte n\'est pas administrateur.', true);
+    $('ach-signin-section')?.classList.remove('hidden');
+    $('ach-grant-section')?.classList.add('hidden');
+    return;
+  }
+
+  const { data: allA } = await sb.from('achievements').select('*').order('category').order('name');
+  _allAchievements = allA || [];
+
+  $('ach-signin-section')?.classList.add('hidden');
+  $('ach-grant-section')?.classList.remove('hidden');
+  setAchStatus('');
+};
+
+const searchMemberForGrant = async () => {
+  const pseudo = $('ach-member-search')?.value.trim().toLowerCase();
+  if (!pseudo) return;
+  const sb = getAchSb();
+
+  const { data, error } = await sb
+    .from('profiles').select('id, pseudo, title').eq('pseudo', pseudo).single();
+
+  if (error || !data) {
+    setAchStatus('Membre introuvable.', true);
+    $('ach-member-result')?.classList.add('hidden');
+    return;
+  }
+
+  setAchStatus('');
+  _selectedMember = data;
+
+  const { data: granted } = await sb
+    .from('member_achievements').select('achievement_id').eq('member_id', data.id);
+  _memberGranted = new Set((granted || []).map(r => r.achievement_id));
+  _memberPending  = new Set(_memberGranted);
+
+  renderMemberAchievementGrid();
+};
+
+const renderMemberAchievementGrid = () => {
+  const result = $('ach-member-result');
+  if (!result || !_selectedMember) return;
+  result.classList.remove('hidden');
+
+  const grouped = {};
+  TIER_ORDER_ADM.forEach(t => { grouped[t] = []; });
+  _allAchievements.forEach(a => { if (grouped[a.tier]) grouped[a.tier].push(a); });
+
+  result.innerHTML = `
+    <div class="ach-member-header">
+      <span class="ach-member-name">${escapeHtml(_selectedMember.pseudo)}</span>
+      ${_selectedMember.title ? `<span class="profile-title-badge">${escapeHtml(_selectedMember.title)}</span>` : ''}
+      <span id="ach-count-label" style="opacity:.4;font-size:.82rem;margin-left:auto">${_memberPending.size} haut(s) fait(s)</span>
+    </div>
+    ${TIER_ORDER_ADM.map(tier => `
+      <div class="ach-tier-group">
+        <div class="ach-tier-badge ach-tier-${tier.toLowerCase()}">${TIER_LABELS_ADM[tier] || tier}</div>
+        <div class="ach-checkboxes">
+          ${grouped[tier].map(a => `
+            <label class="ach-checkbox-row${_memberPending.has(a.id) ? ' ach-granted' : ''}">
+              <input type="checkbox" data-achievement-id="${escapeAttr(a.id)}" ${_memberPending.has(a.id) ? 'checked' : ''} />
+              <span class="ach-checkbox-name">${escapeHtml(a.name)}</span>
+            </label>`).join('')}
+        </div>
+      </div>`).join('')}
+    <div style="display:flex;gap:.75rem;align-items:center;margin-top:1rem">
+      <button id="ach-save-btn" class="button button-primary">Sauvegarder les changements</button>
+      <span id="ach-save-status" style="font-size:.82rem;opacity:.7"></span>
+    </div>`;
+
+  result.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.dataset.achievementId;
+      if (cb.checked) _memberPending.add(id); else _memberPending.delete(id);
+      cb.closest('label').classList.toggle('ach-granted', cb.checked);
+      const lbl = $('ach-count-label');
+      if (lbl) lbl.textContent = `${_memberPending.size} haut(s) fait(s)`;
+    });
+  });
+
+  $('ach-save-btn').addEventListener('click', saveAchievementChanges);
+};
+
+const saveAchievementChanges = async () => {
+  if (!_selectedMember) return;
+  const btn = $('ach-save-btn');
+  const statusEl = $('ach-save-status');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+  if (statusEl) statusEl.textContent = '';
+
+  const toGrant  = [..._memberPending].filter(id => !_memberGranted.has(id));
+  const toRevoke = [..._memberGranted].filter(id => !_memberPending.has(id));
+  const sb = getAchSb();
+  let err = null;
+
+  if (toGrant.length) {
+    const { error } = await sb.from('member_achievements').insert(
+      toGrant.map(achievement_id => ({ member_id: _selectedMember.id, achievement_id }))
+    );
+    if (error) err = error;
+  }
+
+  if (!err && toRevoke.length) {
+    const { error } = await sb.from('member_achievements')
+      .delete().eq('member_id', _selectedMember.id).in('achievement_id', toRevoke);
+    if (error) err = error;
+  }
+
+  if (statusEl) statusEl.textContent = err ? `Erreur : ${err.message}` : 'Sauvegardé !';
+  if (!err) _memberGranted = new Set(_memberPending);
+  btn.disabled = false;
+  btn.textContent = 'Sauvegarder les changements';
+};
+
 // --- Event Wiring ---
 
 const wireEvents = () => {
@@ -848,6 +1008,23 @@ const wireEvents = () => {
       _analyticsDays = parseInt(btn.dataset.days);
       loadAnalytics();
     });
+  });
+
+  $('ach-signin-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const sb = getAchSb();
+    if (!sb) return;
+    const email    = $('ach-email')?.value.trim();
+    const password = $('ach-password')?.value;
+    setAchStatus('Connexion…');
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) { setAchStatus(error.message, true); return; }
+    renderAchievementsPanel();
+  });
+
+  $('ach-search-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await searchMemberForGrant();
   });
 
   document.addEventListener('langchange', () => {

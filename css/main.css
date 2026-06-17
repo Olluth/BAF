@@ -1032,6 +1032,196 @@ textarea::placeholder {
   display: block;
 }
 
+/* ---- Achievements (members page) ---- */
+
+.achievements-section {
+  max-width: 720px;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(249, 230, 197, .08);
+}
+
+.achievements-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.achievements-header .search-title {
+  margin: 0;
+}
+
+.achievements-progress {
+  font-size: .78rem;
+  opacity: .45;
+  font-family: 'Barlow', sans-serif;
+}
+
+.achievements-tier {
+  margin-bottom: 1.75rem;
+}
+
+.ach-tier-badge {
+  display: inline-block;
+  padding: .2rem .75rem;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: .75rem;
+}
+
+.ach-tier-silver {
+  background: rgba(192, 192, 192, .12);
+  border: 1px solid rgba(192, 192, 192, .35);
+  color: #c8c8c8;
+}
+
+.ach-tier-gold {
+  background: rgba(255, 215, 0, .1);
+  border: 1px solid rgba(255, 215, 0, .35);
+  color: #ffd700;
+}
+
+.ach-tier-diamond {
+  background: rgba(168, 232, 255, .1);
+  border: 1px solid rgba(168, 232, 255, .35);
+  color: #a8e8ff;
+}
+
+.achievements-grid {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.achievement-card {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding: .6rem .9rem;
+  background: rgba(249, 230, 197, .03);
+  border: 1px solid rgba(249, 230, 197, .07);
+  border-radius: 10px;
+  transition: border-color .12s, background .12s;
+  opacity: .55;
+}
+
+.achievement-card.achievement-unlocked {
+  opacity: 1;
+  background: rgba(201, 134, 10, .08);
+  border-color: rgba(201, 134, 10, .3);
+}
+
+.achievement-status {
+  font-size: .85rem;
+  color: rgba(249, 230, 197, .3);
+  flex-shrink: 0;
+  margin-top: .1rem;
+}
+
+.achievement-card.achievement-unlocked .achievement-status {
+  color: #c9860a;
+  font-weight: 700;
+}
+
+.achievement-body {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
+
+.achievement-name {
+  font-size: .88rem;
+  font-weight: 600;
+  color: #f9e6c5;
+}
+
+.achievement-desc {
+  font-size: .75rem;
+  opacity: .5;
+  line-height: 1.4;
+}
+
+/* ---- Admin: Achievements grant panel ---- */
+
+.ach-signin-form {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: .75rem;
+}
+
+.ach-signin-form input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.ach-member-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  padding: .75rem 1rem;
+  background: rgba(249, 230, 197, .04);
+  border: 1px solid rgba(249, 230, 197, .1);
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.ach-member-name {
+  font-weight: 700;
+  color: #f9e6c5;
+  font-size: 1rem;
+}
+
+.ach-tier-group {
+  margin-bottom: 1.25rem;
+}
+
+.ach-tier-group .ach-tier-badge {
+  margin-bottom: .6rem;
+}
+
+.ach-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+
+.ach-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(249, 230, 197, .1);
+  background: rgba(249, 230, 197, .03);
+  cursor: pointer;
+  font-size: .82rem;
+  color: rgba(249, 230, 197, .55);
+  transition: background .1s, border-color .1s, color .1s;
+}
+
+.ach-checkbox-row:hover {
+  background: rgba(249, 230, 197, .07);
+  border-color: rgba(249, 230, 197, .2);
+  color: #f9e6c5;
+}
+
+.ach-checkbox-row.ach-granted {
+  background: rgba(201, 134, 10, .1);
+  border-color: rgba(201, 134, 10, .35);
+  color: #e0b84a;
+}
+
+.ach-checkbox-name {
+  pointer-events: none;
+}
+
 /* ---- Footer ---- */
 
 .site-footer {
