@@ -602,6 +602,11 @@ textarea::placeholder {
   min-height: 8rem;
 }
 
+#nav-signin-link,
+#nav-signout-btn {
+  margin-left: 1.5rem;
+}
+
 /* ---- Member flash card (index page) ---- */
 
 .member-flash-section {
