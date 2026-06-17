@@ -10,81 +10,109 @@ const $ = id => document.getElementById(id);
 
 /* ---- Hero data ---- */
 
+const CLASS_ORDER = [
+  'Assassin', 'Brute', 'Guardian', 'Illusionist',
+  'Mechanologist', 'Ninja', 'Ranger', 'Runeblade', 'Warrior', 'Wizard',
+];
+
+const CLASS_COLORS = {
+  Assassin:      '#b07ce0',
+  Brute:         '#e08a4a',
+  Guardian:      '#e0c84a',
+  Illusionist:   '#a8d8e8',
+  Mechanologist: '#4ae0d8',
+  Ninja:         '#e04a4a',
+  Ranger:        '#5ad870',
+  Runeblade:     '#c04ae0',
+  Warrior:       '#5a90e0',
+  Wizard:        '#5ab4f0',
+};
+
 const HEROES = [
-  { id: 'arakni_m',    name: 'Arakni, Marionette',            img: 'icon_arakni_m.webp' },
-  { id: 'arakni_sttc', name: 'Arakni, Sow the Seeds',         img: 'icon_arakni_sttc-1.webp' },
-  { id: 'arakni_th',   name: 'Arakni, Thousand Hands',        img: 'icon_arakni_th-1.webp' },
-  { id: 'aurora',      name: 'Aurora',                         img: 'icon_aurora.webp' },
-  { id: 'aurora_lot',  name: 'Aurora, Legacy of Tempest',      img: 'icon_aurora_lot-2.webp' },
-  { id: 'azalea',      name: 'Azalea',                         img: 'icon_azalea.webp' },
-  { id: 'baalghor',    name: "Baal'Ghor",                      img: 'icon_baalghor_oote.webp' },
-  { id: 'benji',       name: 'Benji',                          img: 'icon_benji.webp' },
-  { id: 'betsy',       name: 'Betsy',                          img: 'icon_betsy.webp' },
-  { id: 'blaze',       name: 'Blaze',                          img: 'icon_blaze.webp' },
-  { id: 'boltyn',      name: 'Boltyn',                         img: 'icon_boltyn.webp' },
-  { id: 'bravo_s',     name: 'Bravo, Showstopper',             img: 'icon_bravo_s.webp' },
-  { id: 'bravo_fs',    name: 'Bravo, Forceful Sovereign',      img: 'icon_bravo_fs.webp' },
-  { id: 'bravo_sots',  name: 'Bravo, Strength of Spoils',      img: 'icon_bravo_sots.webp' },
-  { id: 'brevant',     name: 'Brevant',                        img: 'icon_brevant.webp' },
-  { id: 'briar',       name: 'Briar',                          img: 'icon_briar.webp' },
-  { id: 'chane',       name: 'Chane',                          img: 'icon_chane.webp' },
-  { id: 'cindra',      name: 'Cindra',                         img: 'icon_cindra.webp' },
-  { id: 'dash_ie',     name: 'Dash, Inventor Extraordinaire',  img: 'icon_dash_ie.webp' },
-  { id: 'dash_io',     name: 'Dash, Into Oblivion',            img: 'icon_dash_io.webp' },
-  { id: 'datadoll',    name: 'Data Doll',                      img: 'icon_datadoll.webp' },
-  { id: 'dorinthea',   name: 'Dorinthea',                      img: 'icon_dorinthea.webp' },
-  { id: 'dromai',      name: 'Dromai',                         img: 'icon_dromai.webp' },
-  { id: 'emperor',     name: 'Emperor',                        img: 'icon_emperor.webp' },
-  { id: 'enigma',      name: 'Enigma',                         img: 'icon_enigma.webp' },
-  { id: 'fai',         name: 'Fai',                            img: 'icon_fai.webp' },
-  { id: 'fang',        name: 'Fang',                           img: 'icon_fang.webp' },
-  { id: 'florian',     name: 'Florian',                        img: 'icon_florian.webp' },
-  { id: 'frankie',     name: 'Frankie',                        img: 'icon_frankie.webp' },
-  { id: 'genis',       name: 'Genis',                          img: 'icon_genis.webp' },
-  { id: 'gravybones',  name: 'Gravy Bones',                    img: 'icon_gravybones.webp' },
-  { id: 'hala',        name: 'Hala',                           img: 'icon_hala_pos.webp' },
-  { id: 'ira',         name: 'Ira',                            img: 'icon_ira.webp' },
-  { id: 'iyslander',   name: 'Iyslander',                      img: 'icon_iyslander.webp' },
-  { id: 'jarl',        name: 'Jarl',                           img: 'icon_jarl.webp' },
-  { id: 'kano',        name: 'Kano',                           img: 'icon_kano.webp' },
-  { id: 'kassai_cs',   name: 'Kassai, Cintari Sellsword',      img: 'icon_kassai_cs.webp' },
-  { id: 'kassai_gs',   name: 'Kassai of Goldsteel',            img: 'icon_kassai_gs.webp' },
-  { id: 'katsu',       name: 'Katsu',                          img: 'icon_katsu.webp' },
-  { id: 'kavdaen',     name: 'Kavdaen',                        img: 'icon_kavdaen.webp' },
-  { id: 'kayo_ad',     name: 'Kayo, Armed Diplomacy',          img: 'icon_kayo_ad.webp' },
-  { id: 'kayo_br',     name: 'Kayo, Berserker Runt',           img: 'icon_kayo_br_resized.png' },
-  { id: 'kayo_uc',     name: 'Kayo, Unwanted Cargo',           img: 'icon_kayo_uc-2.webp' },
-  { id: 'levia',       name: 'Levia',                          img: 'icon_levia.webp' },
-  { id: 'lexi',        name: 'Lexi',                           img: 'icon_lexi.webp' },
-  { id: 'lyath',       name: 'Lyath',                          img: 'icon_lyath-2.webp' },
-  { id: 'marlynn',     name: 'Marlynn',                        img: 'icon_marlynn.webp' },
-  { id: 'maxxnitro',   name: 'Maxx Nitro',                     img: 'icon_maxxnitro.webp' },
-  { id: 'melody',      name: 'Melody',                         img: 'icon_melody.webp' },
-  { id: 'nuu',         name: 'Nuu',                            img: 'icon_nuu.webp' },
-  { id: 'oldhim',      name: 'Oldhim',                         img: 'icon_oldhim-1.webp' },
-  { id: 'olympia',     name: 'Olympia',                        img: 'icon_olympia.webp' },
-  { id: 'oscilio',     name: 'Oscilio',                        img: 'icon_oscillio.webp' },
-  { id: 'oscilio_fc',  name: 'Oscilio, Forked Continuum',      img: 'icon_oscilio_fc-1.webp' },
-  { id: 'pleiades',    name: 'Pleiades',                       img: 'icon_pleiades-1.webp' },
-  { id: 'prism_soa',   name: 'Prism, Sculptor of Arc Light',   img: 'icon_prism_soa.webp' },
-  { id: 'prism_aos',   name: 'Prism, Advent of Thrones',       img: 'icon_prism_aos.webp' },
-  { id: 'puffin',      name: 'Puffin',                         img: 'icon_puffin.webp' },
-  { id: 'rhinar',      name: 'Rhinar',                         img: 'icon_rhinar_rr-1.webp' },
-  { id: 'riptide',     name: 'Riptide',                        img: 'icon_riptide.webp' },
-  { id: 'scurv',       name: 'Scurv',                          img: 'icon_scurv.webp' },
-  { id: 'shiyana',     name: 'Shiyana',                        img: 'icon_shiyana.webp' },
-  { id: 'teklovossen', name: 'Teklovossen',                    img: 'icon_teklovossen.webp' },
-  { id: 'terra',       name: 'Terra',                          img: 'icon_terra.webp' },
-  { id: 'tuffnut',     name: 'Tuffnut',                        img: 'icon_tuffnut-1.webp' },
-  { id: 'uzuri',       name: 'Uzuri',                          img: 'icon_uzuri.webp' },
-  { id: 'valda',       name: 'Valda',                          img: 'icon_valda.webp' },
-  { id: 'verdance',    name: 'Verdance',                       img: 'icon_verdance.webp' },
-  { id: 'victor',      name: 'Victor',                         img: 'icon_victor.webp' },
-  { id: 'viserai',     name: 'Viserai',                        img: 'icon_viserai.webp' },
-  { id: 'vynnset',     name: 'Vynnset',                        img: 'icon_vynnset.webp' },
-  { id: 'yoji',        name: 'Yoji',                           img: 'icon_yoji.webp' },
-  { id: 'zen',         name: 'Zen',                            img: 'icon_zen.webp' },
-  { id: 'zyggy',       name: 'Zyggy',                          img: 'icon_zyggy-1.webp' },
+  // Assassin
+  { id: 'arakni_m',    name: 'Arakni, Marionette',           img: 'icon_arakni_m.webp',        class: 'Assassin' },
+  { id: 'arakni_sttc', name: 'Arakni, Sow the Seeds',        img: 'icon_arakni_sttc-1.webp',   class: 'Assassin' },
+  { id: 'arakni_th',   name: 'Arakni, Thousand Hands',       img: 'icon_arakni_th-1.webp',     class: 'Assassin' },
+  { id: 'kavdaen',     name: 'Kavdaen',                       img: 'icon_kavdaen.webp',          class: 'Assassin' },
+  { id: 'marlynn',     name: 'Marlynn',                       img: 'icon_marlynn.webp',          class: 'Assassin' },
+  { id: 'uzuri',       name: 'Uzuri',                         img: 'icon_uzuri.webp',            class: 'Assassin' },
+  // Brute
+  { id: 'baalghor',    name: "Baal'Ghor",                     img: 'icon_baalghor_oote.webp',   class: 'Brute' },
+  { id: 'genis',       name: 'Genis',                         img: 'icon_genis.webp',            class: 'Brute' },
+  { id: 'gravybones',  name: 'Gravy Bones',                   img: 'icon_gravybones.webp',       class: 'Brute' },
+  { id: 'kayo_ad',     name: 'Kayo, Armed Diplomacy',         img: 'icon_kayo_ad.webp',          class: 'Brute' },
+  { id: 'kayo_br',     name: 'Kayo, Berserker Runt',          img: 'icon_kayo_br_resized.png',  class: 'Brute' },
+  { id: 'kayo_uc',     name: 'Kayo, Unwanted Cargo',          img: 'icon_kayo_uc-2.webp',       class: 'Brute' },
+  { id: 'levia',       name: 'Levia',                         img: 'icon_levia.webp',            class: 'Brute' },
+  { id: 'puffin',      name: 'Puffin',                        img: 'icon_puffin.webp',           class: 'Brute' },
+  { id: 'rhinar',      name: 'Rhinar',                        img: 'icon_rhinar_rr-1.webp',     class: 'Brute' },
+  { id: 'scurv',       name: 'Scurv',                         img: 'icon_scurv.webp',            class: 'Brute' },
+  { id: 'tuffnut',     name: 'Tuffnut',                       img: 'icon_tuffnut-1.webp',       class: 'Brute' },
+  // Guardian
+  { id: 'bravo_s',     name: 'Bravo, Showstopper',            img: 'icon_bravo_s.webp',          class: 'Guardian' },
+  { id: 'bravo_fs',    name: 'Bravo, Forceful Sovereign',     img: 'icon_bravo_fs.webp',         class: 'Guardian' },
+  { id: 'bravo_sots',  name: 'Bravo, Strength of Spoils',     img: 'icon_bravo_sots.webp',       class: 'Guardian' },
+  { id: 'brevant',     name: 'Brevant',                       img: 'icon_brevant.webp',          class: 'Guardian' },
+  { id: 'florian',     name: 'Florian',                       img: 'icon_florian.webp',          class: 'Guardian' },
+  { id: 'hala',        name: 'Hala',                          img: 'icon_hala_pos.webp',         class: 'Guardian' },
+  { id: 'oldhim',      name: 'Oldhim',                        img: 'icon_oldhim-1.webp',        class: 'Guardian' },
+  { id: 'terra',       name: 'Terra',                         img: 'icon_terra.webp',            class: 'Guardian' },
+  { id: 'valda',       name: 'Valda',                         img: 'icon_valda.webp',            class: 'Guardian' },
+  { id: 'verdance',    name: 'Verdance',                      img: 'icon_verdance.webp',         class: 'Guardian' },
+  // Illusionist
+  { id: 'dromai',      name: 'Dromai',                        img: 'icon_dromai.webp',           class: 'Illusionist' },
+  { id: 'enigma',      name: 'Enigma',                        img: 'icon_enigma.webp',           class: 'Illusionist' },
+  { id: 'lyath',       name: 'Lyath',                         img: 'icon_lyath-2.webp',         class: 'Illusionist' },
+  { id: 'melody',      name: 'Melody',                        img: 'icon_melody.webp',           class: 'Illusionist' },
+  { id: 'pleiades',    name: 'Pleiades',                      img: 'icon_pleiades-1.webp',      class: 'Illusionist' },
+  { id: 'prism_soa',   name: 'Prism, Sculptor of Arc Light',  img: 'icon_prism_soa.webp',       class: 'Illusionist' },
+  { id: 'prism_aos',   name: 'Prism, Advent of Thrones',      img: 'icon_prism_aos.webp',       class: 'Illusionist' },
+  // Mechanologist
+  { id: 'dash_ie',     name: 'Dash, Inventor Extraordinaire', img: 'icon_dash_ie.webp',          class: 'Mechanologist' },
+  { id: 'dash_io',     name: 'Dash, Into Oblivion',           img: 'icon_dash_io.webp',          class: 'Mechanologist' },
+  { id: 'datadoll',    name: 'Data Doll',                     img: 'icon_datadoll.webp',         class: 'Mechanologist' },
+  { id: 'frankie',     name: 'Frankie',                       img: 'icon_frankie.webp',          class: 'Mechanologist' },
+  { id: 'maxxnitro',   name: 'Maxx Nitro',                    img: 'icon_maxxnitro.webp',        class: 'Mechanologist' },
+  { id: 'riptide',     name: 'Riptide',                       img: 'icon_riptide.webp',          class: 'Mechanologist' },
+  { id: 'teklovossen', name: 'Teklovossen',                   img: 'icon_teklovossen.webp',      class: 'Mechanologist' },
+  { id: 'zyggy',       name: 'Zyggy',                         img: 'icon_zyggy-1.webp',         class: 'Mechanologist' },
+  // Ninja
+  { id: 'benji',       name: 'Benji',                         img: 'icon_benji.webp',            class: 'Ninja' },
+  { id: 'fai',         name: 'Fai',                           img: 'icon_fai.webp',              class: 'Ninja' },
+  { id: 'fang',        name: 'Fang',                          img: 'icon_fang.webp',             class: 'Ninja' },
+  { id: 'katsu',       name: 'Katsu',                         img: 'icon_katsu.webp',            class: 'Ninja' },
+  { id: 'nuu',         name: 'Nuu',                           img: 'icon_nuu.webp',              class: 'Ninja' },
+  { id: 'yoji',        name: 'Yoji',                          img: 'icon_yoji.webp',             class: 'Ninja' },
+  { id: 'zen',         name: 'Zen',                           img: 'icon_zen.webp',              class: 'Ninja' },
+  // Ranger
+  { id: 'azalea',      name: 'Azalea',                        img: 'icon_azalea.webp',           class: 'Ranger' },
+  { id: 'betsy',       name: 'Betsy',                         img: 'icon_betsy.webp',            class: 'Ranger' },
+  { id: 'lexi',        name: 'Lexi',                          img: 'icon_lexi.webp',             class: 'Ranger' },
+  // Runeblade
+  { id: 'briar',       name: 'Briar',                         img: 'icon_briar.webp',            class: 'Runeblade' },
+  { id: 'chane',       name: 'Chane',                         img: 'icon_chane.webp',            class: 'Runeblade' },
+  { id: 'viserai',     name: 'Viserai',                       img: 'icon_viserai.webp',          class: 'Runeblade' },
+  { id: 'vynnset',     name: 'Vynnset',                       img: 'icon_vynnset.webp',          class: 'Runeblade' },
+  // Warrior
+  { id: 'blaze',       name: 'Blaze',                         img: 'icon_blaze.webp',            class: 'Warrior' },
+  { id: 'boltyn',      name: 'Boltyn',                        img: 'icon_boltyn.webp',           class: 'Warrior' },
+  { id: 'cindra',      name: 'Cindra',                        img: 'icon_cindra.webp',           class: 'Warrior' },
+  { id: 'dorinthea',   name: 'Dorinthea',                     img: 'icon_dorinthea.webp',        class: 'Warrior' },
+  { id: 'emperor',     name: 'Emperor',                       img: 'icon_emperor.webp',          class: 'Warrior' },
+  { id: 'ira',         name: 'Ira',                           img: 'icon_ira.webp',              class: 'Warrior' },
+  { id: 'jarl',        name: 'Jarl',                          img: 'icon_jarl.webp',             class: 'Warrior' },
+  { id: 'kassai_cs',   name: 'Kassai, Cintari Sellsword',     img: 'icon_kassai_cs.webp',       class: 'Warrior' },
+  { id: 'kassai_gs',   name: 'Kassai of Goldsteel',           img: 'icon_kassai_gs.webp',       class: 'Warrior' },
+  { id: 'olympia',     name: 'Olympia',                       img: 'icon_olympia.webp',          class: 'Warrior' },
+  { id: 'shiyana',     name: 'Shiyana',                       img: 'icon_shiyana.webp',          class: 'Warrior' },
+  { id: 'victor',      name: 'Victor',                        img: 'icon_victor.webp',           class: 'Warrior' },
+  // Wizard
+  { id: 'aurora',      name: 'Aurora',                        img: 'icon_aurora.webp',           class: 'Wizard' },
+  { id: 'aurora_lot',  name: 'Aurora, Legacy of Tempest',     img: 'icon_aurora_lot-2.webp',    class: 'Wizard' },
+  { id: 'iyslander',   name: 'Iyslander',                     img: 'icon_iyslander.webp',        class: 'Wizard' },
+  { id: 'kano',        name: 'Kano',                          img: 'icon_kano.webp',             class: 'Wizard' },
+  { id: 'oscilio',     name: 'Oscilio',                       img: 'icon_oscillio.webp',         class: 'Wizard' },
+  { id: 'oscilio_fc',  name: 'Oscilio, Forked Continuum',     img: 'icon_oscilio_fc-1.webp',    class: 'Wizard' },
 ];
 
 /* ---- UI helpers ---- */
@@ -121,7 +149,7 @@ const heroById = id => HEROES.find(h => h.id === id);
 const renderProfileDisplay = (profile) => {
   const content = $('member-content');
   const discord = profile.discord_pseudo || '';
-  const heroes = (profile.favorite_heroes || []).map(heroById).filter(Boolean);
+  const heroes  = (profile.favorite_heroes || []).map(heroById).filter(Boolean);
 
   const heroHTML = heroes.length
     ? heroes.map(h => `
@@ -154,7 +182,7 @@ const renderProfileDisplay = (profile) => {
 
 const renderProfileEdit = (profile) => {
   _selectedHeroes = [...(profile.favorite_heroes || [])];
-  const content = $('member-content');
+  const content   = $('member-content');
   const discordVal = (profile.discord_pseudo || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   content.innerHTML = `
@@ -179,20 +207,33 @@ const renderProfileEdit = (profile) => {
 
   renderHeroPicker();
 
-  $('profile-save-btn').addEventListener('click', () => saveProfile());
+  $('profile-save-btn').addEventListener('click', saveProfile);
   $('profile-cancel-btn').addEventListener('click', () => renderProfileDisplay(profile));
 };
 
 const renderHeroPicker = () => {
-  const picker = $('hero-picker');
-  picker.innerHTML = HEROES.map(h => {
-    const sel   = _selectedHeroes.includes(h.id);
-    const maxed = !sel && _selectedHeroes.length >= 3;
-    return `<div class="hero-card${sel ? ' selected' : ''}${maxed ? ' maxed' : ''}"
-      data-id="${h.id}" role="checkbox" aria-checked="${sel}" tabindex="0">
-      <img src="images/${h.img}" alt="${h.name}" loading="lazy" />
-      <span class="hero-name">${h.name}</span>
-      <span class="hero-check" aria-hidden="true">✓</span>
+  const picker  = $('hero-picker');
+  const grouped = {};
+  CLASS_ORDER.forEach(c => { grouped[c] = []; });
+  HEROES.forEach(h => { if (grouped[h.class]) grouped[h.class].push(h); });
+
+  picker.innerHTML = CLASS_ORDER.map(cls => {
+    const list  = grouped[cls];
+    const color = CLASS_COLORS[cls] || '#f9e6c5';
+    return `<div class="hero-section">
+      <div class="hero-section-title" style="--cls-color:${color}">${cls}</div>
+      <div class="hero-section-grid">
+        ${list.map(h => {
+          const sel   = _selectedHeroes.includes(h.id);
+          const maxed = !sel && _selectedHeroes.length >= 3;
+          return `<div class="hero-card${sel ? ' selected' : ''}${maxed ? ' maxed' : ''}"
+            data-id="${h.id}" role="checkbox" aria-checked="${sel}" tabindex="0">
+            <img src="images/${h.img}" alt="${h.name}" loading="lazy" />
+            <span class="hero-name">${h.name}</span>
+            <span class="hero-check" aria-hidden="true">✓</span>
+          </div>`;
+        }).join('')}
+      </div>
     </div>`;
   }).join('');
 
@@ -220,8 +261,8 @@ const saveProfile = async () => {
   btn.textContent = 'Enregistrement…';
   clearStatus('profile-status');
 
-  const discord_pseudo   = $('edit-discord').value.trim();
-  const favorite_heroes  = _selectedHeroes;
+  const discord_pseudo  = $('edit-discord').value.trim();
+  const favorite_heroes = _selectedHeroes;
 
   const { error } = await _sb
     .from('profiles')

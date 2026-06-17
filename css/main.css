@@ -664,10 +664,9 @@ textarea::placeholder {
   width: 60px;
   height: 60px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 50%;
   background: rgba(249, 230, 197, .06);
-  padding: 4px;
-  border: 1px solid rgba(249, 230, 197, .12);
+  border: 2px solid rgba(249, 230, 197, .15);
 }
 
 .profile-hero-display span {
@@ -708,24 +707,41 @@ textarea::placeholder {
 /* ---- Hero picker ---- */
 
 .hero-picker {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
-  gap: .4rem;
-  max-height: 316px;
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+  max-height: 400px;
   overflow-y: auto;
-  padding: .5rem;
+  padding: .75rem;
   background: rgba(0, 0, 0, .22);
   border-radius: 10px;
   border: 1px solid rgba(249, 230, 197, .08);
+}
+
+.hero-section-title {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--cls-color, #f9e6c5);
+  border-left: 2px solid var(--cls-color, #f9e6c5);
+  padding-left: .5rem;
+  margin-bottom: .4rem;
+}
+
+.hero-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: .35rem;
 }
 
 .hero-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .2rem;
-  padding: .4rem .2rem .35rem;
-  border-radius: 8px;
+  gap: .25rem;
+  padding: .45rem .2rem .35rem;
+  border-radius: 10px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: border-color .12s, background .12s, opacity .12s;
@@ -744,19 +760,21 @@ textarea::placeholder {
 }
 
 .hero-card.maxed {
-  opacity: .28;
+  opacity: .25;
   cursor: default;
 }
 
 .hero-card img {
   width: 50px;
   height: 50px;
+  border-radius: 50%;
   object-fit: contain;
+  background: rgba(249, 230, 197, .06);
   pointer-events: none;
 }
 
 .hero-name {
-  font-size: .57rem;
+  font-size: .56rem;
   opacity: .7;
   text-align: center;
   line-height: 1.2;
