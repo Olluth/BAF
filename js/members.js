@@ -345,7 +345,7 @@ $('signin-form').addEventListener('submit', async (e) => {
   btn.textContent = 'Connexion…';
   clearStatus('signin-status');
 
-  const pseudo   = $('signin-pseudo').value.trim();
+  const pseudo   = $('signin-pseudo').value.trim().toLowerCase();
   const password = $('signin-password').value;
 
   const { data: profile, error: lookupError } = await _sb
@@ -379,7 +379,7 @@ $('signup-form').addEventListener('submit', async (e) => {
   btn.textContent = 'Création…';
   clearStatus('signup-status');
 
-  const pseudo   = $('signup-pseudo').value.trim();
+  const pseudo   = $('signup-pseudo').value.trim().toLowerCase();
   const email    = $('signup-email').value.trim();
   const password = $('signup-password').value;
 
