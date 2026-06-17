@@ -1032,6 +1032,37 @@ textarea::placeholder {
   display: block;
 }
 
+/* ---- Events + feed two-column layout ---- */
+
+.events-feed-layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .events-feed-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.activity-feed-box {
+  background: rgba(249, 230, 197, .03);
+  border: 1px solid rgba(249, 230, 197, .1);
+  border-radius: 16px;
+  padding: 1.25rem 1.1rem;
+}
+
+.activity-feed-title {
+  font-family: 'Cinzel', serif;
+  font-size: .82rem;
+  color: rgba(249, 230, 197, .5);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin: 0 0 .9rem;
+}
+
 /* ---- Activity feed (index page) ---- */
 
 .activity-feed {
