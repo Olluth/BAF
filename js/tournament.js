@@ -14,7 +14,16 @@ const loadTrackedPlayers = () => {
   } catch { return []; }
 };
 
-const loadEvents = () => {
+const fetchEvents = async () => {
+  try {
+    const r = await fetch('/api/events');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    if (Array.isArray(data)) {
+      try { localStorage.setItem(EVENTS_KEY, JSON.stringify(data)); } catch {}
+      return data.filter(e => e.active !== false);
+    }
+  } catch {}
   try {
     const raw = localStorage.getItem(EVENTS_KEY);
     const p   = raw ? JSON.parse(raw) : [];
@@ -235,11 +244,11 @@ const loadEvent = async (slug) => {
 
 /* ---- Dropdown ---- */
 
-const populateEventDropdown = () => {
+const populateEventDropdown = async () => {
   const select = document.getElementById('event-select');
   if (!select) return;
   while (select.options.length > 1) select.remove(1);
-  const events = loadEvents();
+  const events = await fetchEvents();
   if (!events.length) {
     const opt       = document.createElement('option');
     opt.disabled    = true;
@@ -267,13 +276,13 @@ const wireEvents = () => {
   }
 };
 
-const initialize = () => {
+const initialize = async () => {
   renderVisitorPlayerList();
-  populateEventDropdown();
+  await populateEventDropdown();
   wireEvents();
 
-  document.addEventListener('langchange', () => {
-    populateEventDropdown();
+  document.addEventListener('langchange', async () => {
+    await populateEventDropdown();
     if (_currentSlug) loadEvent(_currentSlug);
     else renderVisitorPlayerList();
   });

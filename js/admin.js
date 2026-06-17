@@ -286,6 +286,45 @@ const updateAdminEvent = (id, changes) => {
 
 const deleteAdminEvent = (id) => saveAdminEvents(loadAdminEvents().filter((e) => e.id !== id));
 
+const syncEventToServer = async (event) => {
+  const key = getAnalyticsKey();
+  if (!key) return;
+  try {
+    await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ slug: event.slug, name: event.name, active: event.active !== false }),
+    });
+  } catch {}
+};
+
+const deleteEventFromServer = async (slug) => {
+  const key = getAnalyticsKey();
+  if (!key) return;
+  try {
+    await fetch(`/api/events/${encodeURIComponent(slug)}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${key}` },
+    });
+  } catch {}
+};
+
+const loadEventsFromServer = async () => {
+  try {
+    const r = await fetch('/api/events');
+    if (!r.ok) return;
+    const serverEvents = await r.json();
+    if (!Array.isArray(serverEvents) || !serverEvents.length) return;
+    const local = loadAdminEvents();
+    const merged = serverEvents.map(sv => {
+      const existing = local.find(l => l.slug === sv.slug);
+      return existing || { id: randomUUID(), slug: sv.slug, name: sv.name, active: sv.active !== false };
+    });
+    saveAdminEvents(merged);
+    renderEventList();
+  } catch {}
+};
+
 // --- Helpers ---
 
 const escapeHtml = (str) => {
@@ -345,6 +384,7 @@ const switchTab = (tab) => {
   $('panel-events').classList.toggle('hidden', tab !== 'events');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
+  if (tab === 'events') loadEventsFromServer();
 };
 
 // --- Analytics ---
@@ -621,7 +661,7 @@ const wireEvents = () => {
   $('new-event-btn').addEventListener('click', () => openEventForm());
   $('cancel-event-btn').addEventListener('click', closeEventForm);
 
-  $('event-form').addEventListener('submit', (e) => {
+  $('event-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
       name:   $('event-name').value,
@@ -633,11 +673,12 @@ const wireEvents = () => {
     } else {
       createAdminEvent(data);
     }
+    await syncEventToServer(data);
     closeEventForm();
     renderEventList();
   });
 
-  $('event-list').addEventListener('click', (e) => {
+  $('event-list').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const { action, id } = btn.dataset;
@@ -646,7 +687,9 @@ const wireEvents = () => {
       if (ev) openEventForm(ev);
     } else if (action === 'delete-event') {
       if (confirm(t('admin.events.confirmDelete'))) {
+        const ev = loadAdminEvents().find((ev) => ev.id === id);
         deleteAdminEvent(id);
+        if (ev) await deleteEventFromServer(ev.slug);
         renderEventList();
       }
     }

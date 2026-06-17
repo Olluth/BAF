@@ -1,6 +1,8 @@
 'use strict';
-const puppeteer = require('puppeteer');
-const { JSDOM } = require('jsdom');
+const puppeteer      = require('puppeteer-extra');
+const StealthPlugin  = require('puppeteer-extra-plugin-stealth');
+const { JSDOM }      = require('jsdom');
+puppeteer.use(StealthPlugin());
 const fs   = require('fs');
 const path = require('path');
 
@@ -117,7 +119,7 @@ const fetchPage = async (browser, url) => {
   const page = await browser.newPage();
   try {
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8' });
-    const res = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    const res = await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     if (!res.ok()) throw new Error(`HTTP ${res.status()}`);
     const html = await page.content();
     if (/<title>[^<]*just a moment/i.test(html)) throw new Error('Cloudflare challenge — try again in a few seconds');
@@ -147,8 +149,18 @@ async function main() {
   console.log(`Fetching standings for: ${slug}`);
   console.log('Launching browser…');
 
+  const chromePaths = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    (process.env.LOCALAPPDATA || '') + '\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files\\Chromium\\Application\\chromium.exe',
+  ];
+  const executablePath = chromePaths.find(p => fs.existsSync(p)) || undefined;
+  if (executablePath) console.log(`Using Chrome: ${executablePath}`);
+
   const browser = await puppeteer.launch({
     headless: true,
+    executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
 

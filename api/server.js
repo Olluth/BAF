@@ -9,8 +9,9 @@ const db      = require('./db');
 const app          = express();
 const PORT         = Number(process.env.PORT) || 3001;
 const API_KEY      = process.env.API_KEY || '';
-const DATA_DIR     = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DATA_DIR      = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
+const EVENTS_FILE   = path.join(DATA_DIR, 'events.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
@@ -22,6 +23,14 @@ const requireAuth = (req, res, next) => {
 };
 
 const validSlug = (s) => typeof s === 'string' && /^[a-z0-9-]+$/.test(s) && s.length < 80;
+
+const loadEventsData = () => {
+  try {
+    if (!fs.existsSync(EVENTS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(EVENTS_FILE, 'utf8'));
+  } catch { return []; }
+};
+const saveEventsData = (events) => fs.writeFileSync(EVENTS_FILE, JSON.stringify(events, null, 2));
 
 /* ---- Analytics ---- */
 
@@ -66,6 +75,16 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
     droppedPlayers: droppedPlayers || [],
   }, null, 2));
   console.log(`Standings saved: ${slug} (${standings.length} players)`);
+
+  // Auto-register event on first upload so visitors can find it
+  const events = loadEventsData();
+  if (!events.find(e => e.slug === slug)) {
+    const autoName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    events.unshift({ slug, name: autoName, active: true });
+    saveEventsData(events);
+    console.log(`Auto-registered event: ${slug}`);
+  }
+
   res.json({ ok: true, players: standings.length });
 });
 
@@ -76,6 +95,34 @@ app.get('/api/standings/:slug', (req, res) => {
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(file);
+});
+
+/* ---- Events ---- */
+
+app.get('/api/events', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(loadEventsData());
+});
+
+app.post('/api/events', requireAuth, (req, res) => {
+  const { slug, name, active } = req.body || {};
+  if (!validSlug(slug) || typeof name !== 'string' || !name.trim()) {
+    return res.status(400).json({ error: 'invalid data' });
+  }
+  const events = loadEventsData();
+  const idx = events.findIndex(e => e.slug === slug);
+  const entry = { slug, name: name.trim(), active: active !== false };
+  if (idx >= 0) events[idx] = entry;
+  else events.unshift(entry);
+  saveEventsData(events);
+  res.json({ ok: true });
+});
+
+app.delete('/api/events/:slug', requireAuth, (req, res) => {
+  const { slug } = req.params;
+  if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
+  saveEventsData(loadEventsData().filter(e => e.slug !== slug));
+  res.json({ ok: true });
 });
 
 app.listen(PORT, '127.0.0.1', () => console.log(`BAF API running on :${PORT}`));
