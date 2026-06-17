@@ -99,7 +99,7 @@ const HEROES = [
   { id: 'vynnset',     name: 'Vynnset',                       img: 'icon_vynnset.webp',          class: 'Runeblade' },
   // Warrior
   { id: 'boltyn',      name: 'Boltyn',                        img: 'icon_boltyn.webp',           class: 'Warrior' },
-  { id: 'cindra',      name: 'Cindra',                        img: 'icon_cindra.webp',           class: 'Warrior' },
+  { id: 'cindra',      name: 'Cindra',                        img: 'icon_cindra.webp',           class: 'Ninja' },
   { id: 'dorinthea',   name: 'Dorinthea',                     img: 'icon_dorinthea.webp',        class: 'Warrior' },
   { id: 'fang',        name: 'Fang',                          img: 'icon_fang.webp',             class: 'Warrior' },
   { id: 'hala',        name: 'Hala',                          img: 'icon_hala_pos.webp',         class: 'Warrior' },
