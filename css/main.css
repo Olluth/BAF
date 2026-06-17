@@ -814,6 +814,132 @@ textarea::placeholder {
   margin-top: 1.5rem;
 }
 
+/* ---- Member search ---- */
+
+.search-section {
+  max-width: 720px;
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(249, 230, 197, .08);
+}
+
+.search-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.05rem;
+  color: #f9e6c5;
+  margin: 0 0 1.25rem;
+}
+
+.search-tabs {
+  display: flex;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.search-tab {
+  background: rgba(249, 230, 197, .05);
+  border: 1px solid rgba(249, 230, 197, .14);
+  border-radius: 8px;
+  color: rgba(249, 230, 197, .55);
+  padding: .38rem .9rem;
+  font-size: .82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background .12s, color .12s, border-color .12s;
+}
+
+.search-tab.active,
+.search-tab:hover {
+  background: rgba(249, 230, 197, .1);
+  border-color: rgba(249, 230, 197, .32);
+  color: #f9e6c5;
+}
+
+.search-form {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.search-form .profile-input {
+  flex: 1;
+  max-width: none;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  margin-top: .25rem;
+}
+
+.member-search-result {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .75rem 1rem;
+  background: rgba(249, 230, 197, .04);
+  border: 1px solid rgba(249, 230, 197, .1);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.msr-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(201, 134, 10, .15);
+  border: 1px solid rgba(201, 134, 10, .3);
+  color: #e0b84a;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.msr-info {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.msr-pseudo {
+  font-weight: 600;
+  color: #f9e6c5;
+  font-size: .9rem;
+}
+
+.msr-discord {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.msr-discord-label {
+  font-size: .68rem;
+  opacity: .4;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.msr-discord-value {
+  font-size: .88rem;
+  color: #f9e6c5;
+}
+
+.search-empty {
+  opacity: .45;
+  font-style: italic;
+  font-size: .88rem;
+  margin: .5rem 0;
+}
+
 /* ---- Hero picker ---- */
 
 .hero-picker {

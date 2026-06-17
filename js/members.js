@@ -306,6 +306,105 @@ const saveProfile = async () => {
   renderProfileDisplay({ discord_pseudo, favorite_heroes, title });
 };
 
+/* ---- Member search ---- */
+
+const renderSearchResults = (members, emptyMsg) => {
+  const el = $('search-results');
+  if (!members || !members.length) {
+    el.innerHTML = `<p class="search-empty">${emptyMsg || 'Aucun résultat.'}</p>`;
+    return;
+  }
+  el.innerHTML = members.map(m => {
+    const initial    = (m.pseudo || '?').charAt(0).toUpperCase();
+    const titleBadge = m.title ? `<span class="profile-title-badge">${m.title.replace(/</g,'&lt;')}</span>` : '';
+    const discord    = m.discord_pseudo
+      ? m.discord_pseudo.replace(/</g, '&lt;')
+      : '<span style="opacity:.4;font-style:italic">Non renseigné</span>';
+    return `<div class="member-search-result">
+      <div class="msr-avatar">${initial}</div>
+      <div class="msr-info">
+        <span class="msr-pseudo">${(m.pseudo || '').replace(/</g,'&lt;')}</span>
+        ${titleBadge}
+      </div>
+      <div class="msr-discord">
+        <span class="msr-discord-label">Discord</span>
+        <span class="msr-discord-value">${discord}</span>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+const searchByPseudo = async () => {
+  const term = $('search-pseudo-input').value.trim();
+  if (!term) return;
+  $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
+  const { data, error } = await _sb
+    .from('profiles')
+    .select('pseudo, discord_pseudo, title')
+    .ilike('pseudo', `%${term}%`)
+    .limit(10);
+  if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
+  renderSearchResults(data, 'Aucun membre trouvé.');
+};
+
+const searchByHero = async () => {
+  const heroId = $('search-hero-select').value;
+  if (!heroId) return;
+  $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
+  const { data, error } = await _sb
+    .from('profiles')
+    .select('pseudo, discord_pseudo, title')
+    .contains('favorite_heroes', [heroId])
+    .limit(20);
+  if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
+  const hero = heroById(heroId);
+  renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
+};
+
+const renderSearchSection = () => {
+  const heroOptions = CLASS_ORDER.map(cls => {
+    const list = HEROES.filter(h => h.class === cls).sort((a, b) => a.name.localeCompare(b.name));
+    if (!list.length) return '';
+    return `<optgroup label="${cls}">${list.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}</optgroup>`;
+  }).join('');
+
+  $('member-search').innerHTML = `
+    <div class="search-section">
+      <h3 class="search-title">Rechercher un membre</h3>
+      <div class="search-tabs">
+        <button class="search-tab active" data-mode="pseudo">Par pseudo</button>
+        <button class="search-tab" data-mode="hero">Par héros</button>
+      </div>
+      <div id="search-pseudo-mode" class="search-form">
+        <input type="text" id="search-pseudo-input" class="profile-input" placeholder="Pseudo…" maxlength="64" />
+        <button id="search-pseudo-btn" class="button button-primary">Chercher</button>
+      </div>
+      <div id="search-hero-mode" class="search-form hidden">
+        <select id="search-hero-select" class="profile-input profile-select">
+          <option value="">— Choisir un héros —</option>
+          ${heroOptions}
+        </select>
+        <button id="search-hero-btn" class="button button-primary">Chercher</button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>`;
+
+  document.querySelectorAll('.search-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.search-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const mode = tab.dataset.mode;
+      $('search-pseudo-mode').classList.toggle('hidden', mode !== 'pseudo');
+      $('search-hero-mode').classList.toggle('hidden', mode !== 'hero');
+      $('search-results').innerHTML = '';
+    });
+  });
+
+  $('search-pseudo-btn').addEventListener('click', searchByPseudo);
+  $('search-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByPseudo(); });
+  $('search-hero-btn').addEventListener('click', searchByHero);
+};
+
 /* ---- Auth UI ---- */
 
 const showDashboard = async (user) => {
@@ -316,6 +415,7 @@ const showDashboard = async (user) => {
   $('member-email').textContent = `Bonjour, ${pseudo} !`;
   const profile = await loadProfile(user.id);
   renderProfileDisplay(profile);
+  renderSearchSection();
 };
 
 const showAuth = () => {
