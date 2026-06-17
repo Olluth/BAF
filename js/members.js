@@ -315,13 +315,11 @@ const renderSearchResults = (members, emptyMsg) => {
     return;
   }
   el.innerHTML = members.map(m => {
-    const initial    = (m.pseudo || '?').charAt(0).toUpperCase();
     const titleBadge = m.title ? `<span class="profile-title-badge">${m.title.replace(/</g,'&lt;')}</span>` : '';
     const discord    = m.discord_pseudo
       ? m.discord_pseudo.replace(/</g, '&lt;')
       : '<span style="opacity:.4;font-style:italic">Non renseigné</span>';
     return `<div class="member-search-result">
-      <div class="msr-avatar">${initial}</div>
       <div class="msr-info">
         <span class="msr-pseudo">${(m.pseudo || '').replace(/</g,'&lt;')}</span>
         ${titleBadge}

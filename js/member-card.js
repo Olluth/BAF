@@ -56,8 +56,7 @@
     const title  = data?.title || '';
     const heroes = Array.isArray(data?.favorite_heroes) ? data.favorite_heroes : [];
 
-    document.getElementById('flash-avatar').textContent = pseudo.charAt(0).toUpperCase();
-    document.getElementById('flash-name').textContent   = pseudo;
+    document.getElementById('flash-name').textContent = pseudo;
 
     const titleEl = document.getElementById('flash-title');
     if (title) {
