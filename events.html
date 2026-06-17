@@ -24,6 +24,9 @@
         <a href="resources.html" data-i18n="nav.resources">Ressources</a>
         <a href="contact.html" data-i18n="nav.contact">Contact</a>
         <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
+        <a href="members.html" id="nav-member-link" class="hidden">Espace membre</a>
+        <a href="members.html" id="nav-signin-link" class="button">Se connecter</a>
+        <button type="button" id="nav-signout-btn" class="button hidden">Se déconnecter</button>
       </nav>
       <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
     </div>
@@ -78,5 +81,7 @@
 
   <script src="js/i18n.js"></script>
   <script src="js/tracker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/nav-auth.js"></script>
 </body>
 </html>
