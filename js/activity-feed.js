@@ -49,6 +49,15 @@
       items.push({ date: a.granted_at, type: 'achievement', pseudo, name, tier });
     });
 
+    try {
+      const raw = localStorage.getItem('baf-articles');
+      const articles = raw ? JSON.parse(raw) : [];
+      (Array.isArray(articles) ? articles : []).forEach(a => {
+        if (!a.published || !a.title || !a.date) return;
+        items.push({ date: a.date, type: 'article', title: a.title });
+      });
+    } catch {}
+
     items.sort((a, b) => new Date(b.date) - new Date(a.date));
     const top = items.slice(0, 10);
 
@@ -62,6 +71,13 @@
         return `<div class="feed-item">
           <span class="feed-badge feed-badge-new">Nouveau</span>
           <span class="feed-text"><strong>${esc(item.pseudo)}</strong> a rejoint la BAF !</span>
+          <span class="feed-time">${timeAgo(item.date)}</span>
+        </div>`;
+      }
+      if (item.type === 'article') {
+        return `<div class="feed-item">
+          <span class="feed-badge feed-badge-article">Article</span>
+          <span class="feed-text"><strong>${esc(item.title)}</strong> a été publié</span>
           <span class="feed-time">${timeAgo(item.date)}</span>
         </div>`;
       }

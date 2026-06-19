@@ -1100,6 +1100,12 @@ textarea::placeholder {
   color: #5ec482;
 }
 
+.feed-badge-article {
+  background: rgba(99, 160, 230, .12);
+  border: 1px solid rgba(99, 160, 230, .3);
+  color: #63a0e6;
+}
+
 .feed-text {
   flex: 1;
   color: rgba(249, 230, 197, .7);
