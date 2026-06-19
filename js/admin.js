@@ -851,7 +851,7 @@ const wireEvents = () => {
   $('new-article-btn').addEventListener('click', () => openArticleForm());
   $('cancel-article-btn').addEventListener('click', closeArticleForm);
 
-  $('article-form').addEventListener('submit', (e) => {
+  $('article-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
       title: $('article-title').value,
