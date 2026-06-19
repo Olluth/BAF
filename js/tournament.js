@@ -116,12 +116,16 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     return a.losses - b.losses;
   });
 
+  const rankMap = new Map(standings.map((p, i) => [p.name.toLowerCase().trim(), i + 1]));
+  const total   = standings.length;
+
   const rows = sorted.map((p, i) => {
     const tracked   = trackedSet.has(p.name.toLowerCase().trim());
     const liveMatch = liveMatches[p.name];
     const dropped   = droppedSet.has(p.name);
     const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
     const hid       = toId(p.name);
+    const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
     const liveIndicator = liveMatch
       ? `<span class="live-match-indicator">● ${t('tracker.vs')} ${esc(liveMatch.opponent)}</span>`
@@ -141,7 +145,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
 
     return `
       <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
-        <td class="rank-cell">${i + 1}</td>
+        <td class="rank-cell">${rank}${total ? '/' + total : ''}</td>
         <td class="player-cell">
           <span class="player-cell-inner">
             ${tracked ? '<span class="tracked-indicator" aria-hidden="true"></span>' : ''}
