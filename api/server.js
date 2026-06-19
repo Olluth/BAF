@@ -13,8 +13,9 @@ const SUPABASE_URL         = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
 const DATA_DIR      = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
-const EVENTS_FILE   = path.join(DATA_DIR, 'events.json');
-const PLAYERS_FILE  = path.join(DATA_DIR, 'players.json');
+const EVENTS_FILE    = path.join(DATA_DIR, 'events.json');
+const PLAYERS_FILE   = path.join(DATA_DIR, 'players.json');
+const ARTICLES_FILE  = path.join(DATA_DIR, 'articles.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
@@ -42,6 +43,14 @@ const loadPlayersData = () => {
   } catch { return []; }
 };
 const savePlayersData = (players) => fs.writeFileSync(PLAYERS_FILE, JSON.stringify(players, null, 2));
+
+const loadArticlesData = () => {
+  try {
+    if (!fs.existsSync(ARTICLES_FILE)) return [];
+    return JSON.parse(fs.readFileSync(ARTICLES_FILE, 'utf8'));
+  } catch { return []; }
+};
+const saveArticlesData = (articles) => fs.writeFileSync(ARTICLES_FILE, JSON.stringify(articles, null, 2));
 
 /* ---- Analytics ---- */
 
@@ -149,6 +158,20 @@ app.delete('/api/members/:id', requireAuth, async (req, res) => {
     if (!r.ok) throw new Error(`Supabase ${r.status}`);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ---- Articles ---- */
+
+app.get('/api/articles', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(loadArticlesData().filter(a => a.published));
+});
+
+app.post('/api/articles', requireAuth, (req, res) => {
+  const { articles } = req.body || {};
+  if (!Array.isArray(articles)) return res.status(400).json({ error: 'invalid data' });
+  saveArticlesData(articles);
+  res.json({ ok: true, count: articles.length });
 });
 
 /* ---- Events ---- */

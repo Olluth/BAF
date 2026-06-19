@@ -50,12 +50,14 @@
     });
 
     try {
-      const raw = localStorage.getItem('baf-articles');
-      const articles = raw ? JSON.parse(raw) : [];
-      (Array.isArray(articles) ? articles : []).forEach(a => {
-        if (!a.published || !a.title || !a.date) return;
-        items.push({ date: a.date, type: 'article', title: a.title });
-      });
+      const artRes = await fetch('/api/articles');
+      if (artRes.ok) {
+        const articles = await artRes.json();
+        (Array.isArray(articles) ? articles : []).forEach(a => {
+          if (!a.title || !a.date) return;
+          items.push({ date: a.date, type: 'article', title: a.title });
+        });
+      }
     } catch {}
 
     items.sort((a, b) => new Date(b.date) - new Date(a.date));

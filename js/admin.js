@@ -286,6 +286,18 @@ const updateAdminEvent = (id, changes) => {
 
 const deleteAdminEvent = (id) => saveAdminEvents(loadAdminEvents().filter((e) => e.id !== id));
 
+const syncArticlesToServer = async () => {
+  const key = getAnalyticsKey();
+  if (!key) return;
+  try {
+    await fetch('/api/articles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ articles: loadArticles() }),
+    });
+  } catch {}
+};
+
 const syncPlayersToServer = async () => {
   const key = getAnalyticsKey();
   if (!key) return;
@@ -853,9 +865,10 @@ const wireEvents = () => {
     }
     closeArticleForm();
     renderArticleList();
+    await syncArticlesToServer();
   });
 
-  $('article-list').addEventListener('click', (e) => {
+  $('article-list').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const { action, id } = btn.dataset;
@@ -866,6 +879,7 @@ const wireEvents = () => {
       if (confirm(t('admin.articles.confirmDelete'))) {
         deleteArticle(id);
         renderArticleList();
+        await syncArticlesToServer();
       }
     }
   });
