@@ -1353,7 +1353,7 @@ textarea::placeholder {
 /* ---- Event banner ---- */
 
 .event-banner {
-  padding: 4rem 0 3rem;
+  padding: 3rem 0 2rem;
 }
 
 .event-banner .section-header {
@@ -1385,7 +1385,6 @@ textarea::placeholder {
   border: 1px solid rgba(245, 208, 216, 0.25);
   border-radius: 28px;
   padding: 2.5rem;
-  margin-bottom: 1.25rem;
   overflow: hidden;
 }
 
@@ -1415,7 +1414,7 @@ textarea::placeholder {
 }
 
 .event-more-heading {
-  margin: 1.5rem 0 0.75rem;
+  margin: 0.75rem 0 0.5rem;
 }
 
 .event-more {
