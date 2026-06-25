@@ -139,7 +139,7 @@ let _currentUser = null;
 let _selectedHeroes = [];
 let _cachedAchievements = null;
 
-const TITLES = ['Newcomer', 'Oldtimer', 'Judge', 'BAF Staff'];
+const TITLES = ['Newcomer', 'Old Timer', 'Judge', 'BAF Staff'];
 
 const loadProfile = async (userId) => {
   const { data } = await _sb
