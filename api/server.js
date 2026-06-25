@@ -166,13 +166,15 @@ app.get('/api/recent-members', async (req, res) => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return res.json([]);
   res.setHeader('Cache-Control', 'no-store');
   try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles?select=pseudo,created_at&pseudo=not.is.null&order=created_at.desc&limit=15`,
-      { headers: { ...supabaseAdminHeaders(), 'Content-Type': 'application/json' } }
-    );
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=50`, { headers: supabaseAdminHeaders() });
     if (!r.ok) return res.json([]);
     const data = await r.json();
-    res.json(Array.isArray(data) ? data : []);
+    const users = (data.users || [])
+      .filter(u => u.user_metadata?.pseudo)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 15)
+      .map(u => ({ pseudo: u.user_metadata.pseudo, created_at: u.created_at }));
+    res.json(users);
   } catch { res.json([]); }
 });
 
