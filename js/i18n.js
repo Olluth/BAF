@@ -157,8 +157,11 @@ const translations = {
 
     // Admin — tabs
     'admin.tab.articles': 'Articles',
-    'admin.tab.players': 'Joueurs',
+    'admin.tab.players': 'Joueurs phares',
     'admin.tab.events': 'Événements',
+    'admin.tab.members': 'Membres',
+    'admin.tab.achievements': 'Hauts faits',
+    'admin.tab.analytics': 'Analytics',
 
     // Admin — events panel
     'admin.events.title': 'Événements suivis',
@@ -207,13 +210,16 @@ const translations = {
     'admin.articles.confirmDelete': 'Supprimer définitivement cet article ?',
 
     // Admin — players panel
-    'admin.players.title': 'Joueurs suivis',
+    'admin.players.title': 'Joueurs phares',
     'admin.players.desc': 'Les joueurs listés ici sont mis en avant sur la page de suivi de tournoi.',
     'admin.players.placeholder': 'Nom du joueur',
     'admin.players.add': 'Ajouter',
-    'admin.players.empty': 'Aucun joueur suivi pour le moment. Ajoutez-en un ci-dessus.',
+    'admin.players.empty': 'Aucun joueur phare pour le moment. Ajoutez-en un ci-dessus.',
     'admin.players.remove': 'Retirer',
-    'admin.players.confirmRemove': '« {name} » sera retiré de la liste des joueurs suivis. Confirmer ?',
+    'admin.players.confirmRemove': '« {name} » sera retiré de la liste des joueurs phares. Confirmer ?',
+    'admin.members.title': 'Membres',
+    'admin.achievements.title': 'Hauts faits',
+    'admin.analytics.title': 'Analytics',
   },
 
   en: {
@@ -369,8 +375,11 @@ const translations = {
 
     // Admin — tabs
     'admin.tab.articles': 'Articles',
-    'admin.tab.players': 'Players',
+    'admin.tab.players': 'Focused Players',
     'admin.tab.events': 'Events',
+    'admin.tab.members': 'Members',
+    'admin.tab.achievements': 'Achievements',
+    'admin.tab.analytics': 'Analytics',
 
     // Admin — events panel
     'admin.events.title': 'Tracked Events',
@@ -419,13 +428,16 @@ const translations = {
     'admin.articles.confirmDelete': 'Permanently delete this article?',
 
     // Admin — players panel
-    'admin.players.title': 'Tracked Players',
+    'admin.players.title': 'Focused Players',
     'admin.players.desc': 'Players listed here are highlighted on the Tournament Tracker page.',
     'admin.players.placeholder': 'Player name',
-    'admin.players.add': 'Add Player',
-    'admin.players.empty': 'No tracked players yet. Add one above.',
+    'admin.players.add': 'Add',
+    'admin.players.empty': 'No focused players yet. Add one above.',
     'admin.players.remove': 'Remove',
-    'admin.players.confirmRemove': 'Remove "{name}" from the tracked player list?',
+    'admin.players.confirmRemove': 'Remove "{name}" from the focused player list?',
+    'admin.members.title': 'Members',
+    'admin.achievements.title': 'Achievements',
+    'admin.analytics.title': 'Analytics',
   },
 };
 
