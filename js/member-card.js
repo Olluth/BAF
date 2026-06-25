@@ -53,7 +53,7 @@
       .eq('id', user.id)
       .single();
 
-    const title  = data?.title || '';
+    const title  = (data?.title || '').replace('Oldtimer', 'Old Timer');
     const heroes = Array.isArray(data?.favorite_heroes) ? data.favorite_heroes : [];
 
     const nameEl = document.getElementById('flash-name');

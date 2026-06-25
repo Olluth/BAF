@@ -150,7 +150,7 @@ const loadProfile = async (userId) => {
   return {
     discord_pseudo: data?.discord_pseudo || '',
     favorite_heroes: Array.isArray(data?.favorite_heroes) ? data.favorite_heroes : [],
-    title: data?.title || '',
+    title: (data?.title || '').replace('Oldtimer', 'Old Timer'),
   };
 };
 
@@ -316,7 +316,7 @@ const renderSearchResults = (members, emptyMsg) => {
     return;
   }
   el.innerHTML = members.map(m => {
-    const titleBadge = m.title ? `<span class="profile-title-badge">${m.title.replace(/</g,'&lt;')}</span>` : '';
+    const titleBadge = m.title ? `<span class="profile-title-badge">${m.title.replace('Oldtimer','Old Timer').replace(/</g,'&lt;')}</span>` : '';
     const discord    = m.discord_pseudo
       ? m.discord_pseudo.replace(/</g, '&lt;')
       : '<span style="opacity:.4;font-style:italic">Non renseigné</span>';
