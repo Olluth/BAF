@@ -157,7 +157,7 @@ const translations = {
 
     // Admin — tabs
     'admin.tab.articles': 'Articles',
-    'admin.tab.players': 'Joueurs phares',
+    'admin.tab.players': 'Joueurs suivis',
     'admin.tab.events': 'Événements',
     'admin.tab.members': 'Membres',
     'admin.tab.achievements': 'Hauts faits',
@@ -210,13 +210,13 @@ const translations = {
     'admin.articles.confirmDelete': 'Supprimer définitivement cet article ?',
 
     // Admin — players panel
-    'admin.players.title': 'Joueurs phares',
+    'admin.players.title': 'Joueurs suivis',
     'admin.players.desc': 'Les joueurs listés ici sont mis en avant sur la page de suivi de tournoi.',
     'admin.players.placeholder': 'Nom du joueur',
     'admin.players.add': 'Ajouter',
-    'admin.players.empty': 'Aucun joueur phare pour le moment. Ajoutez-en un ci-dessus.',
+    'admin.players.empty': 'Aucun joueur suivi pour le moment. Ajoutez-en un ci-dessus.',
     'admin.players.remove': 'Retirer',
-    'admin.players.confirmRemove': '« {name} » sera retiré de la liste des joueurs phares. Confirmer ?',
+    'admin.players.confirmRemove': '« {name} » sera retiré de la liste des joueurs suivis. Confirmer ?',
     'admin.members.title': 'Membres',
     'admin.achievements.title': 'Hauts faits',
     'admin.analytics.title': 'Analytics',
