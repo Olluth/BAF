@@ -144,6 +144,18 @@ const translations = {
     'tracker.updated': 'Mis à jour il y a {min}m',
     'tracker.dropped': 'Abandon',
 
+    // Activity feed
+    'feed.badge.member': 'Membre',
+    'feed.badge.article': 'Article',
+    'feed.member.joined': 'a rejoint la BAF !',
+    'feed.article.published': 'a été publié',
+    'feed.achievement.unlocked': 'a obtenu',
+    'feed.empty': 'Aucune activité récente.',
+    'feed.time.now': 'à l\'instant',
+    'feed.time.minutes': 'il y a {n} min',
+    'feed.time.hours': 'il y a {n} h',
+    'feed.time.days': 'il y a {n} j',
+
     // Admin — login
     'admin.login.username': "Nom d'utilisateur",
     'admin.login.password': 'Mot de passe',
@@ -361,6 +373,18 @@ const translations = {
     'tracker.vs': 'vs',
     'tracker.updated': 'Updated {min}m ago',
     'tracker.dropped': 'Dropped',
+
+    // Activity feed
+    'feed.badge.member': 'Member',
+    'feed.badge.article': 'Article',
+    'feed.member.joined': 'joined the BAF!',
+    'feed.article.published': 'was published',
+    'feed.achievement.unlocked': 'unlocked',
+    'feed.empty': 'No recent activity.',
+    'feed.time.now': 'just now',
+    'feed.time.minutes': '{n}m ago',
+    'feed.time.hours': '{n}h ago',
+    'feed.time.days': '{n}d ago',
 
     // Admin — login
     'admin.login.username': 'Username',
