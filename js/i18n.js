@@ -39,7 +39,7 @@ const translations = {
     'about.join.cta': 'Nous contacter',
 
     // Events
-    'events.eyebrow': 'À venir',
+    'events.eyebrow': 'Événements',
     'events.title': 'Événements',
     'events.next': 'Prochain grand événement',
     'events.weekly': 'Rendez-vous hebdomadaires',
@@ -269,7 +269,7 @@ const translations = {
     'about.join.cta': 'Get in Touch',
 
     // Events
-    'events.eyebrow': 'Upcoming',
+    'events.eyebrow': 'Events',
     'events.title': 'Events',
     'events.next': 'Next major event',
     'events.weekly': 'Weekly events',
