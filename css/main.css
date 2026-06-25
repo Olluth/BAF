@@ -1360,7 +1360,15 @@ textarea::placeholder {
 }
 
 .event-banner .section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
   margin-bottom: 2rem;
+}
+
+.event-banner .section-header .eyebrow {
+  margin-bottom: 0;
+  flex-shrink: 0;
 }
 
 .event-banner h1 {
