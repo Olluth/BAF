@@ -1365,9 +1365,10 @@ textarea::placeholder {
 
 .event-banner .section-header .eyebrow {
   font-size: clamp(2rem, 2.5vw, 3rem);
-  font-family: 'Cinzel', serif;
-  letter-spacing: 0.05em;
-  color: #f9e6c5;
+  font-family: 'Cinzel', Georgia, serif;
+  letter-spacing: 0.02em;
+  color: #fff;
+  font-weight: 700;
   margin-bottom: 0;
 }
 
