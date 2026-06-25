@@ -22,12 +22,8 @@
     const container = document.getElementById('activity-feed');
     if (!container) return;
 
-    const [membersRes, achRes] = await Promise.all([
-      _sb.from('profiles')
-        .select('pseudo, created_at')
-        .not('pseudo', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(15),
+    const [membersData, achRes] = await Promise.all([
+      fetch('/api/recent-members').then(r => r.ok ? r.json() : []).catch(() => []),
       _sb.from('member_achievements')
         .select('granted_at, profiles!member_id(pseudo), achievements!achievement_id(name, tier)')
         .order('granted_at', { ascending: false })
@@ -36,7 +32,7 @@
 
     const items = [];
 
-    (membersRes.data || []).forEach(m => {
+    (Array.isArray(membersData) ? membersData : []).forEach(m => {
       if (!m.pseudo) return;
       items.push({ date: m.created_at, type: 'member', pseudo: m.pseudo });
     });

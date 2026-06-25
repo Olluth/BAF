@@ -160,6 +160,22 @@ app.delete('/api/members/:id', requireAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+/* ---- Recent members (public, bypasses RLS) ---- */
+
+app.get('/api/recent-members', async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return res.json([]);
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?select=pseudo,created_at&pseudo=not.is.null&order=created_at.desc&limit=15`,
+      { headers: { ...supabaseAdminHeaders(), 'Content-Type': 'application/json' } }
+    );
+    if (!r.ok) return res.json([]);
+    const data = await r.json();
+    res.json(Array.isArray(data) ? data : []);
+  } catch { res.json([]); }
+});
+
 /* ---- Articles ---- */
 
 app.get('/api/articles', (req, res) => {
