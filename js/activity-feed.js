@@ -39,7 +39,7 @@
       if (item.type === 'member') {
         return `<div class="feed-item">
           <span class="feed-badge feed-badge-new">${tr('feed.badge.member')}</span>
-          <span class="feed-text"><strong>${esc(item.pseudo)}</strong> ${tr('feed.member.joined')}</span>
+          <span class="feed-text"><strong>${esc(item.pseudo.charAt(0).toUpperCase() + item.pseudo.slice(1))}</strong> ${tr('feed.member.joined')}</span>
           <span class="feed-time">${timeAgo(item.date)}</span>
         </div>`;
       }
@@ -54,7 +54,7 @@
       const tierLabel = tierLabels[item.tier] || item.tier;
       return `<div class="feed-item">
         <span class="feed-badge ach-tier-badge ${tierClass}">${tierLabel}</span>
-        <span class="feed-text"><strong>${esc(item.pseudo)}</strong> ${tr('feed.achievement.unlocked')} <strong>${esc(item.name)}</strong></span>
+        <span class="feed-text"><strong>${esc(item.pseudo.charAt(0).toUpperCase() + item.pseudo.slice(1))}</strong> ${tr('feed.achievement.unlocked')} <strong>${esc(item.name)}</strong></span>
         <span class="feed-time">${timeAgo(item.date)}</span>
       </div>`;
     }).join('');

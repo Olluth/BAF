@@ -656,6 +656,7 @@ textarea::placeholder {
   font-weight: 600;
   color: #f9e6c5;
   font-size: .95rem;
+  text-transform: capitalize;
 }
 
 .member-flash-heroes {
@@ -913,6 +914,7 @@ textarea::placeholder {
   font-weight: 600;
   color: #f9e6c5;
   font-size: .9rem;
+  text-transform: capitalize;
 }
 
 .msr-discord {
@@ -1276,6 +1278,7 @@ textarea::placeholder {
   font-weight: 700;
   color: #f9e6c5;
   font-size: 1rem;
+  text-transform: capitalize;
 }
 
 .ach-tier-group {

@@ -472,7 +472,8 @@ const showDashboard = async (user) => {
   $('auth-container').classList.add('hidden');
   $('member-dashboard').classList.remove('hidden');
   const pseudo = user.user_metadata?.pseudo || user.email;
-  $('member-email').textContent = `Bonjour, ${pseudo} !`;
+  const pseudoCap = pseudo.charAt(0).toUpperCase() + pseudo.slice(1);
+  $('member-email').textContent = `Bonjour, ${pseudoCap} !`;
   const [profile, allAchievements, memberAchievements] = await Promise.all([
     loadProfile(user.id),
     _cachedAchievements ? Promise.resolve(_cachedAchievements) : loadAllAchievements(),
