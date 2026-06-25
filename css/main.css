@@ -1360,7 +1360,7 @@ textarea::placeholder {
 }
 
 .event-banner .section-header {
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
 }
 
 .event-banner .section-header .eyebrow {
