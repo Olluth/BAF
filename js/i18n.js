@@ -40,11 +40,11 @@ const translations = {
 
     // Events
     'events.eyebrow': 'À venir',
-    'events.title': 'Événements à venir',
+    'events.title': 'Événements',
     'events.next': 'Prochain grand événement',
     'events.weekly': 'Rendez-vous hebdomadaires',
     'events.card1.title': 'France National',
-    'events.card1.desc': '26–28 juin 2026 — Grand tournoi national Flesh and Blood. Partenaire : Uchronies Games.',
+    'events.card1.desc': '26–28 juin 2026 · Partenaire : Uchronies Games.',
     'events.card2.title': 'Armory du mardi',
     'events.card2.desc': 'Chaque mardi à 19h30 — Decaféine',
     'events.card3.title': 'Armory du jeudi',
@@ -270,11 +270,11 @@ const translations = {
 
     // Events
     'events.eyebrow': 'Upcoming',
-    'events.title': 'Upcoming Events',
+    'events.title': 'Events',
     'events.next': 'Next major event',
     'events.weekly': 'Weekly events',
     'events.card1.title': 'French Nationals',
-    'events.card1.desc': 'June 26–28, 2026 — National Flesh and Blood championship. Event Partner: Uchronies Games.',
+    'events.card1.desc': 'June 26–28, 2026 · Partner: Uchronies Games.',
     'events.card2.title': 'Tuesday Armory',
     'events.card2.desc': 'Every Tuesday at 7:30 PM — Decaféine',
     'events.card3.title': 'Thursday Armory',

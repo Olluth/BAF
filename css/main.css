@@ -1405,8 +1405,8 @@ textarea::placeholder {
 }
 
 .event-featured-card h2 {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
   color: #ffffff;
 }
 
