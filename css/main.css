@@ -662,7 +662,6 @@ textarea::placeholder {
   display: flex;
   gap: .5rem;
   align-items: center;
-  margin-left: auto;
 }
 
 .member-flash-heroes img {
@@ -678,6 +677,7 @@ textarea::placeholder {
   flex-shrink: 0;
   font-size: .85rem;
   padding: .45rem 1rem;
+  margin-left: auto;
 }
 
 /* ---- Profile card ---- */
