@@ -1356,7 +1356,7 @@ textarea::placeholder {
 /* ---- Event banner ---- */
 
 .event-banner {
-  padding: 3rem 0 2rem;
+  padding: 1.25rem 0 2rem;
 }
 
 .event-banner .section-header {
