@@ -69,7 +69,7 @@
     container.innerHTML = top.map(item => {
       if (item.type === 'member') {
         return `<div class="feed-item">
-          <span class="feed-badge feed-badge-new">Nouveau</span>
+          <span class="feed-badge feed-badge-new">Membre</span>
           <span class="feed-text"><strong>${esc(item.pseudo)}</strong> a rejoint la BAF !</span>
           <span class="feed-time">${timeAgo(item.date)}</span>
         </div>`;

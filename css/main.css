@@ -1095,15 +1095,15 @@ textarea::placeholder {
 }
 
 .feed-badge-new {
-  background: rgba(94, 196, 130, .12);
-  border: 1px solid rgba(94, 196, 130, .3);
-  color: #5ec482;
+  background: rgba(120, 155, 110, .12);
+  border: 1px solid rgba(120, 155, 110, .28);
+  color: #9db89a;
 }
 
 .feed-badge-article {
-  background: rgba(99, 160, 230, .12);
-  border: 1px solid rgba(99, 160, 230, .3);
-  color: #63a0e6;
+  background: rgba(100, 130, 175, .10);
+  border: 1px solid rgba(100, 130, 175, .25);
+  color: #8fa8c4;
 }
 
 .feed-text {
@@ -1174,21 +1174,21 @@ textarea::placeholder {
 }
 
 .ach-tier-silver {
-  background: rgba(192, 192, 192, .12);
-  border: 1px solid rgba(192, 192, 192, .35);
-  color: #c8c8c8;
+  background: rgba(170, 170, 155, .10);
+  border: 1px solid rgba(170, 170, 155, .28);
+  color: #b0b0a5;
 }
 
 .ach-tier-gold {
-  background: rgba(255, 215, 0, .1);
-  border: 1px solid rgba(255, 215, 0, .35);
-  color: #ffd700;
+  background: rgba(185, 150, 85, .12);
+  border: 1px solid rgba(185, 150, 85, .30);
+  color: #c9a96e;
 }
 
 .ach-tier-diamond {
-  background: rgba(168, 232, 255, .1);
-  border: 1px solid rgba(168, 232, 255, .35);
-  color: #a8e8ff;
+  background: rgba(100, 160, 190, .10);
+  border: 1px solid rgba(100, 160, 190, .28);
+  color: #7fb5c8;
 }
 
 .achievements-grid {
