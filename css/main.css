@@ -1363,6 +1363,14 @@ textarea::placeholder {
   margin-bottom: 2rem;
 }
 
+.event-banner .section-header .eyebrow {
+  font-size: clamp(2rem, 2.5vw, 3rem);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+  color: #f9e6c5;
+  margin-bottom: 0;
+}
+
 .event-banner h1 {
   margin: 0;
   font-size: clamp(2rem, 2.5vw, 3rem);
