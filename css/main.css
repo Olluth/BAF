@@ -1076,12 +1076,12 @@ textarea::placeholder {
   display: flex;
   align-items: center;
   gap: .75rem;
-  padding: .6rem .9rem;
+  padding: .5rem .9rem;
   background: rgba(249, 230, 197, .03);
   border: 1px solid rgba(249, 230, 197, .08);
   border-radius: 10px;
-  font-size: .88rem;
-  flex-wrap: wrap;
+  font-size: .82rem;
+  overflow: hidden;
 }
 
 .feed-badge {
@@ -1110,6 +1110,9 @@ textarea::placeholder {
   flex: 1;
   color: rgba(249, 230, 197, .7);
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .feed-text strong {
