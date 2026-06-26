@@ -394,6 +394,26 @@ const renderBookmarklet = () => {
   wrap.innerHTML = `<a href="${loader}" class="button button-primary" style="display:inline-block;cursor:grab" draggable="true">🎴 BAF — Mettre à jour les standings</a><p class="admin-panel-desc" style="margin-top:.6rem;font-size:.8rem">Ne clique pas ici — glisse-le dans ta barre de favoris.</p>`;
 };
 
+const reconcileArticles = async () => {
+  try {
+    const res = await fetch('/api/articles');
+    if (!res.ok) return;
+    const serverArticles = await res.json();
+    if (!Array.isArray(serverArticles)) return;
+    const localArticles = loadArticles();
+    if (serverArticles.length > 0) {
+      const serverIds = new Set(serverArticles.map(a => a.id));
+      const localOnly = localArticles.filter(a => !serverIds.has(a.id));
+      const merged = [...serverArticles, ...localOnly].sort((a, b) => new Date(b.date) - new Date(a.date));
+      saveArticles(merged);
+      if (localOnly.length > 0) await syncArticlesToServer();
+    } else if (localArticles.length > 0) {
+      await syncArticlesToServer();
+    }
+    renderArticleList();
+  } catch {}
+};
+
 const showDashboard = () => {
   $('login-page').classList.add('hidden');
   $('dashboard').classList.remove('hidden');
@@ -416,6 +436,7 @@ const switchTab = (tab) => {
   $('panel-achievements').classList.toggle('hidden', tab !== 'achievements');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
+  if (tab === 'articles') reconcileArticles();
   if (tab === 'events') loadEventsFromServer();
   if (tab === 'players') syncPlayersToServer();
   if (tab === 'members') loadMembers();
