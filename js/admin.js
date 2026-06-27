@@ -348,8 +348,9 @@ const loadEventsFromServer = async () => {
     const local = loadAdminEvents();
     const merged = serverEvents.map(sv => {
       const existing = local.find(l => l.slug === sv.slug);
-      const base = existing || { id: randomUUID() };
-      return { ...base, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false };
+      const base = existing || {};
+      const id = base.id || randomUUID();
+      return { ...base, id, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false };
     });
     saveAdminEvents(merged);
     renderEventList();
