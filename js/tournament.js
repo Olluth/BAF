@@ -237,9 +237,10 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const lastH       = p.history.length ? p.history[p.history.length - 1] : null;
-    const heroIcon    = (heroName) => { const src = getHeroIcon(heroName || ''); return src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(heroName || '')}" loading="lazy">` : `<span class="hero-icon-text">${esc((heroName || '').split(',')[0])}</span>`; };
-    const matchupCell = lastH
+    const lastH          = p.history.length ? p.history[p.history.length - 1] : null;
+    const roundIsDraft   = (r) => /draft|booster/i.test(r || '');
+    const heroIcon       = (heroName) => { const src = getHeroIcon(heroName || ''); return src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(heroName || '')}" loading="lazy">` : `<span class="hero-icon-text">${esc((heroName || '').split(',')[0])}</span>`; };
+    const matchupCell    = lastH && !roundIsDraft(lastH.round)
       ? `<td class="matchup-cell"><div class="hero-matchup">${heroIcon(p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHero)}</div></td>`
       : `<td class="matchup-cell">—</td>`;
     const liveCell    = `<td class="live-round-cell">${lastH ? esc(lastH.round) : '—'}</td>`;
@@ -250,7 +251,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
       <tr>
         <td>${esc(h.round)}</td>
         <td>${esc(h.opponent)}</td>
-        <td>${esc(h.opponentHero)}</td>
+        <td>${roundIsDraft(h.round) ? '—' : esc(h.opponentHero)}</td>
         <td>${resultBadge(h.result)}</td>
       </tr>`).join('');
 
