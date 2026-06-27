@@ -240,8 +240,10 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
 
 /* ---- Load event ---- */
 
-let _generation    = 0;
-let _prevStandings = new Map();
+let _generation      = 0;
+let _prevStandings   = new Map();
+let _scoreHighlights = new Map(); // name → 'win' | 'loss'
+let _currentRound    = '';
 
 const loadEvent = async (slug) => {
   const isRefresh = slug === _currentSlug;
@@ -250,7 +252,9 @@ const loadEvent = async (slug) => {
   const gen = ++_generation;
   clearRefreshTimer();
   if (!isRefresh) {
-    _prevStandings = new Map();
+    _prevStandings   = new Map();
+    _scoreHighlights = new Map();
+    _currentRound    = '';
     clearStandings();
     renderVisitorPlayerList(false);
     setStatus(t('tracker.loading'));
@@ -269,19 +273,29 @@ const loadEvent = async (slug) => {
     const newStandings = data.standings || [];
     renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet);
 
+    // Clear highlights when a new round starts
+    if (data.liveRoundName && data.liveRoundName !== _currentRound) {
+      _scoreHighlights = new Map();
+      _currentRound    = data.liveRoundName;
+    }
+
+    // Accumulate new highlights from changed scores
     if (isRefresh && _prevStandings.size) {
       newStandings.forEach(p => {
         const prev = _prevStandings.get(p.name);
         if (!prev) return;
-        const won  = p.wins   > prev.wins;
-        const lost = p.losses > prev.losses || p.draws > prev.draws;
-        if (!won && !lost) return;
-        const row  = document.querySelector(`.standings-row[data-hid="${toId(p.name)}"]`);
-        const cell = row?.querySelector('.record-cell');
-        if (!cell) return;
-        cell.classList.add(won ? 'score-highlight-win' : 'score-highlight-loss');
+        if (p.wins   > prev.wins)                               _scoreHighlights.set(p.name, 'win');
+        else if (p.losses > prev.losses || p.draws > prev.draws) _scoreHighlights.set(p.name, 'loss');
       });
     }
+
+    // Apply all stored highlights after each render
+    _scoreHighlights.forEach((type, name) => {
+      const row  = document.querySelector(`.standings-row[data-hid="${toId(name)}"]`);
+      const cell = row?.querySelector('.record-cell');
+      if (cell) cell.classList.add(type === 'win' ? 'score-highlight-win' : 'score-highlight-loss');
+    });
+
     _prevStandings = new Map(newStandings.map(p => [p.name, { wins: p.wins, losses: p.losses, draws: p.draws }]));
 
     if (data.liveRoundName) {
