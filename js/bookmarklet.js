@@ -132,18 +132,8 @@
         });
       });
       const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
-      let liveMatches = {}, liveRoundName = '';
+      const liveMatches = {}, liveRoundName = liveRound.roundName;
       const droppedPlayers = [];
-      setStatus('Pairings en cours…');
-      try {
-        const allPairings = parsePairings(await fetch(liveRound.pairingsUrl).then(r => r.text()));
-        liveRoundName = liveRound.roundName;
-        if (Object.keys(allPairings).length) {
-          liveMatches = allPairings;
-          const active = new Set(Object.keys(allPairings));
-          standings.forEach(p => { if (!active.has(p.name)) droppedPlayers.push(p.name); });
-        }
-      } catch (e) { setStatus(`⚠️ Pairings: ${e.message}`); }
 
       setStatus('Envoi vers bafbordeaux.fr…');
       const res = await fetch('https://bafbordeaux.fr/api/standings', {

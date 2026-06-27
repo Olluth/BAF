@@ -127,7 +127,8 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const liveCell = `<td class="live-round-cell">${liveMatch ? `${esc(liveMatch.opponent)}<span class="live-round-hero">${esc(liveMatch.opponentHero)}</span>` : '—'}</td>`;
+    const lastH    = p.history.length ? p.history[p.history.length - 1] : null;
+    const liveCell = `<td class="live-round-cell">${lastH ? `${esc(lastH.opponent)}<span class="live-round-hero">${esc(lastH.opponentHero)}</span>` : '—'}</td>`;
 
     const histRows = p.history.map(h => `
       <tr>
