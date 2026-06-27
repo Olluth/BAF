@@ -1919,13 +1919,15 @@ textarea::placeholder {
 }
 
 .matchup-col {
-  width: 7rem;
+  width: 6rem;
 }
 .matchup-cell {
   vertical-align: middle;
+  padding-left: 0 !important;
+  padding-right: 0.5rem !important;
 }
 .matchup-cell .hero-matchup {
-  justify-content: center;
+  justify-content: flex-start;
 }
 .live-round-col {
   width: 7rem;
