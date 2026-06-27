@@ -74,10 +74,11 @@
       c.querySelectorAll('i').forEach(i => i.remove());
       return c.textContent.trim();
     };
-    const getHero = el => el.querySelector('.player-text span')?.textContent.trim() ?? '';
+    const getHero    = el => el.querySelector('.player-text span')?.textContent.trim() ?? '';
+    const getHeroImg = el => el.querySelector('img')?.src ?? '';
     const p1Name = getName(p1El), p2Name = getName(p2El);
     if (!p1Name || !p2Name) return null;
-    return { p1Name, p2Name, p1Hero: getHero(p1El), p2Hero: getHero(p2El), p1Won: p1El.classList.contains('winner'), p2Won: p2El.classList.contains('winner') };
+    return { p1Name, p2Name, p1Hero: getHero(p1El), p2Hero: getHero(p2El), p1HeroImg: getHeroImg(p1El), p2HeroImg: getHeroImg(p2El), p1Won: p1El.classList.contains('winner'), p2Won: p2El.classList.contains('winner') };
   };
 
   const parseResults  = html => { const d = parseDoc(html); const m = []; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (x) m.push(x); }); return m; };
@@ -120,18 +121,27 @@
       const liveRound = rounds[rounds.length - 1];
       const liveRoundNameForBuild = liveRound.roundName;
 
+      const heroImgMap = {};
+      allRounds.forEach(({ matches }) => {
+        matches.forEach(({ p1Name, p1HeroImg, p2Name, p2HeroImg }) => {
+          if (p1HeroImg && !heroImgMap[p1Name]) heroImgMap[p1Name] = p1HeroImg;
+          if (p2HeroImg && !heroImgMap[p2Name]) heroImgMap[p2Name] = p2HeroImg;
+        });
+      });
+
       const map = {};
       const get = (name, hero) => { if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] }; return map[name]; };
       allRounds.forEach(({ roundName, matches }) => {
         matches.forEach(({ p1Name, p1Hero, p2Name, p2Hero, p1Won, p2Won }) => {
           const p1 = get(p1Name, p1Hero), p2 = get(p2Name, p2Hero), draw = !p1Won && !p2Won;
-          if (draw && roundName === liveRoundNameForBuild) { p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'ongoing' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'ongoing' }); }
-          else if (draw) { p1.draws++; p2.draws++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' }); }
-          else if (p1Won) { p1.wins++; p2.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'win' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'loss' }); }
-          else { p2.wins++; p1.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'loss' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'win' }); }
+          const i1 = heroImgMap[p1Name] || '', i2 = heroImgMap[p2Name] || '';
+          if (draw && roundName === liveRoundNameForBuild) { p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, opponentHeroImg: i2, result: 'ongoing' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, opponentHeroImg: i1, result: 'ongoing' }); }
+          else if (draw) { p1.draws++; p2.draws++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, opponentHeroImg: i2, result: 'draw' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, opponentHeroImg: i1, result: 'draw' }); }
+          else if (p1Won) { p1.wins++; p2.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, opponentHeroImg: i2, result: 'win' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, opponentHeroImg: i1, result: 'loss' }); }
+          else { p2.wins++; p1.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, opponentHeroImg: i2, result: 'loss' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, opponentHeroImg: i1, result: 'win' }); }
         });
       });
-      const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
+      const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses).map(p => ({ ...p, heroImg: heroImgMap[p.name] || '' }));
       const liveMatches = {}, liveRoundName = liveRound.roundName;
       const droppedPlayers = [];
 

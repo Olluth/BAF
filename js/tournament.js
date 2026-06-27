@@ -150,8 +150,11 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const lastH        = p.history.length ? p.history[p.history.length - 1] : null;
-    const liveCell     = `<td class="live-round-cell">${lastH ? `${esc(lastH.round)}<span class="live-round-hero">${esc(lastH.opponent)}</span>` : '—'}</td>`;
+    const lastH    = p.history.length ? p.history[p.history.length - 1] : null;
+    const heroIcon = (src, title) => src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(title)}" loading="lazy">` : `<span class="hero-icon-text">${esc(title.split(',')[0])}</span>`;
+    const liveCell = `<td class="live-round-cell">${lastH
+      ? `<div class="hero-matchup">${heroIcon(p.heroImg || '', p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHeroImg || '', lastH.opponentHero)}</div><span class="live-round-hero">${esc(lastH.round)}</span>`
+      : '—'}</td>`;
     const roundResult  = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
     const recordClass  = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
 

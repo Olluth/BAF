@@ -1922,6 +1922,30 @@ textarea::placeholder {
   width: 11rem;
 }
 
+.hero-matchup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hero-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(249, 230, 197, 0.2);
+}
+
+.hero-icon-text {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.vs-x {
+  font-size: 0.75rem;
+  opacity: 0.5;
+}
+
 .live-round-cell {
   font-size: 0.85rem;
   color: rgba(249, 230, 197, 0.9);
