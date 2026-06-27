@@ -240,7 +240,8 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
 
 /* ---- Load event ---- */
 
-let _generation = 0;
+let _generation    = 0;
+let _prevStandings = new Map();
 
 const loadEvent = async (slug) => {
   const isRefresh = slug === _currentSlug;
@@ -249,6 +250,7 @@ const loadEvent = async (slug) => {
   const gen = ++_generation;
   clearRefreshTimer();
   if (!isRefresh) {
+    _prevStandings = new Map();
     clearStandings();
     renderVisitorPlayerList(false);
     setStatus(t('tracker.loading'));
@@ -263,15 +265,26 @@ const loadEvent = async (slug) => {
     if (gen !== _generation) return;
 
     setStatus('');
-    const droppedSet = new Set(data.droppedPlayers || []);
-    renderStandings(
-      data.standings    || [],
-      slug,
-      loadTrackedPlayers(),
-      data.liveMatches  || {},
-      data.liveRoundName || '',
-      droppedSet
-    );
+    const droppedSet   = new Set(data.droppedPlayers || []);
+    const newStandings = data.standings || [];
+    renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet);
+
+    if (isRefresh && _prevStandings.size) {
+      newStandings.forEach(p => {
+        const prev = _prevStandings.get(p.name);
+        if (!prev) return;
+        const won  = p.wins   > prev.wins;
+        const lost = p.losses > prev.losses || p.draws > prev.draws;
+        if (!won && !lost) return;
+        const row  = document.querySelector(`.standings-row[data-hid="${toId(p.name)}"]`);
+        const cell = row?.querySelector('.record-cell');
+        if (!cell) return;
+        const cls = won ? 'score-highlight-win' : 'score-highlight-loss';
+        cell.classList.add(cls);
+        setTimeout(() => cell.classList.remove(cls), 4000);
+      });
+    }
+    _prevStandings = new Map(newStandings.map(p => [p.name, { wins: p.wins, losses: p.losses, draws: p.draws }]));
 
     if (data.liveRoundName) {
       const ageMin = Math.round((Date.now() - new Date(data.lastUpdated).getTime()) / 60000);
