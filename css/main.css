@@ -1891,6 +1891,22 @@ textarea::placeholder {
   font-weight: 500;
 }
 
+.live-round-col {
+  width: 11rem;
+}
+
+.live-round-cell {
+  font-size: 0.85rem;
+  color: rgba(249, 230, 197, 0.9);
+}
+
+.live-round-cell .live-round-hero {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(249, 230, 197, 0.45);
+  margin-top: 0.1rem;
+}
+
 .dropped-row {
   opacity: 0.45;
 }

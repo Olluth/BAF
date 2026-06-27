@@ -127,8 +127,8 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const liveIndicator = liveMatch
-      ? `<span class="live-match-indicator">● ${t('tracker.vs')} ${esc(liveMatch.opponent)}</span>`
+    const liveCell = hasLive
+      ? `<td class="live-round-cell">${liveMatch ? `${esc(liveMatch.opponent)}<span class="live-round-hero">${esc(liveMatch.opponentHero)}</span>` : '—'}</td>`
       : '';
 
     const histRows = p.history.map(h => `
@@ -155,10 +155,11 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
           </span>
         </td>
         <td>${esc(p.hero)}</td>
-        <td class="record-cell">${record}${liveIndicator}</td>
+        <td class="record-cell">${record}</td>
+        ${liveCell}
       </tr>
       <tr class="history-panel-row hidden" id="${hid}">
-        <td colspan="4" class="history-panel-cell">
+        <td colspan="${hasLive ? 5 : 4}" class="history-panel-cell">
           <div class="history-panel">
             ${liveNote}
             <table class="history-table">
@@ -193,6 +194,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
           <th>${t('tracker.col.player')}</th>
           <th>${t('tracker.col.hero')}</th>
           <th>${t('tracker.col.record')}</th>
+          ${hasLive ? `<th class="live-round-col">${t('tracker.col.liveRound')}</th>` : ''}
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
