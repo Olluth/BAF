@@ -9,7 +9,7 @@
 
   const _src = document.currentScript?.src || '';
   const API_KEY = new URL(_src || 'https://x/?key=').searchParams.get('key') || '';
-  const INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+  const INTERVAL_MS = 90 * 1000; // 90 seconds
 
   /* ---- Overlay ---- */
   const el = document.createElement('div');
@@ -94,8 +94,10 @@
 
       setStatus(`<b>${slug}</b> — Lecture des rounds…`);
 
+      const coverageHtml = await fetch(location.href).then(r => r.text());
+      const coverageDoc  = parseDoc(coverageHtml);
       const rounds = [];
-      document.querySelectorAll('table tbody tr').forEach(row => {
+      coverageDoc.querySelectorAll('table tbody tr').forEach(row => {
         const nameCell    = row.querySelector('td.rounds');
         const pairingsLnk = row.querySelector('td.pairings a');
         if (!nameCell || !pairingsLnk) return;
