@@ -1732,6 +1732,19 @@ textarea::placeholder {
   font-size: 0.83rem;
 }
 
+.event-default-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fcd34d;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 .admin-list-item-actions {
   display: flex;
   gap: 0.5rem;

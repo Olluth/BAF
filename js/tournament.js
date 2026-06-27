@@ -274,12 +274,18 @@ const populateEventDropdown = async () => {
     select.appendChild(opt);
     return;
   }
+  let defaultSlug = '';
   events.forEach(ev => {
     const opt       = document.createElement('option');
     opt.value       = ev.slug;
     opt.textContent = ev.name;
     select.appendChild(opt);
+    if (ev.isDefault) defaultSlug = ev.slug;
   });
+  if (defaultSlug && !_currentSlug) {
+    select.value = defaultSlug;
+    loadEvent(defaultSlug);
+  }
 };
 
 /* ---- Init ---- */

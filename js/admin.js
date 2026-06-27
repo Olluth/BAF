@@ -348,7 +348,8 @@ const loadEventsFromServer = async () => {
     const local = loadAdminEvents();
     const merged = serverEvents.map(sv => {
       const existing = local.find(l => l.slug === sv.slug);
-      return existing || { id: randomUUID(), slug: sv.slug, name: sv.name, active: sv.active !== false };
+      const base = existing || { id: randomUUID() };
+      return { ...base, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false };
     });
     saveAdminEvents(merged);
     renderEventList();
@@ -586,10 +587,11 @@ const renderEventList = () => {
       (ev) => `
     <li class="admin-list-item">
       <div class="admin-list-item-info">
-        <span class="admin-list-item-title">${escapeHtml(ev.name)}</span>
+        <span class="admin-list-item-title">${escapeHtml(ev.name)}${ev.isDefault ? ' <span class="event-default-badge">★ défaut</span>' : ''}</span>
         <span class="admin-list-item-meta">${escapeHtml(ev.slug)}${ev.active === false ? ' · masqué' : ''}</span>
       </div>
       <div class="admin-list-item-actions">
+        ${ev.isDefault ? '' : `<button class="button" data-action="set-default" data-id="${escapeAttr(ev.id)}" data-slug="${escapeAttr(ev.slug)}">${t('admin.events.setDefault')}</button>`}
         <button class="button" data-action="edit-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.edit')}</button>
         <button class="button admin-btn-danger" data-action="delete-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.delete')}</button>
       </div>
@@ -969,8 +971,15 @@ const wireEvents = () => {
   $('event-list').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
-    const { action, id } = btn.dataset;
-    if (action === 'edit-event') {
+    const { action, id, slug } = btn.dataset;
+    if (action === 'set-default') {
+      await fetch(`/api/events/${encodeURIComponent(slug)}/set-default`, {
+        method: 'POST', headers: { 'Authorization': `Bearer ${getAnalyticsKey()}` },
+      });
+      const events = loadAdminEvents().map(ev => ({ ...ev, isDefault: ev.id === id }));
+      saveAdminEvents(events);
+      renderEventList();
+    } else if (action === 'edit-event') {
       const ev = loadAdminEvents().find((ev) => ev.id === id);
       if (ev) openEventForm(ev);
     } else if (action === 'delete-event') {

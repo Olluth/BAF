@@ -213,6 +213,15 @@ app.post('/api/events', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+app.post('/api/events/:slug/set-default', requireAuth, (req, res) => {
+  const { slug } = req.params;
+  if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
+  const events = loadEventsData();
+  if (!events.find(e => e.slug === slug)) return res.status(404).json({ error: 'not found' });
+  saveEventsData(events.map(e => ({ ...e, isDefault: e.slug === slug })));
+  res.json({ ok: true });
+});
+
 app.delete('/api/events/:slug', requireAuth, (req, res) => {
   const { slug } = req.params;
   if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
