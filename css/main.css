@@ -1908,23 +1908,15 @@ textarea::placeholder {
   font-weight: 500;
 }
 
-@keyframes score-flash-win {
-  0%   { background: rgba(34, 197, 94, 0.3); color: #4ade80; }
-  100% { background: transparent; }
-}
-
-@keyframes score-flash-loss {
-  0%   { background: rgba(239, 68, 68, 0.3); color: #f87171; }
-  100% { background: transparent; }
-}
-
 .score-highlight-win {
-  animation: score-flash-win 4s ease-out forwards;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
   border-radius: 4px;
 }
 
 .score-highlight-loss {
-  animation: score-flash-loss 4s ease-out forwards;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
   border-radius: 4px;
 }
 

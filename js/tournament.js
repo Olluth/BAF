@@ -279,9 +279,7 @@ const loadEvent = async (slug) => {
         const row  = document.querySelector(`.standings-row[data-hid="${toId(p.name)}"]`);
         const cell = row?.querySelector('.record-cell');
         if (!cell) return;
-        const cls = won ? 'score-highlight-win' : 'score-highlight-loss';
-        cell.classList.add(cls);
-        setTimeout(() => cell.classList.remove(cls), 4000);
+        cell.classList.add(won ? 'score-highlight-win' : 'score-highlight-loss');
       });
     }
     _prevStandings = new Map(newStandings.map(p => [p.name, { wins: p.wins, losses: p.losses, draws: p.draws }]));
