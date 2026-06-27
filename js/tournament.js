@@ -127,9 +127,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const liveCell = hasLive
-      ? `<td class="live-round-cell">${liveMatch ? `${esc(liveMatch.opponent)}<span class="live-round-hero">${esc(liveMatch.opponentHero)}</span>` : '—'}</td>`
-      : '';
+    const liveCell = `<td class="live-round-cell">${liveMatch ? `${esc(liveMatch.opponent)}<span class="live-round-hero">${esc(liveMatch.opponentHero)}</span>` : '—'}</td>`;
 
     const histRows = p.history.map(h => `
       <tr>
@@ -159,7 +157,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
         ${liveCell}
       </tr>
       <tr class="history-panel-row hidden" id="${hid}">
-        <td colspan="${hasLive ? 5 : 4}" class="history-panel-cell">
+        <td colspan="5" class="history-panel-cell">
           <div class="history-panel">
             ${liveNote}
             <table class="history-table">
@@ -194,7 +192,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
           <th>${t('tracker.col.player')}</th>
           <th>${t('tracker.col.hero')}</th>
           <th>${t('tracker.col.record')}</th>
-          ${hasLive ? `<th class="live-round-col">${t('tracker.col.liveRound')}</th>` : ''}
+          <th class="live-round-col">${t('tracker.col.liveRound')}</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
