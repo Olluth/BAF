@@ -1919,10 +1919,10 @@ textarea::placeholder {
 }
 
 .matchup-col {
-  width: 5.5rem;
+  width: 7rem;
 }
 .matchup-cell {
-  text-align: center;
+  vertical-align: middle;
 }
 .matchup-cell .hero-matchup {
   justify-content: center;
@@ -1938,8 +1938,8 @@ textarea::placeholder {
 }
 
 .hero-icon {
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(249, 230, 197, 0.2);
