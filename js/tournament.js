@@ -97,6 +97,7 @@ const _HERO_ICON_MAP = [
   ['frankie',                         '/images/icon_frankie.webp'],
   ['genis',                           '/images/icon_genis.webp'],
   ['gravybones',                      '/images/icon_gravybones.webp'],
+  ['gravy bones',                     '/images/icon_gravybones.webp'],
   ['ira',                             '/images/icon_ira.webp'],
   ['iyslander',                       '/images/icon_iyslander.webp'],
   ['jarl',                            '/images/icon_jarl.webp'],
