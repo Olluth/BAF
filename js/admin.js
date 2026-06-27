@@ -587,11 +587,11 @@ const renderEventList = () => {
       (ev) => `
     <li class="admin-list-item">
       <div class="admin-list-item-info">
-        <span class="admin-list-item-title">${escapeHtml(ev.name)}${ev.isDefault ? ' <span class="event-default-badge">★ défaut</span>' : ''}</span>
+        <span class="admin-list-item-title">${escapeHtml(ev.name)}</span>
         <span class="admin-list-item-meta">${escapeHtml(ev.slug)}${ev.active === false ? ' · masqué' : ''}</span>
       </div>
       <div class="admin-list-item-actions">
-        ${ev.isDefault ? '' : `<button class="button" data-action="set-default" data-id="${escapeAttr(ev.id)}" data-slug="${escapeAttr(ev.slug)}">${t('admin.events.setDefault')}</button>`}
+        <button class="button event-default-btn${ev.isDefault ? ' event-default-btn--active' : ''}" data-action="set-default" data-id="${escapeAttr(ev.id)}" data-slug="${escapeAttr(ev.slug)}"${ev.isDefault ? ' disabled' : ''}>${t('admin.events.setDefault')}</button>
         <button class="button" data-action="edit-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.edit')}</button>
         <button class="button admin-btn-danger" data-action="delete-event" data-id="${escapeAttr(ev.id)}">${t('admin.events.delete')}</button>
       </div>
