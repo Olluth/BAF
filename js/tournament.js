@@ -50,6 +50,92 @@ const fetchEvents = async () => {
 const esc  = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const toId = s => 'h' + s.replace(/[^a-zA-Z0-9]/g, '-');
 
+const _HERO_ICON_MAP = [
+  ['arakni, marionette',              '/images/icon_arakni_m.webp'],
+  ['arakni, 5l!p3d',                  '/images/icon_arakni_sttc-1.webp'],
+  ['arakni',                          '/images/icon_arakni_th-1.webp'],
+  ['aurora, legacy of the tempest',   '/images/icon_aurora_lot-2.webp'],
+  ['aurora',                          '/images/icon_aurora.webp'],
+  ['baalghor',                        '/images/icon_baalghor_oote.webp'],
+  ['oscilio, constella intelligence', '/images/icon_oscilio_fc-1.webp'],
+  ['oscilio',                         '/images/icon_oscillio.webp'],
+  ['bravo, showstopper',              '/images/icon_bravo_sots.webp'],
+  ['bravo, fearless',                 '/images/icon_bravo_fs.webp'],
+  ['bravo',                           '/images/icon_bravo_s.webp'],
+  ['dash, inventor extraordinaire',   '/images/icon_dash_ie.webp'],
+  ['dash',                            '/images/icon_dash_io.webp'],
+  ['kassai, cintari',                 '/images/icon_kassai_cs.webp'],
+  ['kassai',                          '/images/icon_kassai_gs.webp'],
+  ['kayo, army of darkness',          '/images/icon_kayo_ad.webp'],
+  ['kayo',                            '/images/icon_kayo_uc-2.webp'],
+  ['oldhim',                          '/images/icon_oldhim-1.webp'],
+  ['prism, sculptor',                 '/images/icon_prism_soa.webp'],
+  ['prism',                           '/images/icon_prism_aos.webp'],
+  ['rhinar',                          '/images/icon_rhinar_rr-1.webp'],
+  ['hala',                            '/images/icon_hala_pos.webp'],
+  ['pleiades',                        '/images/icon_pleiades-1.webp'],
+  ['lyath',                           '/images/icon_lyath-2.webp'],
+  ['tuffnut',                         '/images/icon_tuffnut-1.webp'],
+  ['zyggy',                           '/images/icon_zyggy-1.webp'],
+  ['azalea',                          '/images/icon_azalea.webp'],
+  ['benji',                           '/images/icon_benji.webp'],
+  ['betsy',                           '/images/icon_betsy.webp'],
+  ['blaze',                           '/images/icon_blaze.webp'],
+  ['boltyn',                          '/images/icon_boltyn.webp'],
+  ['brevant',                         '/images/icon_brevant.webp'],
+  ['briar',                           '/images/icon_briar.webp'],
+  ['chane',                           '/images/icon_chane.webp'],
+  ['cindra',                          '/images/icon_cindra.webp'],
+  ['data doll',                       '/images/icon_datadoll.webp'],
+  ['dorinthea',                       '/images/icon_dorinthea.webp'],
+  ['dromai',                          '/images/icon_dromai.webp'],
+  ['emperor',                         '/images/icon_emperor.webp'],
+  ['enigma',                          '/images/icon_enigma.webp'],
+  ['fai',                             '/images/icon_fai.webp'],
+  ['fang',                            '/images/icon_fang.webp'],
+  ['florian',                         '/images/icon_florian.webp'],
+  ['frankie',                         '/images/icon_frankie.webp'],
+  ['genis',                           '/images/icon_genis.webp'],
+  ['gravybones',                      '/images/icon_gravybones.webp'],
+  ['ira',                             '/images/icon_ira.webp'],
+  ['iyslander',                       '/images/icon_iyslander.webp'],
+  ['jarl',                            '/images/icon_jarl.webp'],
+  ['kano',                            '/images/icon_kano.webp'],
+  ['katsu',                           '/images/icon_katsu.webp'],
+  ['kavdaen',                         '/images/icon_kavdaen.webp'],
+  ['levia',                           '/images/icon_levia.webp'],
+  ['lexi',                            '/images/icon_lexi.webp'],
+  ['marlynn',                         '/images/icon_marlynn.webp'],
+  ['maxx nitro',                      '/images/icon_maxxnitro.webp'],
+  ['melody',                          '/images/icon_melody.webp'],
+  ["nu'u",                            '/images/icon_nuu.webp'],
+  ['nuu',                             '/images/icon_nuu.webp'],
+  ['olympia',                         '/images/icon_olympia.webp'],
+  ['puffin',                          '/images/icon_puffin.webp'],
+  ['riptide',                         '/images/icon_riptide.webp'],
+  ['scurv',                           '/images/icon_scurv.webp'],
+  ['shiyana',                         '/images/icon_shiyana.webp'],
+  ['teklovossen',                     '/images/icon_teklovossen.webp'],
+  ['terra',                           '/images/icon_terra.webp'],
+  ['uzuri',                           '/images/icon_uzuri.webp'],
+  ['valda',                           '/images/icon_valda.webp'],
+  ['verdance',                        '/images/icon_verdance.webp'],
+  ['victor',                          '/images/icon_victor.webp'],
+  ['viserai',                         '/images/icon_viserai.webp'],
+  ['vynnset',                         '/images/icon_vynnset.webp'],
+  ['yoji',                            '/images/icon_yoji.webp'],
+  ['zen',                             '/images/icon_zen.webp'],
+];
+
+const getHeroIcon = (heroName) => {
+  if (!heroName) return null;
+  const n = heroName.toLowerCase();
+  for (const [key, path] of _HERO_ICON_MAP) {
+    if (n.startsWith(key)) return path;
+  }
+  return null;
+};
+
 let _refreshTimer = null;
 
 const clearRefreshTimer = () => {
@@ -150,13 +236,14 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     const hid       = toId(p.name);
     const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
 
-    const lastH    = p.history.length ? p.history[p.history.length - 1] : null;
-    const heroIcon = (src, title) => src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(title)}" loading="lazy">` : `<span class="hero-icon-text">${esc(title.split(',')[0])}</span>`;
-    const liveCell = `<td class="live-round-cell">${lastH
-      ? `<div class="hero-matchup">${heroIcon(p.heroImg || '', p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHeroImg || '', lastH.opponentHero)}</div><span class="live-round-hero">${esc(lastH.round)}</span>`
-      : '—'}</td>`;
-    const roundResult  = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
-    const recordClass  = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
+    const lastH       = p.history.length ? p.history[p.history.length - 1] : null;
+    const heroIcon    = (heroName) => { const src = getHeroIcon(heroName || ''); return src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(heroName || '')}" loading="lazy">` : `<span class="hero-icon-text">${esc((heroName || '').split(',')[0])}</span>`; };
+    const matchupCell = lastH
+      ? `<td class="matchup-cell"><div class="hero-matchup">${heroIcon(p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHero)}</div></td>`
+      : `<td class="matchup-cell">—</td>`;
+    const liveCell    = `<td class="live-round-cell">${lastH ? esc(lastH.round) : '—'}</td>`;
+    const roundResult = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
+    const recordClass = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
 
     const histRows = p.history.map(h => `
       <tr>
@@ -182,11 +269,12 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
           </span>
         </td>
         <td>${esc(p.hero)}</td>
+        ${matchupCell}
         <td class="record-cell${recordClass}">${record}</td>
         ${liveCell}
       </tr>
       <tr class="history-panel-row hidden" id="${hid}">
-        <td colspan="5" class="history-panel-cell">
+        <td colspan="6" class="history-panel-cell">
           <div class="history-panel">
             ${liveNote}
             <table class="history-table">
@@ -220,6 +308,7 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
           <th class="rank-col">#</th>
           <th>${t('tracker.col.player')}</th>
           <th>${t('tracker.col.hero')}</th>
+          <th class="matchup-col"></th>
           <th>${t('tracker.col.record')}</th>
           <th class="live-round-col">${t('tracker.col.liveRound')}</th>
         </tr></thead>

@@ -1918,8 +1918,17 @@ textarea::placeholder {
   font-weight: 600;
 }
 
+.matchup-col {
+  width: 5.5rem;
+}
+.matchup-cell {
+  text-align: center;
+}
+.matchup-cell .hero-matchup {
+  justify-content: center;
+}
 .live-round-col {
-  width: 11rem;
+  width: 7rem;
 }
 
 .hero-matchup {
