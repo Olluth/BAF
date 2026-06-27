@@ -114,19 +114,21 @@
         } catch { allRounds.push({ roundName: completed[i].roundName, matches: [] }); }
       }
 
+      const liveRound = rounds[rounds.length - 1];
+      const liveRoundNameForBuild = liveRound.roundName;
+
       const map = {};
       const get = (name, hero) => { if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] }; return map[name]; };
       allRounds.forEach(({ roundName, matches }) => {
         matches.forEach(({ p1Name, p1Hero, p2Name, p2Hero, p1Won, p2Won }) => {
           const p1 = get(p1Name, p1Hero), p2 = get(p2Name, p2Hero), draw = !p1Won && !p2Won;
-          if (draw) { p1.draws++; p2.draws++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' }); }
+          if (draw && roundName === liveRoundNameForBuild) { p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'ongoing' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'ongoing' }); }
+          else if (draw) { p1.draws++; p2.draws++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' }); }
           else if (p1Won) { p1.wins++; p2.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'win' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'loss' }); }
           else { p2.wins++; p1.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'loss' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'win' }); }
         });
       });
       const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
-
-      const liveRound = rounds[rounds.length - 1];
       let liveMatches = {}, liveRoundName = '';
       const droppedPlayers = [];
       setStatus('Pairings en cours…');
