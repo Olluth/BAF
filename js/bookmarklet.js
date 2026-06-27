@@ -131,7 +131,36 @@
           else { p2.wins++; p1.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'loss' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'win' }); }
         });
       });
-      const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
+      // Fetch official standings page for accurate rank order (tiebreakers, etc.)
+      let officialRankMap = {};
+      if (completed.length > 0) {
+        try {
+          const standingsUrl = new URL(`standings/${completed.length}/`, location.href).href;
+          setStatus('Classement officiel…');
+          const sHtml = await fetch(standingsUrl).then(r => r.text());
+          const sDoc  = parseDoc(sHtml);
+          sDoc.querySelectorAll('table tbody tr').forEach((row, idx) => {
+            const cells = [...row.querySelectorAll('td')];
+            if (cells.length < 2) return;
+            const rankNum  = parseInt(cells[0]?.textContent.trim()) || (idx + 1);
+            const nameCell = cells[1];
+            const name     = (nameCell?.querySelector('a') || nameCell)?.textContent.trim() || '';
+            if (name) officialRankMap[name.toLowerCase()] = rankNum;
+          });
+        } catch {}
+      }
+
+      const allPlayers = Object.values(map);
+      if (Object.keys(officialRankMap).length > 0) {
+        allPlayers.sort((a, b) => {
+          const ra = officialRankMap[a.name.toLowerCase()] ?? 9999;
+          const rb = officialRankMap[b.name.toLowerCase()] ?? 9999;
+          return ra - rb;
+        });
+      } else {
+        allPlayers.sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
+      }
+      const standings = allPlayers;
       const liveMatches = {}, liveRoundName = liveRound.roundName;
       const droppedPlayers = [];
 
