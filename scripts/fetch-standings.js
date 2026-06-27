@@ -84,7 +84,7 @@ const parsePairingsPage = (html) => {
   return pairings;
 };
 
-const buildStandings = (allRounds) => {
+const buildStandings = (allRounds, liveRoundName = '') => {
   const map = {};
   const get = (name, hero) => {
     if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] };
@@ -95,7 +95,10 @@ const buildStandings = (allRounds) => {
       const p1   = get(p1Name, p1Hero);
       const p2   = get(p2Name, p2Hero);
       const draw = !p1Won && !p2Won;
-      if (draw) {
+      if (draw && roundName === liveRoundName) {
+        p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'ongoing' });
+        p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'ongoing' });
+      } else if (draw) {
         p1.draws++; p2.draws++;
         p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' });
         p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' });
@@ -189,6 +192,7 @@ async function main() {
   // 2. Fetch completed rounds and build standings
   const completedRounds = rounds.filter(r => r.hasResults);
   let standings = [];
+  const liveRound    = rounds[rounds.length - 1];
 
   if (completedRounds.length) {
     const fetches = await Promise.allSettled(completedRounds.map(r => fetchUrl(r.resultsUrl)));
@@ -196,12 +200,11 @@ async function main() {
       roundName: r.roundName,
       matches:   fetches[i].status === 'fulfilled' ? parseResultsPage(fetches[i].value) : [],
     }));
-    standings = buildStandings(allRounds);
+    standings = buildStandings(allRounds, liveRound.roundName);
     console.log(`Standings built: ${standings.length} player(s) across ${completedRounds.length} completed round(s)`);
   }
 
   // 3. Fetch live pairings for the current round
-  const liveRound    = rounds[rounds.length - 1];
   let liveMatches    = {};
   let liveRoundName  = '';
   const droppedPlayers = [];
