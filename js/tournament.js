@@ -104,6 +104,8 @@ const toEmbedUrl = (url) => {
 const renderStreamEmbed = (slug) => {
   const el = document.getElementById('stream-embed');
   if (!el) return;
+  if (el.dataset.slug === slug) return;
+  el.dataset.slug = slug;
   const ev = _eventsCache.find(e => e.slug === slug);
   const embedUrl = ev ? toEmbedUrl(ev.streamUrl) : null;
   if (!embedUrl) { el.classList.add('hidden'); el.innerHTML = ''; return; }
