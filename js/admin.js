@@ -317,7 +317,7 @@ const syncEventToServer = async (event) => {
     await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ slug: event.slug, name: event.name, active: event.active !== false }),
+      body: JSON.stringify({ slug: event.slug, name: event.name, active: event.active !== false, streamUrl: event.streamUrl || '' }),
     });
   } catch {}
 };
@@ -350,7 +350,7 @@ const loadEventsFromServer = async () => {
       const existing = local.find(l => l.slug === sv.slug);
       const base = existing || {};
       const id = base.id || randomUUID();
-      return { ...base, id, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false };
+      return { ...base, id, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false, streamUrl: sv.streamUrl || '' };
     });
     saveAdminEvents(merged);
     renderEventList();
@@ -606,9 +606,10 @@ const openEventForm = (event = null) => {
   const titleEl = $('event-form-title');
   titleEl.textContent = t(event ? 'admin.events.form.edit' : 'admin.events.form.new');
   titleEl.dataset.i18n = event ? 'admin.events.form.edit' : 'admin.events.form.new';
-  $('event-id').value          = event ? event.id   : '';
-  $('event-name').value        = event ? event.name : '';
-  $('event-slug-input').value  = event ? event.slug : '';
+  $('event-id').value          = event ? event.id        : '';
+  $('event-name').value        = event ? event.name      : '';
+  $('event-slug-input').value  = event ? event.slug      : '';
+  $('event-stream-url').value  = event ? (event.streamUrl || '') : '';
   $('event-active').checked    = event ? event.active !== false : true;
   $('event-form-container').classList.remove('hidden');
   $('event-name').focus();
@@ -955,9 +956,10 @@ const wireEvents = () => {
   $('event-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const data = {
-      name:   $('event-name').value,
-      slug:   $('event-slug-input').value,
-      active: $('event-active').checked,
+      name:      $('event-name').value,
+      slug:      $('event-slug-input').value,
+      active:    $('event-active').checked,
+      streamUrl: $('event-stream-url').value.trim(),
     };
     if (editingEventId) {
       updateAdminEvent(editingEventId, data);

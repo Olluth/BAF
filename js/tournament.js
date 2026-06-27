@@ -88,7 +88,28 @@ const renderVisitorPlayerList = (hidden = false) => {
     </div>`;
 };
 
-let _currentSlug = null;
+let _currentSlug  = null;
+let _eventsCache  = [];
+
+const toEmbedUrl = (url) => {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}?autoplay=0`;
+  const tw = url.match(/(?:twitch\.tv\/)([a-zA-Z0-9_]+)/);
+  if (tw) return `https://player.twitch.tv/?channel=${tw[1]}&parent=${location.hostname}`;
+  if (url.startsWith('http')) return url;
+  return null;
+};
+
+const renderStreamEmbed = (slug) => {
+  const el = document.getElementById('stream-embed');
+  if (!el) return;
+  const ev = _eventsCache.find(e => e.slug === slug);
+  const embedUrl = ev ? toEmbedUrl(ev.streamUrl) : null;
+  if (!embedUrl) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `<iframe src="${esc(embedUrl)}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
+};
 
 const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRoundName = '', droppedSet = new Set()) => {
   const container = document.getElementById('standings-container');
@@ -221,6 +242,7 @@ let _generation = 0;
 
 const loadEvent = async (slug) => {
   _currentSlug = slug;
+  renderStreamEmbed(slug);
   const gen = ++_generation;
   clearRefreshTimer();
   clearStandings();
@@ -275,6 +297,7 @@ const populateEventDropdown = async () => {
     select.appendChild(opt);
     return;
   }
+  _eventsCache = events;
   let defaultSlug = '';
   events.forEach(ev => {
     const opt       = document.createElement('option');
