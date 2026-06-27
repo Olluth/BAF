@@ -611,7 +611,6 @@ const openEventForm = (event = null) => {
   $('event-slug-input').value  = event ? event.slug      : '';
   $('event-stream-url').value  = event ? (event.streamUrl || '') : '';
   $('event-active').checked    = event ? event.active !== false : true;
-  $('event-is-draft').checked  = event ? !!event.isDraft : false;
   $('event-form-container').classList.remove('hidden');
   $('event-name').focus();
   $('event-form-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -961,7 +960,6 @@ const wireEvents = () => {
       slug:      $('event-slug-input').value,
       active:    $('event-active').checked,
       streamUrl: $('event-stream-url').value.trim(),
-      isDraft:   $('event-is-draft').checked,
     };
     if (editingEventId) {
       updateAdminEvent(editingEventId, data);

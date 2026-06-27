@@ -360,7 +360,7 @@ const loadEvent = async (slug) => {
     setStatus('');
     const droppedSet   = new Set(data.droppedPlayers || []);
     const newStandings = data.standings || [];
-    const isDraft      = !!(_eventsCache.find(e => e.slug === slug)?.isDraft);
+    const isDraft      = /draft|booster/i.test(data.liveRoundName || '');
     renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet, isDraft);
 
     if (data.liveRoundName) {
