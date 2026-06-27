@@ -118,16 +118,18 @@
       const liveRoundNameForBuild = liveRound.roundName;
 
       const map = {};
+      let ongoingCount = 0;
       const get = (name, hero) => { if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] }; return map[name]; };
       allRounds.forEach(({ roundName, matches }) => {
         matches.forEach(({ p1Name, p1Hero, p2Name, p2Hero, p1Won, p2Won }) => {
           const p1 = get(p1Name, p1Hero), p2 = get(p2Name, p2Hero), draw = !p1Won && !p2Won;
-          if (draw && roundName === liveRoundNameForBuild) { p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'ongoing' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'ongoing' }); }
+          if (draw && roundName === liveRoundNameForBuild) { ongoingCount++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'ongoing' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'ongoing' }); }
           else if (draw) { p1.draws++; p2.draws++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'draw' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'draw' }); }
           else if (p1Won) { p1.wins++; p2.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'win' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'loss' }); }
           else { p2.wins++; p1.losses++; p1.history.push({ round: roundName, opponent: p2Name, opponentHero: p2Hero, result: 'loss' }); p2.history.push({ round: roundName, opponent: p1Name, opponentHero: p1Hero, result: 'win' }); }
         });
       });
+      console.log('[BAF] liveRoundName:', liveRoundNameForBuild, '| ongoing matches detected:', ongoingCount);
       const standings = Object.values(map).sort((a, b) => b.wins !== a.wins ? b.wins - a.wins : a.losses - b.losses);
       let liveMatches = {}, liveRoundName = '';
       const droppedPlayers = [];
