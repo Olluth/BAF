@@ -96,8 +96,7 @@
 
       const coverageHtml = await fetch(location.href).then(r => r.text());
       const coverageDoc  = parseDoc(coverageHtml);
-      const base = location.origin;
-      const absHref = el => { if (!el) return null; const h = el.getAttribute('href'); if (!h) return null; return h.startsWith('http') ? h : base + h; };
+      const absHref = el => { if (!el) return null; const h = el.getAttribute('href'); if (!h) return null; try { return new URL(h, location.href).href; } catch { return null; } };
       const rounds = [];
       coverageDoc.querySelectorAll('table tbody tr').forEach(row => {
         const nameCell    = row.querySelector('td.rounds');
@@ -138,11 +137,13 @@
       setStatus('Pairings en cours…');
       try {
         const allPairings = parsePairings(await fetch(liveRound.pairingsUrl).then(r => r.text()));
-        liveMatches = allPairings;
         liveRoundName = liveRound.roundName;
-        const active = new Set(Object.keys(allPairings));
-        standings.forEach(p => { if (!active.has(p.name)) droppedPlayers.push(p.name); });
-      } catch (_) {}
+        if (Object.keys(allPairings).length) {
+          liveMatches = allPairings;
+          const active = new Set(Object.keys(allPairings));
+          standings.forEach(p => { if (!active.has(p.name)) droppedPlayers.push(p.name); });
+        }
+      } catch (e) { setStatus(`⚠️ Pairings: ${e.message}`); }
 
       setStatus('Envoi vers bafbordeaux.fr…');
       const res = await fetch('https://bafbordeaux.fr/api/standings', {
