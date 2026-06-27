@@ -970,25 +970,30 @@ const wireEvents = () => {
 
   $('event-list').addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     const { action, id, slug } = btn.dataset;
-    if (action === 'set-default') {
-      await fetch(`/api/events/${encodeURIComponent(slug)}/set-default`, {
-        method: 'POST', headers: { 'Authorization': `Bearer ${getAnalyticsKey()}` },
-      });
-      const events = loadAdminEvents().map(ev => ({ ...ev, isDefault: ev.id === id }));
-      saveAdminEvents(events);
-      renderEventList();
-    } else if (action === 'edit-event') {
-      const ev = loadAdminEvents().find((ev) => ev.id === id);
-      if (ev) openEventForm(ev);
-    } else if (action === 'delete-event') {
-      if (confirm(t('admin.events.confirmDelete'))) {
-        const ev = loadAdminEvents().find((ev) => ev.id === id);
-        deleteAdminEvent(id);
-        if (ev) await deleteEventFromServer(ev.slug);
+    try {
+      if (action === 'set-default') {
+        await fetch(`/api/events/${encodeURIComponent(slug)}/set-default`, {
+          method: 'POST', headers: { 'Authorization': `Bearer ${getAnalyticsKey()}` },
+        });
+        const events = loadAdminEvents().map(ev => ({ ...ev, isDefault: ev.id === id }));
+        saveAdminEvents(events);
         renderEventList();
+      } else if (action === 'edit-event') {
+        const ev = loadAdminEvents().find((ev) => ev.id === id);
+        if (ev) openEventForm(ev);
+      } else if (action === 'delete-event') {
+        if (confirm(t('admin.events.confirmDelete'))) {
+          const ev = loadAdminEvents().find((ev) => ev.id === id);
+          deleteAdminEvent(id);
+          if (ev) await deleteEventFromServer(ev.slug);
+          renderEventList();
+        }
       }
+    } catch (err) {
+      console.error('[BAF] event-list click error:', action, err);
+      alert(`Erreur : ${err.message}`);
     }
   });
 
