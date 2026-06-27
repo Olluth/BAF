@@ -317,7 +317,7 @@ const syncEventToServer = async (event) => {
     await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({ slug: event.slug, name: event.name, active: event.active !== false, streamUrl: event.streamUrl || '' }),
+      body: JSON.stringify({ slug: event.slug, name: event.name, active: event.active !== false, streamUrl: event.streamUrl || '', isDraft: !!event.isDraft }),
     });
   } catch {}
 };
@@ -350,7 +350,7 @@ const loadEventsFromServer = async () => {
       const existing = local.find(l => l.slug === sv.slug);
       const base = existing || {};
       const id = base.id || randomUUID();
-      return { ...base, id, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false, streamUrl: sv.streamUrl || '' };
+      return { ...base, id, slug: sv.slug, name: sv.name, active: sv.active !== false, isDefault: sv.isDefault || false, streamUrl: sv.streamUrl || '', isDraft: !!sv.isDraft };
     });
     saveAdminEvents(merged);
     renderEventList();
@@ -611,6 +611,7 @@ const openEventForm = (event = null) => {
   $('event-slug-input').value  = event ? event.slug      : '';
   $('event-stream-url').value  = event ? (event.streamUrl || '') : '';
   $('event-active').checked    = event ? event.active !== false : true;
+  $('event-is-draft').checked  = event ? !!event.isDraft : false;
   $('event-form-container').classList.remove('hidden');
   $('event-name').focus();
   $('event-form-container').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -960,6 +961,7 @@ const wireEvents = () => {
       slug:      $('event-slug-input').value,
       active:    $('event-active').checked,
       streamUrl: $('event-stream-url').value.trim(),
+      isDraft:   $('event-is-draft').checked,
     };
     if (editingEventId) {
       updateAdminEvent(editingEventId, data);

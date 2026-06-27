@@ -200,7 +200,7 @@ const renderStreamEmbed = (slug) => {
   el.innerHTML = `<iframe src="${esc(embedUrl)}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
 };
 
-const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRoundName = '', droppedSet = new Set()) => {
+const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false) => {
   const container = document.getElementById('standings-container');
   if (!container) return;
   renderVisitorPlayerList(true);
@@ -269,13 +269,13 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
             <span class="row-chevron" aria-hidden="true">›</span>
           </span>
         </td>
-        <td>${esc(p.hero)}</td>
-        ${matchupCell}
+        ${isDraft ? '' : `<td>${esc(p.hero)}</td>`}
+        ${isDraft ? '' : matchupCell}
         <td class="record-cell${recordClass}">${record}</td>
         ${liveCell}
       </tr>
       <tr class="history-panel-row hidden" id="${hid}">
-        <td colspan="6" class="history-panel-cell">
+        <td colspan="${isDraft ? 4 : 6}" class="history-panel-cell">
           <div class="history-panel">
             ${liveNote}
             <table class="history-table">
@@ -308,8 +308,8 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
         <thead><tr>
           <th class="rank-col">#</th>
           <th>${t('tracker.col.player')}</th>
-          <th>${t('tracker.col.hero')}</th>
-          <th class="matchup-col"></th>
+          ${isDraft ? '' : `<th>${t('tracker.col.hero')}</th>`}
+          ${isDraft ? '' : `<th class="matchup-col"></th>`}
           <th>${t('tracker.col.record')}</th>
           <th class="live-round-col">${t('tracker.col.liveRound')}</th>
         </tr></thead>
@@ -360,7 +360,8 @@ const loadEvent = async (slug) => {
     setStatus('');
     const droppedSet   = new Set(data.droppedPlayers || []);
     const newStandings = data.standings || [];
-    renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet);
+    const isDraft      = !!(_eventsCache.find(e => e.slug === slug)?.isDraft);
+    renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet, isDraft);
 
     if (data.liveRoundName) {
       const ageMin = Math.round((Date.now() - new Date(data.lastUpdated).getTime()) / 60000);

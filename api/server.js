@@ -200,14 +200,14 @@ app.get('/api/events', (req, res) => {
 });
 
 app.post('/api/events', requireAuth, (req, res) => {
-  const { slug, name, active, streamUrl } = req.body || {};
+  const { slug, name, active, streamUrl, isDraft } = req.body || {};
   if (!validSlug(slug) || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({ error: 'invalid data' });
   }
   const events = loadEventsData();
   const idx = events.findIndex(e => e.slug === slug);
   const existing = idx >= 0 ? events[idx] : {};
-  const entry = { ...existing, slug, name: name.trim(), active: active !== false, streamUrl: streamUrl || '' };
+  const entry = { ...existing, slug, name: name.trim(), active: active !== false, streamUrl: streamUrl || '', isDraft: !!isDraft };
   if (idx >= 0) events[idx] = entry;
   else events.unshift(entry);
   saveEventsData(events);
