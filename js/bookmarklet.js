@@ -134,16 +134,10 @@
       setStatus('Pairings en cours…');
       try {
         const allPairings = parsePairings(await fetch(liveRound.pairingsUrl).then(r => r.text()));
-        const resolved = new Set();
-        if (liveRound.hasResults) {
-          parseResults(await fetch(liveRound.resultsUrl).then(r => r.text())).forEach(m => { resolved.add(m.p1Name); resolved.add(m.p2Name); });
-        }
-        Object.entries(allPairings).forEach(([pl, pr]) => { if (!resolved.has(pl)) liveMatches[pl] = pr; });
+        liveMatches = allPairings;
         liveRoundName = liveRound.roundName;
-        if (Object.keys(liveMatches).length) {
-          const active = new Set([...Object.keys(allPairings), ...resolved]);
-          standings.forEach(p => { if (!active.has(p.name)) droppedPlayers.push(p.name); });
-        }
+        const active = new Set(Object.keys(allPairings));
+        standings.forEach(p => { if (!active.has(p.name)) droppedPlayers.push(p.name); });
       } catch (_) {}
 
       setStatus('Envoi vers bafbordeaux.fr…');
