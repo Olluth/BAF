@@ -162,7 +162,18 @@
       }
       const standings = allPlayers;
       const liveMatches = {}, liveRoundName = liveRound.roundName;
-      const droppedPlayers = [];
+
+      // Players seen in last completed round — anyone absent = dropped
+      const lastRoundPlayers = new Set();
+      if (allRounds.length > 0) {
+        allRounds[allRounds.length - 1].matches.forEach(({ p1Name, p2Name }) => {
+          lastRoundPlayers.add(p1Name);
+          lastRoundPlayers.add(p2Name);
+        });
+      }
+      const droppedPlayers = allRounds.length > 1
+        ? Object.keys(map).filter(name => !lastRoundPlayers.has(name))
+        : [];
 
       setStatus('Envoi vers bafbordeaux.fr…');
       const res = await fetch('https://bafbordeaux.fr/api/standings', {
