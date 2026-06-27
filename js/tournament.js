@@ -243,13 +243,16 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
 let _generation = 0;
 
 const loadEvent = async (slug) => {
+  const isRefresh = slug === _currentSlug;
   _currentSlug = slug;
   renderStreamEmbed(slug);
   const gen = ++_generation;
   clearRefreshTimer();
-  clearStandings();
-  renderVisitorPlayerList(false);
-  setStatus(t('tracker.loading'));
+  if (!isRefresh) {
+    clearStandings();
+    renderVisitorPlayerList(false);
+    setStatus(t('tracker.loading'));
+  }
 
   try {
     const r = await fetch(`${STANDINGS_BASE}${encodeURIComponent(slug)}?_=${Date.now()}`);
