@@ -96,13 +96,15 @@
 
       const coverageHtml = await fetch(location.href).then(r => r.text());
       const coverageDoc  = parseDoc(coverageHtml);
+      const base = location.origin;
+      const absHref = el => { if (!el) return null; const h = el.getAttribute('href'); if (!h) return null; return h.startsWith('http') ? h : base + h; };
       const rounds = [];
       coverageDoc.querySelectorAll('table tbody tr').forEach(row => {
         const nameCell    = row.querySelector('td.rounds');
         const pairingsLnk = row.querySelector('td.pairings a');
         if (!nameCell || !pairingsLnk) return;
         const resultsLnk = row.querySelector('td.results a');
-        rounds.push({ roundName: nameCell.textContent.trim(), pairingsUrl: pairingsLnk.href, resultsUrl: resultsLnk?.href || null, hasResults: !!resultsLnk });
+        rounds.push({ roundName: nameCell.textContent.trim(), pairingsUrl: absHref(pairingsLnk), resultsUrl: absHref(resultsLnk), hasResults: !!resultsLnk });
       });
       if (!rounds.length) { setStatus('❌ Aucun round trouvé.'); return; }
 
