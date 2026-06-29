@@ -1582,14 +1582,60 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
-.agenda-tier-armory   { background: rgba(120,155,110,.12); border: 1px solid rgba(120,155,110,.3); color: #9db89a; }
-.agenda-tier-skirmish { background: rgba(100,130,175,.10); border: 1px solid rgba(100,130,175,.28); color: #8fa8c4; }
-.agenda-tier-bh       { background: rgba(185,150,85,.12);  border: 1px solid rgba(185,150,85,.3);  color: #c9a96e; }
-.agenda-tier-calling  { background: rgba(160,100,190,.12); border: 1px solid rgba(160,100,190,.3); color: #b87fd4; }
-.agenda-tier-pt       { background: rgba(190,80,80,.12);   border: 1px solid rgba(190,80,80,.3);   color: #d47f7f; }
-.agenda-tier-national { background: rgba(190,150,50,.14);  border: 1px solid rgba(190,150,50,.35); color: #d4b84a; }
-.agenda-tier-world    { background: rgba(100,160,190,.14); border: 1px solid rgba(100,160,190,.35); color: #7fb5c8; }
-.agenda-tier-other    { background: rgba(140,140,140,.10); border: 1px solid rgba(140,140,140,.25); color: #aaa; }
+.agenda-tier-armory      { background: rgba(120,155,110,.12); border: 1px solid rgba(120,155,110,.3);  color: #9db89a; }
+.agenda-tier-skirmish    { background: rgba(100,130,175,.10); border: 1px solid rgba(100,130,175,.28); color: #8fa8c4; }
+.agenda-tier-showdown    { background: rgba(185,150,85,.12);  border: 1px solid rgba(185,150,85,.3);   color: #c9a96e; }
+.agenda-tier-proquest    { background: rgba(130,175,140,.12); border: 1px solid rgba(130,175,140,.3);  color: #8fbfa0; }
+.agenda-tier-rtn         { background: rgba(175,130,100,.12); border: 1px solid rgba(175,130,100,.3);  color: #c9a07a; }
+.agenda-tier-battleground{ background: rgba(190,80,80,.12);   border: 1px solid rgba(190,80,80,.3);    color: #d47f7f; }
+.agenda-tier-wcq         { background: rgba(160,100,190,.12); border: 1px solid rgba(160,100,190,.3);  color: #b87fd4; }
+.agenda-tier-calling     { background: rgba(190,130,50,.14);  border: 1px solid rgba(190,130,50,.35);  color: #d4a84a; }
+.agenda-tier-pt          { background: rgba(190,150,50,.14);  border: 1px solid rgba(190,150,50,.35);  color: #d4c04a; }
+.agenda-tier-national    { background: rgba(210,170,50,.16);  border: 1px solid rgba(210,170,50,.4);   color: #e0ca5a; }
+.agenda-tier-world       { background: rgba(100,160,190,.14); border: 1px solid rgba(100,160,190,.35); color: #7fb5c8; }
+.agenda-tier-other       { background: rgba(140,140,140,.10); border: 1px solid rgba(140,140,140,.25); color: #aaa; }
+
+.mid-events-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.mid-event-item {
+  flex: 1;
+  min-width: 200px;
+}
+
+.mid-event-link {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .85rem;
+  background: rgba(249,230,197,.04);
+  border: 1px solid rgba(249,230,197,.1);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color .15s;
+}
+
+a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
+
+.mid-event-name {
+  flex: 1;
+  font-size: .85rem;
+  color: #f9e6c5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mid-event-date {
+  font-size: .75rem;
+  color: rgba(249,230,197,.4);
+  white-space: nowrap;
+  margin-left: auto;
+}
 
 .agenda-past-heading {
   font-size: .75rem;
