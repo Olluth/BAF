@@ -435,11 +435,13 @@ const switchTab = (tab) => {
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
   $('panel-members').classList.toggle('hidden', tab !== 'members');
+  $('panel-agenda').classList.toggle('hidden', tab !== 'agenda');
   $('panel-achievements').classList.toggle('hidden', tab !== 'achievements');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
   if (tab === 'articles') reconcileArticles();
   if (tab === 'events') loadEventsFromServer();
+  if (tab === 'agenda') loadAgendaFromServer();
   if (tab === 'players') syncPlayersToServer();
   if (tab === 'members') loadMembers();
   if (tab === 'achievements') renderAchievementsPanel();
@@ -845,6 +847,71 @@ const saveAchievementChanges = async () => {
   btn.textContent = 'Sauvegarder les changements';
 };
 
+// --- Agenda ---
+
+let _agenda = [];
+
+const setAgendaStatus = (msg, isError = false) => {
+  const el = $('agenda-status');
+  if (!el) return;
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.textContent = msg;
+};
+
+const saveAgendaToServer = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setAgendaStatus('Clé API manquante.', true); return; }
+  const r = await fetch('/api/agenda', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ agenda: _agenda }),
+  });
+  if (!r.ok) setAgendaStatus('Erreur serveur.', true);
+};
+
+const renderAgendaList = () => {
+  const ul = $('agenda-list');
+  if (!ul) return;
+  const sorted = [..._agenda].sort((a, b) => a.date.localeCompare(b.date));
+  if (!sorted.length) {
+    ul.innerHTML = '<li class="admin-list-empty">Aucun événement dans l\'agenda.</li>';
+    return;
+  }
+  ul.innerHTML = sorted.map(e => {
+    const dateStr = new Date(e.date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const past = e.date < new Date().toISOString().slice(0, 10);
+    return `<li class="admin-list-item${past ? ' admin-list-item-muted' : ''}">
+      <div style="display:flex;align-items:center;gap:.75rem;flex:1;min-width:0">
+        ${e.image ? `<img src="${escapeAttr(e.image)}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0" />` : ''}
+        <div style="min-width:0">
+          <div style="font-weight:600;color:#f9e6c5">${escapeHtml(e.name)}${past ? ' <span style="opacity:.4;font-size:.75rem">(passé)</span>' : ''}</div>
+          <div style="font-size:.8rem;opacity:.5">${dateStr}${e.link ? ` · <a href="${escapeAttr(e.link)}" target="_blank" rel="noopener" style="color:inherit">lien ↗</a>` : ''}</div>
+        </div>
+      </div>
+      <button class="button" data-agenda-delete="${escapeAttr(e.id)}" style="flex-shrink:0">Supprimer</button>
+    </li>`;
+  }).join('');
+
+  ul.querySelectorAll('[data-agenda-delete]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      _agenda = _agenda.filter(e => e.id !== btn.dataset.agendaDelete);
+      renderAgendaList();
+      await saveAgendaToServer();
+    });
+  });
+};
+
+const loadAgendaFromServer = async () => {
+  try {
+    const r = await fetch('/api/agenda');
+    if (!r.ok) return;
+    _agenda = await r.json();
+    renderAgendaList();
+  } catch {}
+};
+
 // --- Event Wiring ---
 
 const wireEvents = () => {
@@ -1076,6 +1143,22 @@ const wireEvents = () => {
       _analyticsDays = parseInt(btn.dataset.days);
       loadAnalytics();
     });
+  });
+
+  $('agenda-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name  = $('agenda-name').value.trim();
+    const date  = $('agenda-date').value;
+    const image = $('agenda-image').value.trim();
+    const link  = $('agenda-link').value.trim();
+    if (!name || !date) return;
+    _agenda.push({ id: randomUUID(), name, date, image, link });
+    _agenda.sort((a, b) => a.date.localeCompare(b.date));
+    renderAgendaList();
+    await saveAgendaToServer();
+    setAgendaStatus('Événement ajouté !');
+    $('agenda-form').reset();
+    setTimeout(() => setAgendaStatus(''), 2500);
   });
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {

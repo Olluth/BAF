@@ -54,15 +54,8 @@
           <span class="eyebrow" data-i18n="events.eyebrow">Événements</span>
         </div>
         <div class="events-feed-layout">
-          <div class="event-featured-card">
-            <a href="https://fabtcg.com/organised-play/2026/national-championship-2026-france/" target="_blank" rel="noopener noreferrer">
-              <img src="images/national.png" alt="Championnats de France" class="event-featured-img" />
-            </a>
-            <div class="event-featured-body">
-              <span class="event-label" data-i18n="events.next">Prochain grand événement</span>
-              <h2 data-i18n="events.card1.title">France National</h2>
-              <p data-i18n="events.card1.desc">26–28 juin 2026 · Partenaire : Uchronies Games.</p>
-            </div>
+          <div class="event-featured-card" id="next-event-card">
+            <p style="opacity:.4;font-style:italic">Chargement…</p>
           </div>
           <div class="activity-feed-box">
             <h3 class="activity-feed-title">Activité récente</h3>
@@ -150,6 +143,7 @@
   <script src="js/i18n.js"></script>
   <script src="js/main.js"></script>
   <script src="js/tracker.js"></script>
+  <script src="js/agenda.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/nav-auth.js"></script>
   <script src="js/member-card.js"></script>

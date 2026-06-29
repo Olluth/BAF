@@ -17,6 +17,7 @@ const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
 const EVENTS_FILE    = path.join(DATA_DIR, 'events.json');
 const PLAYERS_FILE   = path.join(DATA_DIR, 'players.json');
 const ARTICLES_FILE  = path.join(DATA_DIR, 'articles.json');
+const AGENDA_FILE    = path.join(DATA_DIR, 'agenda.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
@@ -52,6 +53,14 @@ const loadArticlesData = () => {
   } catch { return []; }
 };
 const saveArticlesData = (articles) => fs.writeFileSync(ARTICLES_FILE, JSON.stringify(articles, null, 2));
+
+const loadAgendaData = () => {
+  try {
+    if (!fs.existsSync(AGENDA_FILE)) return [];
+    return JSON.parse(fs.readFileSync(AGENDA_FILE, 'utf8'));
+  } catch { return []; }
+};
+const saveAgendaData = (agenda) => fs.writeFileSync(AGENDA_FILE, JSON.stringify(agenda, null, 2));
 
 /* ---- Discord notifications ---- */
 
@@ -245,6 +254,27 @@ app.post('/api/articles', requireAuth, (req, res) => {
   if (!Array.isArray(articles)) return res.status(400).json({ error: 'invalid data' });
   saveArticlesData(articles);
   res.json({ ok: true, count: articles.length });
+});
+
+/* ---- Agenda ---- */
+
+app.get('/api/agenda', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(loadAgendaData());
+});
+
+app.post('/api/agenda', requireAuth, (req, res) => {
+  const { agenda } = req.body || {};
+  if (!Array.isArray(agenda)) return res.status(400).json({ error: 'invalid data' });
+  const cleaned = agenda.map(e => ({
+    id:    String(e.id   || '').slice(0, 64),
+    name:  String(e.name || '').trim().slice(0, 200),
+    date:  String(e.date || '').slice(0, 10),
+    image: String(e.image || '').slice(0, 500),
+    link:  String(e.link  || '').slice(0, 500),
+  })).filter(e => e.name && e.date);
+  saveAgendaData(cleaned);
+  res.json({ ok: true, count: cleaned.length });
 });
 
 /* ---- Events ---- */

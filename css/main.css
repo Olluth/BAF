@@ -1489,6 +1489,89 @@ textarea::placeholder {
   padding: 0 1.25rem 1.25rem;
 }
 
+/* ---- Agenda cards ---- */
+
+.agenda-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.agenda-card {
+  background: rgba(249, 230, 197, .04);
+  border: 1px solid rgba(249, 230, 197, .12);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color .15s;
+}
+
+.agenda-card:hover {
+  border-color: rgba(249, 230, 197, .25);
+}
+
+.agenda-card-past {
+  opacity: .5;
+}
+
+.agenda-card-img-wrap {
+  display: block;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: rgba(249, 230, 197, .04);
+}
+
+.agenda-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agenda-card-no-img {
+  width: 100%;
+  height: 100%;
+  background: rgba(249, 230, 197, .05);
+}
+
+.agenda-card-body {
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  flex: 1;
+}
+
+.agenda-card-date {
+  font-size: .75rem;
+  color: rgba(249, 230, 197, .45);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.agenda-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  color: #f9e6c5;
+  margin: 0;
+}
+
+.agenda-card-btn {
+  align-self: flex-start;
+  margin-top: .5rem;
+  font-size: .8rem;
+  padding: .35rem .85rem;
+}
+
+.agenda-past-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: rgba(249, 230, 197, .35);
+  margin: 1.5rem 0 .75rem;
+}
+
 /* ---- Admin: Login ---- */
 
 .admin-login-page {

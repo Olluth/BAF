@@ -41,7 +41,8 @@
         <nav class="site-nav" aria-label="Sections admin">
           <button class="admin-tab active" data-tab="articles" data-i18n="admin.tab.articles">Articles</button>
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs suivis</button>
-          <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Événements</button>
+          <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Tournois</button>
+          <button class="admin-tab" data-tab="agenda">Agenda</button>
           <button class="admin-tab" data-tab="members" data-i18n="admin.tab.members">Membres</button>
           <button class="admin-tab" data-tab="achievements" data-i18n="admin.tab.achievements">Hauts faits</button>
           <button class="admin-tab" data-tab="analytics" data-i18n="admin.tab.analytics">Analytics</button>
@@ -99,10 +100,10 @@
               <ul id="player-list" class="admin-list"></ul>
             </div>
 
-            <!-- Panneau Événements -->
+            <!-- Panneau Tournois -->
             <div id="panel-events" class="admin-panel-section hidden">
               <div class="admin-panel-header">
-                <h2 data-i18n="admin.events.title">Événements suivis</h2>
+                <h2 data-i18n="admin.events.title">Tournois suivis</h2>
                 <button id="new-event-btn" class="button button-primary" data-i18n="admin.events.new">+ Nouvel événement</button>
               </div>
               <p class="admin-panel-desc" data-i18n="admin.events.desc">Les événements listés ici apparaissent dans le sélecteur de la page de suivi.</p>
@@ -148,6 +149,31 @@
                   <p class="admin-panel-desc" style="color:rgba(249,230,197,.45)">Configure ta clé API dans l'onglet Analytics d'abord.</p>
                 </div>
               </div>
+            </div>
+
+            <!-- Panneau Agenda -->
+            <div id="panel-agenda" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2>Agenda</h2>
+              </div>
+              <p class="admin-panel-desc">Événements à venir affichés sur la page Événements et en page d'accueil.</p>
+
+              <form id="agenda-form" class="admin-form" style="max-width:480px" novalidate>
+                <label for="agenda-name">Nom de l'événement</label>
+                <input type="text" id="agenda-name" placeholder="Ex : Calling Toulouse" required />
+                <label for="agenda-date">Date</label>
+                <input type="date" id="agenda-date" required />
+                <label for="agenda-image">Image (URL)</label>
+                <input type="url" id="agenda-image" placeholder="https://…" />
+                <label for="agenda-link">Lien (URL)</label>
+                <input type="url" id="agenda-link" placeholder="https://fabtcg.com/…" />
+                <div class="admin-form-actions">
+                  <button type="submit" class="button button-primary">Ajouter</button>
+                </div>
+              </form>
+
+              <div id="agenda-status" class="tracker-status hidden" style="margin:.75rem 0"></div>
+              <ul id="agenda-list" class="admin-list" style="margin-top:1.5rem"></ul>
             </div>
 
             <!-- Panneau Membres -->
