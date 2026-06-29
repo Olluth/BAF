@@ -270,6 +270,7 @@ app.post('/api/agenda', requireAuth, (req, res) => {
     id:    String(e.id   || '').slice(0, 64),
     name:  String(e.name || '').trim().slice(0, 200),
     date:  String(e.date || '').slice(0, 10),
+    tier:  String(e.tier  || '').slice(0, 50),
     image: String(e.image || '').slice(0, 500),
     link:  String(e.link  || '').slice(0, 500),
   })).filter(e => e.name && e.date);

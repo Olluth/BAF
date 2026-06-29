@@ -893,7 +893,7 @@ const renderAgendaList = () => {
         ${e.image ? `<img src="${escapeAttr(e.image)}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0" />` : ''}
         <div style="min-width:0">
           <div style="font-weight:600;color:#f9e6c5">${escapeHtml(e.name)}${past ? ' <span style="opacity:.4;font-size:.75rem">(passé)</span>' : ''}</div>
-          <div style="font-size:.8rem;opacity:.5">${dateStr}${e.link ? ` · <a href="${escapeAttr(e.link)}" target="_blank" rel="noopener" style="color:inherit">lien ↗</a>` : ''}</div>
+          <div style="font-size:.8rem;opacity:.5">${dateStr}${e.tier ? ` · ${escapeHtml(e.tier)}` : ''}${e.link ? ` · <a href="${escapeAttr(e.link)}" target="_blank" rel="noopener" style="color:inherit">lien ↗</a>` : ''}</div>
         </div>
       </div>
       <button class="button" data-agenda-delete="${escapeAttr(e.id)}" style="flex-shrink:0">Supprimer</button>
@@ -1155,10 +1155,11 @@ const wireEvents = () => {
     e.preventDefault();
     const name  = $('agenda-name').value.trim();
     const date  = $('agenda-date').value;
+    const tier  = $('agenda-tier').value;
     const image = $('agenda-image').value.trim();
     const link  = $('agenda-link').value.trim();
     if (!name || !date) return;
-    _agenda.push({ id: randomUUID(), name, date, image, link });
+    _agenda.push({ id: randomUUID(), name, date, tier, image, link });
     _agenda.sort((a, b) => a.date.localeCompare(b.date));
     renderAgendaList();
     await saveAgendaToServer();

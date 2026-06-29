@@ -1,15 +1,44 @@
 'use strict';
 (function () {
+  const CACHE_KEY = 'baf-agenda-cache';
+
   const esc     = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const today   = () => new Date().toISOString().slice(0, 10);
+  const cutoff  = () => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); };
   const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString(
     document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR',
     { day: 'numeric', month: 'long', year: 'numeric' }
   );
 
+  const TIER_COLORS = {
+    'Armory':                 'agenda-tier-armory',
+    'Skirmish':               'agenda-tier-skirmish',
+    'Battle Hardened':        'agenda-tier-bh',
+    'Calling':                'agenda-tier-calling',
+    'Pro Tour':               'agenda-tier-pt',
+    'National Championship':  'agenda-tier-national',
+    'World Championship':     'agenda-tier-world',
+  };
+
   const fetchAgenda = async () => {
-    try { const r = await fetch('/api/agenda'); return r.ok ? r.json() : []; }
-    catch { return []; }
+    try {
+      const r = await fetch('/api/agenda');
+      if (r.ok) {
+        const data = await r.json();
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+        return data;
+      }
+    } catch {}
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  };
+
+  const tierBadge = (tier) => {
+    if (!tier) return '';
+    const cls = TIER_COLORS[tier] || 'agenda-tier-other';
+    return `<span class="agenda-tier-badge ${cls}">${esc(tier)}</span>`;
   };
 
   const card = (e, muted) => `
@@ -22,7 +51,10 @@
           : '<div class="agenda-card-img agenda-card-no-img"></div>'}
       ${e.link ? '</a>' : '</div>'}
       <div class="agenda-card-body">
-        <span class="agenda-card-date">${fmtDate(e.date)}</span>
+        <div class="agenda-card-meta">
+          <span class="agenda-card-date">${fmtDate(e.date)}</span>
+          ${tierBadge(e.tier)}
+        </div>
         <h3 class="agenda-card-name">${esc(e.name)}</h3>
         ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer" class="button agenda-card-btn">Voir l'événement ↗</a>` : ''}
       </div>
@@ -45,6 +77,7 @@
       ${e.link ? '</a>' : '</div>'}
       <div class="event-featured-body">
         <span class="event-label">Prochain événement</span>
+        ${tierBadge(e.tier)}
         <h2>${esc(e.name)}</h2>
         <p>${fmtDate(e.date)}</p>
       </div>`;
@@ -56,18 +89,19 @@
     if (!el) return;
     const agenda   = await fetchAgenda();
     const t        = today();
+    const c        = cutoff();
     const upcoming = agenda.filter(e => e.date >= t).sort((a, b) => a.date.localeCompare(b.date));
-    const past     = agenda.filter(e => e.date <  t).sort((a, b) => b.date.localeCompare(a.date));
+    const recent   = agenda.filter(e => e.date >= c && e.date < t).sort((a, b) => b.date.localeCompare(a.date));
 
-    if (!upcoming.length && !past.length) {
+    if (!upcoming.length && !recent.length) {
       el.innerHTML = '<p style="opacity:.4;font-style:italic">Aucun événement pour le moment.</p>';
       return;
     }
 
     let html = '<div class="agenda-grid">' + upcoming.map(e => card(e, false)).join('') + '</div>';
-    if (past.length) {
-      html += '<div class="agenda-past-heading">Événements passés</div>';
-      html += '<div class="agenda-grid">' + past.map(e => card(e, true)).join('') + '</div>';
+    if (recent.length) {
+      html += '<div class="agenda-past-heading">Événements récents</div>';
+      html += '<div class="agenda-grid">' + recent.map(e => card(e, true)).join('') + '</div>';
     }
     el.innerHTML = html;
   };

@@ -1564,6 +1564,33 @@ textarea::placeholder {
   padding: .35rem .85rem;
 }
 
+.agenda-card-meta {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.agenda-tier-badge {
+  display: inline-block;
+  padding: .1rem .5rem;
+  border-radius: 20px;
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.agenda-tier-armory   { background: rgba(120,155,110,.12); border: 1px solid rgba(120,155,110,.3); color: #9db89a; }
+.agenda-tier-skirmish { background: rgba(100,130,175,.10); border: 1px solid rgba(100,130,175,.28); color: #8fa8c4; }
+.agenda-tier-bh       { background: rgba(185,150,85,.12);  border: 1px solid rgba(185,150,85,.3);  color: #c9a96e; }
+.agenda-tier-calling  { background: rgba(160,100,190,.12); border: 1px solid rgba(160,100,190,.3); color: #b87fd4; }
+.agenda-tier-pt       { background: rgba(190,80,80,.12);   border: 1px solid rgba(190,80,80,.3);   color: #d47f7f; }
+.agenda-tier-national { background: rgba(190,150,50,.14);  border: 1px solid rgba(190,150,50,.35); color: #d4b84a; }
+.agenda-tier-world    { background: rgba(100,160,190,.14); border: 1px solid rgba(100,160,190,.35); color: #7fb5c8; }
+.agenda-tier-other    { background: rgba(140,140,140,.10); border: 1px solid rgba(140,140,140,.25); color: #aaa; }
+
 .agenda-past-heading {
   font-size: .75rem;
   text-transform: uppercase;
