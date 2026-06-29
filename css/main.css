@@ -1079,7 +1079,7 @@ textarea::placeholder {
   color: rgba(249, 230, 197, .5);
   letter-spacing: .1em;
   text-transform: uppercase;
-  margin: 0 0 .9rem;
+  margin: 0 0 .5rem;
 }
 
 /* ---- Activity feed (index page) ---- */
