@@ -877,6 +877,8 @@ const saveAgendaToServer = async () => {
   if (!r.ok) setAgendaStatus('Erreur serveur.', true);
 };
 
+const AGENDA_TIERS = ['Armory','Skirmish','Showdown','Pro Quest','Road to National','Battleground','WCQ','Calling','Pro Tour','National Championship','World Championship'];
+
 const renderAgendaList = () => {
   const ul = $('agenda-list');
   if (!ul) return;
@@ -885,6 +887,9 @@ const renderAgendaList = () => {
     ul.innerHTML = '<li class="admin-list-empty">Aucun événement dans l\'agenda.</li>';
     return;
   }
+  const tierOptions = `<option value="">— Niveau —</option>` +
+    AGENDA_TIERS.map(t => `<option value="${escapeAttr(t)}">${escapeHtml(t)}</option>`).join('');
+
   ul.innerHTML = sorted.map(e => {
     const dateStr = new Date(e.date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     const past = e.date < new Date().toISOString().slice(0, 10);
@@ -893,12 +898,28 @@ const renderAgendaList = () => {
         ${e.image ? `<img src="${escapeAttr(e.image)}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0" />` : ''}
         <div style="min-width:0">
           <div style="font-weight:600;color:#f9e6c5">${escapeHtml(e.name)}${past ? ' <span style="opacity:.4;font-size:.75rem">(passé)</span>' : ''}</div>
-          <div style="font-size:.8rem;opacity:.5">${dateStr}${e.tier ? ` · ${escapeHtml(e.tier)}` : ''}${e.link ? ` · <a href="${escapeAttr(e.link)}" target="_blank" rel="noopener" style="color:inherit">lien ↗</a>` : ''}</div>
+          <div style="font-size:.8rem;opacity:.5">${dateStr}${e.link ? ` · <a href="${escapeAttr(e.link)}" target="_blank" rel="noopener" style="color:inherit">lien ↗</a>` : ''}</div>
         </div>
       </div>
+      <select class="profile-input profile-select agenda-tier-select" data-agenda-tier="${escapeAttr(e.id)}" style="width:auto;padding:.3rem .5rem;font-size:.8rem;flex-shrink:0">
+        ${tierOptions}
+      </select>
       <button class="button" data-agenda-delete="${escapeAttr(e.id)}" style="flex-shrink:0">Supprimer</button>
     </li>`;
   }).join('');
+
+  ul.querySelectorAll('.agenda-tier-select').forEach(sel => {
+    const entry = _agenda.find(e => e.id === sel.dataset.agendaTier);
+    if (entry) sel.value = entry.tier || '';
+    sel.addEventListener('change', async () => {
+      const entry = _agenda.find(e => e.id === sel.dataset.agendaTier);
+      if (!entry) return;
+      entry.tier = sel.value;
+      await saveAgendaToServer();
+      setAgendaStatus('Niveau mis à jour !');
+      setTimeout(() => setAgendaStatus(''), 2000);
+    });
+  });
 
   ul.querySelectorAll('[data-agenda-delete]').forEach(btn => {
     btn.addEventListener('click', async () => {
