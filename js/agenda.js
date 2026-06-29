@@ -87,7 +87,6 @@
       ${e.link ? '</a>' : '</div>'}
       <div class="event-featured-body">
         <span class="event-label">Prochain événement majeur</span>
-        ${tierBadge(e.tier)}
         <h2>${esc(e.name)}</h2>
         <p>${fmtDate(e.date)}</p>
       </div>`;
@@ -106,7 +105,6 @@
       ? mid.map(e => `
           <div class="mid-event-item">
             ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer" class="mid-event-link">` : '<span class="mid-event-link">'}
-              ${tierBadge(e.tier)}
               <span class="mid-event-name">${esc(e.name)}</span>
               <span class="mid-event-date">${fmtShort(e.date)}</span>
             ${e.link ? '</a>' : '</span>'}
