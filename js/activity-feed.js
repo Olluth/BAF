@@ -98,7 +98,7 @@
     const members  = items.filter(i => i.type === 'member').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
     const articles = items.filter(i => i.type === 'article').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 2);
     const others   = items.filter(i => i.type !== 'member' && i.type !== 'article').sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
-    _cachedItems = [...members, ...articles, ...others].sort((a, b) => new Date(b.date) - new Date(a.date));
+    _cachedItems = [...members, ...articles, ...others].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
     renderFeed();
   };
