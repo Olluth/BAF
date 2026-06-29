@@ -425,9 +425,15 @@ const showDashboard = () => {
   const keyInput = $('analytics-key-input');
   if (keyInput) keyInput.value = getAnalyticsKey();
   renderBookmarklet();
+  try {
+    const saved = localStorage.getItem('baf-admin-tab');
+    if (saved) switchTab(saved);
+  } catch {}
 };
 
 const switchTab = (tab) => {
+  try { localStorage.setItem('baf-admin-tab', tab); } catch {}
+
   document.querySelectorAll('.admin-tab').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
