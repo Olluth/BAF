@@ -11,6 +11,7 @@ const PORT         = Number(process.env.PORT) || 3001;
 const API_KEY              = process.env.API_KEY || '';
 const SUPABASE_URL         = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || '';
+const DISCORD_WEBHOOK_URL  = process.env.DISCORD_WEBHOOK_URL || '';
 const DATA_DIR      = process.env.DATA_DIR || path.join(__dirname, 'data');
 const STANDINGS_DIR = path.join(DATA_DIR, 'standings');
 const EVENTS_FILE    = path.join(DATA_DIR, 'events.json');
@@ -52,6 +53,54 @@ const loadArticlesData = () => {
 };
 const saveArticlesData = (articles) => fs.writeFileSync(ARTICLES_FILE, JSON.stringify(articles, null, 2));
 
+/* ---- Discord notifications ---- */
+
+const notifyDiscord = async (slug, newStandings, oldData, trackedPlayers, liveRoundName) => {
+  if (!DISCORD_WEBHOOK_URL || !trackedPlayers.length) return;
+
+  const norm    = s => s.trim().toLowerCase();
+  const tracked = new Set(trackedPlayers.map(norm));
+
+  const oldLen = {};
+  (oldData?.standings || []).forEach(p => {
+    oldLen[norm(p.name)] = (p.history || []).filter(h => h.result !== 'ongoing').length;
+  });
+
+  const fields = [];
+  for (const player of newStandings) {
+    if (!tracked.has(norm(player.name))) continue;
+    const done    = (player.history || []).filter(h => h.result !== 'ongoing');
+    const prev    = oldLen[norm(player.name)] ?? -1;
+    if (done.length <= prev) continue;
+    for (const r of done.slice(prev)) {
+      const emoji = r.result === 'win' ? '✅' : r.result === 'loss' ? '❌' : '🤝';
+      const label = r.result === 'win' ? 'Victoire' : r.result === 'loss' ? 'Défaite' : 'Nul';
+      fields.push({
+        name:   `${player.name}${player.hero ? ` (${player.hero})` : ''} — ${r.round}`,
+        value:  `${emoji} **${label}** vs ${r.opponent}${r.opponentHero ? ` (${r.opponentHero})` : ''}\n${player.wins}V · ${player.losses}D · ${player.draws}N`,
+        inline: false,
+      });
+    }
+  }
+
+  if (!fields.length) return;
+
+  const eventName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  await fetch(DISCORD_WEBHOOK_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      embeds: [{
+        title:       `🎴 ${eventName}`,
+        description: liveRoundName ? `Résultats — ${liveRoundName}` : 'Nouveaux résultats',
+        fields,
+        color:       0xf9a825,
+        timestamp:   new Date().toISOString(),
+      }],
+    }),
+  }).catch(err => console.error('Discord webhook error:', err.message));
+};
+
 /* ---- Analytics ---- */
 
 app.post('/api/track', (req, res) => {
@@ -86,12 +135,16 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
   const { slug, standings, liveMatches, liveRoundName, droppedPlayers, lastUpdated } = req.body || {};
   if (!validSlug(slug) || !Array.isArray(standings)) return res.status(400).json({ error: 'invalid data' });
   const file = path.join(STANDINGS_DIR, `${slug}.json`);
+
+  let oldData = null;
+  try { if (fs.existsSync(file)) oldData = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
+
   fs.writeFileSync(file, JSON.stringify({
     slug,
-    lastUpdated:   lastUpdated || new Date().toISOString(),
+    lastUpdated:    lastUpdated || new Date().toISOString(),
     standings,
-    liveMatches:   liveMatches   || {},
-    liveRoundName: liveRoundName || '',
+    liveMatches:    liveMatches    || {},
+    liveRoundName:  liveRoundName  || '',
     droppedPlayers: droppedPlayers || [],
   }, null, 2));
   console.log(`Standings saved: ${slug} (${standings.length} players)`);
@@ -104,6 +157,8 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
     saveEventsData(events);
     console.log(`Auto-registered event: ${slug}`);
   }
+
+  notifyDiscord(slug, standings, oldData, loadPlayersData(), liveRoundName).catch(() => {});
 
   res.json({ ok: true, players: standings.length });
 });
