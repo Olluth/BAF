@@ -77,10 +77,10 @@
     if (!el) return;
     const agenda = await fetchAgenda();
     const t = today();
-    const big = agenda.filter(e => e.date >= t && BIG_TIERS.has(e.tier))
-                      .sort((a, b) => a.date.localeCompare(b.date));
-    if (!big.length) { el.innerHTML = '<p style="opacity:.4;font-style:italic">Aucun grand événement à venir.</p>'; return; }
-    const e = big[0];
+    const upcoming = agenda.filter(e => e.date >= t).sort((a, b) => a.date.localeCompare(b.date));
+    if (!upcoming.length) { el.innerHTML = '<p style="opacity:.4;font-style:italic">Aucun événement à venir.</p>'; return; }
+    const big = upcoming.filter(e => BIG_TIERS.has(e.tier));
+    const e = big.length ? big[0] : upcoming[0];
     el.innerHTML = `
       ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer">` : '<div>'}
         ${e.image ? `<img src="${esc(e.image)}" alt="${esc(e.name)}" class="event-featured-img" />` : ''}
