@@ -1057,7 +1057,7 @@ textarea::placeholder {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
   gap: 1.5rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 @media (max-width: 860px) {
@@ -1071,6 +1071,8 @@ textarea::placeholder {
   border: 1px solid rgba(249, 230, 197, .1);
   border-radius: 16px;
   padding: 1.25rem 1.1rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .activity-feed-title {
