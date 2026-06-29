@@ -102,18 +102,21 @@
     const mid = agenda.filter(e => e.date >= t && MID_TIERS.has(e.tier))
                       .sort((a, b) => a.date.localeCompare(b.date))
                       .slice(0, 3);
-    if (!mid.length) { el.innerHTML = ''; return; }
-    el.innerHTML = `
-      <div class="mid-events-strip">
-        ${mid.map(e => `
-          <div class="mid-event-item${e.link ? '' : ''}">
+    const items = mid.length
+      ? mid.map(e => `
+          <div class="mid-event-item">
             ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer" class="mid-event-link">` : '<span class="mid-event-link">'}
               ${tierBadge(e.tier)}
               <span class="mid-event-name">${esc(e.name)}</span>
               <span class="mid-event-date">${fmtShort(e.date)}</span>
             ${e.link ? '</a>' : '</span>'}
-          </div>`).join('')}
-      </div>`;
+          </div>`).join('')
+      : `<div class="mid-event-item"><span class="mid-event-link"><span class="mid-event-name" style="opacity:.4;font-style:italic">Aucun événement local à venir</span></span></div>`;
+    el.innerHTML = `
+      <div class="event-more-heading" style="margin-top:1.5rem">
+        <span class="event-label">Prochain événement local</span>
+      </div>
+      <div class="mid-events-strip">${items}</div>`;
   };
 
   /* Full agenda list on events.html */
