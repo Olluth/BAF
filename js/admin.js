@@ -868,13 +868,16 @@ const setAgendaStatus = (msg, isError = false) => {
 
 const saveAgendaToServer = async () => {
   const key = getAnalyticsKey();
-  if (!key) { setAgendaStatus('Clé API manquante.', true); return; }
-  const r = await fetch('/api/agenda', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({ agenda: _agenda }),
-  });
-  if (!r.ok) setAgendaStatus('Erreur serveur.', true);
+  if (!key) { setAgendaStatus('Clé API manquante.', true); return false; }
+  try {
+    const r = await fetch('/api/agenda', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ agenda: _agenda }),
+    });
+    if (!r.ok) { setAgendaStatus('Erreur serveur ' + r.status, true); return false; }
+    return true;
+  } catch (err) { setAgendaStatus('Erreur réseau', true); return false; }
 };
 
 const AGENDA_TIERS = ['Armory','Skirmish','Showdown','Pro Quest','Road to National','Battleground','WCQ','Calling','Pro Tour','National Championship','World Championship'];
@@ -915,9 +918,8 @@ const renderAgendaList = () => {
       const entry = _agenda.find(e => e.id === sel.dataset.agendaTier);
       if (!entry) return;
       entry.tier = sel.value;
-      await saveAgendaToServer();
-      setAgendaStatus('Niveau mis à jour !');
-      setTimeout(() => setAgendaStatus(''), 2000);
+      const ok = await saveAgendaToServer();
+      if (ok) { setAgendaStatus('Niveau mis à jour !'); setTimeout(() => setAgendaStatus(''), 2000); }
     });
   });
 
@@ -1183,10 +1185,9 @@ const wireEvents = () => {
     _agenda.push({ id: randomUUID(), name, date, tier, image, link });
     _agenda.sort((a, b) => a.date.localeCompare(b.date));
     renderAgendaList();
-    await saveAgendaToServer();
-    setAgendaStatus('Événement ajouté !');
+    const ok = await saveAgendaToServer();
+    if (ok) { setAgendaStatus('Événement ajouté !'); setTimeout(() => setAgendaStatus(''), 2500); }
     $('agenda-form').reset();
-    setTimeout(() => setAgendaStatus(''), 2500);
   });
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {
