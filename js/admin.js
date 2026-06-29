@@ -720,21 +720,37 @@ const renderAchievementsPanel = async () => {
     return;
   }
 
-  const { data: allA } = await sb.from('achievements').select('*').order('category').order('name');
+  const [{ data: allA }, { data: allProfiles }] = await Promise.all([
+    sb.from('achievements').select('*').order('category').order('name'),
+    sb.from('profiles').select('id, pseudo, title').order('pseudo'),
+  ]);
   _allAchievements = allA || [];
+
+  const sel = $('ach-member-select');
+  if (sel) {
+    sel.innerHTML = '<option value="">— Choisir un membre —</option>' +
+      (allProfiles || []).map(p =>
+        `<option value="${escapeAttr(p.id)}">${escapeHtml(p.pseudo)}${p.title ? ` — ${escapeHtml(p.title)}` : ''}</option>`
+      ).join('');
+    sel.value = _selectedMember?.id || '';
+  }
 
   $('ach-signin-section')?.classList.add('hidden');
   $('ach-grant-section')?.classList.remove('hidden');
   setAchStatus('');
 };
 
-const searchMemberForGrant = async () => {
-  const pseudo = $('ach-member-search')?.value.trim().toLowerCase();
-  if (!pseudo) return;
+const selectMemberForGrant = async (memberId) => {
+  if (!memberId) {
+    $('ach-member-result')?.classList.add('hidden');
+    _selectedMember = null;
+    return;
+  }
   const sb = getAchSb();
+  setAchStatus('Chargement…');
 
   const { data, error } = await sb
-    .from('profiles').select('id, pseudo, title').eq('pseudo', pseudo).single();
+    .from('profiles').select('id, pseudo, title').eq('id', memberId).single();
 
   if (error || !data) {
     setAchStatus('Membre introuvable.', true);
@@ -1074,9 +1090,8 @@ const wireEvents = () => {
     renderAchievementsPanel();
   });
 
-  $('ach-search-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await searchMemberForGrant();
+  $('ach-member-select')?.addEventListener('change', async (e) => {
+    await selectMemberForGrant(e.target.value);
   });
 
   document.addEventListener('langchange', () => {
