@@ -113,7 +113,7 @@
           </div>`).join('')
       : `<div class="mid-event-item"><span class="mid-event-link"><span class="mid-event-name" style="opacity:.4;font-style:italic">Aucun événement local à venir</span></span></div>`;
     el.innerHTML = `
-      <div class="event-more-heading" style="margin-top:1.5rem">
+      <div class="event-more-heading">
         <span class="event-label">Prochain événement local</span>
       </div>
       <div class="mid-events-strip">${items}</div>`;
