@@ -517,9 +517,17 @@ const renderSearchSection = () => {
       <div id="search-results" class="search-results"></div>
     </div>`;
 
-  // Fetch all distinct titles from DB and populate the dropdown
-  _sb.from('profiles').select('title').not('title', 'is', null).neq('title', '').then(({ data }) => {
-    const titles = [...new Set((data || []).map(r => r.title).filter(Boolean))].sort();
+  // Fetch all titles: current profile titles + achievement names ever granted
+  Promise.all([
+    _sb.from('profiles').select('title').not('title', 'is', null).neq('title', ''),
+    _sb.from('member_achievements').select('achievement_id'),
+    _sb.from('achievements').select('id, name'),
+  ]).then(([{ data: profileData }, { data: grantedData }, { data: achData }]) => {
+    const normalize = s => s === 'Oldtimer' ? 'Old Timer' : s;
+    const profileTitles = (profileData || []).map(r => normalize(r.title)).filter(Boolean);
+    const grantedIds = new Set((grantedData || []).map(r => r.achievement_id));
+    const achTitles = (achData || []).filter(a => grantedIds.has(a.id)).map(a => a.name);
+    const titles = [...new Set([...profileTitles, ...achTitles])].sort((a, b) => a.localeCompare(b));
     const list = $('title-csd-list');
     if (!list) return;
     list.innerHTML = titles.length
