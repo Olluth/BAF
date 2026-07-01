@@ -1446,6 +1446,50 @@ textarea::placeholder {
   font-style: italic;
 }
 
+.title-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.title-chip {
+  background: rgba(245, 208, 216, 0.08);
+  border: 1px solid rgba(245, 208, 216, 0.35);
+  border-radius: 999px;
+  color: #f5d0d8;
+  padding: 0.4rem 1rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.title-chip:hover {
+  background: rgba(245, 208, 216, 0.16);
+  border-color: rgba(245, 208, 216, 0.6);
+}
+
+.title-chip.active {
+  background: rgba(245, 208, 216, 0.22);
+  border-color: #f5d0d8;
+}
+
+.title-chip-empty {
+  color: rgba(245, 208, 216, 0.35);
+  border-color: rgba(245, 208, 216, 0.15);
+}
+
+.title-chip-empty:hover {
+  background: rgba(245, 208, 216, 0.06);
+  border-color: rgba(245, 208, 216, 0.25);
+  color: rgba(245, 208, 216, 0.5);
+}
+
+.title-chip-count {
+  opacity: 0.7;
+  font-size: 0.8em;
+}
+
 /* ---- Footer ---- */
 
 .site-footer {

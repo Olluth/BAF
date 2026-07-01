@@ -362,10 +362,10 @@ const searchByHero = async () => {
   renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
 };
 
-const searchByTitle = async () => {
-  const titleVal = $('search-title-select').value;
+const searchByTitle = async (titleVal) => {
   if (!titleVal) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
+  document.querySelectorAll('.title-chip').forEach(c => c.classList.toggle('active', c.dataset.title === titleVal));
   const { data, error } = await _sb
     .from('profiles')
     .select('pseudo, discord_pseudo, title')
@@ -374,6 +374,24 @@ const searchByTitle = async () => {
     .limit(50);
   if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
   renderSearchResults(data, `Aucun membre avec le titre « ${titleVal} ».`);
+};
+
+const loadAndRenderTitleChips = async () => {
+  const wrap = $('title-chips-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<span style="opacity:.4;font-size:.85rem">Chargement…</span>';
+  const { data } = await _sb.from('profiles').select('title').not('title', 'is', null).neq('title', '');
+  const counts = {};
+  (data || []).forEach(r => { if (r.title) counts[r.title] = (counts[r.title] || 0) + 1; });
+  wrap.innerHTML = TITLES.map(t => {
+    const n = counts[t] || 0;
+    return `<button class="title-chip${n ? '' : ' title-chip-empty'}" data-title="${t}">
+      ${t}${n ? ` <span class="title-chip-count">(${n})</span>` : ''}
+    </button>`;
+  }).join('');
+  wrap.querySelectorAll('.title-chip').forEach(chip => {
+    chip.addEventListener('click', () => searchByTitle(chip.dataset.title));
+  });
 };
 
 const renderHeroDropdown = (filter) => {
@@ -403,8 +421,6 @@ const renderHeroDropdown = (filter) => {
 const renderSearchSection = () => {
   _searchHeroId = null;
 
-  const titleOptions = TITLES.map(t => `<option value="${t}">${t}</option>`).join('');
-
   $('member-search').innerHTML = `
     <div class="search-section">
       <h3 class="search-title">Rechercher un membre</h3>
@@ -424,15 +440,13 @@ const renderSearchSection = () => {
         </div>
         <button id="search-hero-btn" class="button button-primary">Chercher</button>
       </div>
-      <div id="search-title-mode" class="search-form hidden">
-        <select id="search-title-select" class="profile-input profile-select">
-          <option value="">— Choisir un titre —</option>
-          ${titleOptions}
-        </select>
-        <button id="search-title-btn" class="button button-primary">Chercher</button>
+      <div id="search-title-mode" class="hidden">
+        <div id="title-chips-wrap" class="title-chips"></div>
       </div>
       <div id="search-results" class="search-results"></div>
     </div>`;
+
+  let titleChipsLoaded = false;
 
   document.querySelectorAll('.search-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -444,6 +458,10 @@ const renderSearchSection = () => {
       $('search-title-mode').classList.toggle('hidden', mode !== 'title');
       $('search-results').innerHTML = '';
       _searchHeroId = null;
+      if (mode === 'title' && !titleChipsLoaded) {
+        titleChipsLoaded = true;
+        loadAndRenderTitleChips();
+      }
     });
   });
 
@@ -459,8 +477,6 @@ const renderSearchSection = () => {
     setTimeout(() => $('hero-dropdown')?.classList.add('hidden'), 150);
   });
   $('search-hero-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByHero(); });
-
-  $('search-title-btn').addEventListener('click', searchByTitle);
 };
 
 /* ---- Achievements ---- */
