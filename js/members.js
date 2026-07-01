@@ -346,8 +346,7 @@ const searchByPseudo = async () => {
   renderSearchResults(data, 'Aucun membre trouvé.');
 };
 
-const searchByHero = async () => {
-  const heroId = $('search-hero-select').value;
+const searchByHero = async (heroId) => {
   if (!heroId) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
   const { data, error } = await _sb
@@ -360,12 +359,10 @@ const searchByHero = async () => {
   renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
 };
 
-const searchByTitle = async () => {
-  const titleVal = $('search-title-select').value;
+const searchByTitle = async (titleVal) => {
   if (!titleVal) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
 
-  // Current title holders
   const { data: current, error } = await _sb
     .from('profiles')
     .select('id, pseudo, discord_pseudo, title')
@@ -377,7 +374,6 @@ const searchByTitle = async () => {
   let allMembers = current || [];
   const currentIds = new Set(allMembers.map(m => m.id));
 
-  // Also find members who have earned an achievement matching this title
   const { data: matchingAch } = await _sb
     .from('achievements')
     .select('id')
@@ -408,22 +404,80 @@ const searchByTitle = async () => {
   renderSearchResults(allMembers, `Aucun membre avec le titre « ${titleVal} ».`);
 };
 
-const buildHeroSelectOptions = () => {
+const makeCsd = (wrapperId, panelId, onSelect) => {
+  const wrap  = $(wrapperId);
+  const panel = $(panelId);
+  if (!wrap || !panel) return;
+
+  const trigger = wrap.querySelector('.csd-trigger');
+  const label   = wrap.querySelector('.csd-label');
+  const arrow   = wrap.querySelector('.csd-arrow');
+  const search  = wrap.querySelector('.csd-search');
+  const list    = wrap.querySelector('.csd-list');
+
+  const open = () => {
+    panel.classList.remove('hidden');
+    arrow.style.transform = 'rotate(180deg)';
+    search?.focus();
+  };
+  const close = () => {
+    panel.classList.add('hidden');
+    arrow.style.transform = '';
+    if (search) search.value = '';
+    list?.querySelectorAll('.csd-opt, .csd-group').forEach(el => (el.style.display = ''));
+  };
+
+  trigger.addEventListener('click', e => {
+    e.stopPropagation();
+    panel.classList.contains('hidden') ? open() : close();
+  });
+
+  search?.addEventListener('input', () => {
+    const q = search.value.toLowerCase();
+    list.querySelectorAll('.csd-opt').forEach(opt => {
+      opt.style.display = opt.dataset.name.toLowerCase().includes(q) ? '' : 'none';
+    });
+    list.querySelectorAll('.csd-group').forEach(grp => {
+      const any = [...grp.querySelectorAll('.csd-opt')].some(o => o.style.display !== 'none');
+      grp.style.display = any ? '' : 'none';
+    });
+  });
+
+  list?.addEventListener('mousedown', e => {
+    const opt = e.target.closest('.csd-opt');
+    if (!opt) return;
+    e.preventDefault();
+    list.querySelectorAll('.csd-opt').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    label.textContent = opt.dataset.name;
+    close();
+    onSelect(opt.dataset.value, opt.dataset.name);
+  });
+
+  document.addEventListener('click', () => close(), { capture: false });
+};
+
+const buildHeroDropdownHTML = () => {
   const grouped = {};
   CLASS_ORDER.forEach(c => { grouped[c] = []; });
   HEROES.forEach(h => { if (grouped[h.class]) grouped[h.class].push(h); });
   return CLASS_ORDER.map(cls => {
-    const heroes = grouped[cls];
-    if (!heroes.length) return '';
-    return `<optgroup label="${cls}">
-      ${heroes.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}
-    </optgroup>`;
+    const list = grouped[cls];
+    if (!list.length) return '';
+    return `<div class="csd-group">
+      <div class="csd-group-label">${cls}</div>
+      ${list.map(h => `<div class="csd-opt" data-value="${h.id}" data-name="${h.name.replace(/"/g, '&quot;')}">
+        <img src="images/${h.img}" alt="" loading="lazy" />
+        <span>${h.name}</span>
+      </div>`).join('')}
+    </div>`;
   }).join('');
 };
 
-const renderSearchSection = () => {
-  const titleOptions = TITLES.map(t => `<option value="${t}">${t}</option>`).join('');
+const buildTitleDropdownHTML = () =>
+  TITLES.map(t => `<div class="csd-opt" data-value="${t}" data-name="${t}">${t}</div>`).join('');
 
+const renderSearchSection = () => {
   $('member-search').innerHTML = `
     <div class="search-section">
       <h3 class="search-title">Rechercher un membre</h3>
@@ -437,18 +491,29 @@ const renderSearchSection = () => {
         <button id="search-pseudo-btn" class="button button-primary">Chercher</button>
       </div>
       <div id="search-hero-mode" class="search-form hidden">
-        <select id="search-hero-select" class="profile-input profile-select">
-          <option value="">— Choisir un héros —</option>
-          ${buildHeroSelectOptions()}
-        </select>
-        <button id="search-hero-btn" class="button button-primary">Chercher</button>
+        <div class="csd-wrap" id="hero-csd-wrap">
+          <button class="csd-trigger profile-input" type="button">
+            <span class="csd-label">— Choisir un héros —</span>
+            <span class="csd-arrow">▾</span>
+          </button>
+          <div class="csd-panel hidden" id="hero-csd-panel">
+            <div class="csd-search-wrap">
+              <input class="csd-search" type="text" placeholder="Filtrer…" autocomplete="off" />
+            </div>
+            <div class="csd-list">${buildHeroDropdownHTML()}</div>
+          </div>
+        </div>
       </div>
       <div id="search-title-mode" class="search-form hidden">
-        <select id="search-title-select" class="profile-input profile-select">
-          <option value="">— Choisir un titre —</option>
-          ${titleOptions}
-        </select>
-        <button id="search-title-btn" class="button button-primary">Chercher</button>
+        <div class="csd-wrap" id="title-csd-wrap">
+          <button class="csd-trigger profile-input" type="button">
+            <span class="csd-label">— Choisir un titre —</span>
+            <span class="csd-arrow">▾</span>
+          </button>
+          <div class="csd-panel hidden" id="title-csd-panel">
+            <div class="csd-list">${buildTitleDropdownHTML()}</div>
+          </div>
+        </div>
       </div>
       <div id="search-results" class="search-results"></div>
     </div>`;
@@ -468,11 +533,8 @@ const renderSearchSection = () => {
   $('search-pseudo-btn').addEventListener('click', searchByPseudo);
   $('search-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByPseudo(); });
 
-  $('search-hero-btn').addEventListener('click', searchByHero);
-  $('search-hero-select').addEventListener('change', searchByHero);
-
-  $('search-title-btn').addEventListener('click', searchByTitle);
-  $('search-title-select').addEventListener('change', searchByTitle);
+  makeCsd('hero-csd-wrap',  'hero-csd-panel',  (id)  => searchByHero(id));
+  makeCsd('title-csd-wrap', 'title-csd-panel', (val) => searchByTitle(val));
 };
 
 /* ---- Achievements ---- */

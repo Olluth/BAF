@@ -1446,6 +1446,113 @@ textarea::placeholder {
   font-style: italic;
 }
 
+/* ---- Custom select dropdown (csd) ---- */
+
+.csd-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.csd-trigger {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  gap: 0.5rem;
+  user-select: none;
+}
+
+.csd-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csd-arrow {
+  opacity: 0.55;
+  font-size: 0.85em;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.csd-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #180010;
+  border: 1px solid rgba(245, 208, 216, 0.2);
+  border-radius: 14px;
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+}
+
+.csd-search-wrap {
+  padding: 0.5rem 0.85rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.12);
+}
+
+.csd-search {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f5d0d8;
+  font-size: 0.9rem;
+}
+
+.csd-search::placeholder {
+  color: rgba(245, 208, 216, 0.35);
+}
+
+.csd-list {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 208, 216, 0.2) transparent;
+}
+
+.csd-group-label {
+  padding: 0.55rem 0.9rem 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(245, 208, 216, 0.4);
+}
+
+.csd-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  color: #f5d0d8;
+  font-size: 0.9rem;
+  transition: background 0.1s;
+}
+
+.csd-opt:hover {
+  background: rgba(245, 208, 216, 0.1);
+}
+
+.csd-opt.selected {
+  background: rgba(245, 208, 216, 0.15);
+}
+
+.csd-opt img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: rgba(249, 230, 197, 0.06);
+  border: 1px solid rgba(249, 230, 197, 0.12);
+  flex-shrink: 0;
+}
+
 .title-chips {
   display: flex;
   flex-wrap: wrap;
