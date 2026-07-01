@@ -346,10 +346,8 @@ const searchByPseudo = async () => {
   renderSearchResults(data, 'Aucun membre trouvé.');
 };
 
-let _searchHeroId = null;
-
 const searchByHero = async () => {
-  const heroId = _searchHeroId;
+  const heroId = $('search-hero-select').value;
   if (!heroId) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
   const { data, error } = await _sb
@@ -362,64 +360,69 @@ const searchByHero = async () => {
   renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
 };
 
-const searchByTitle = async (titleVal) => {
+const searchByTitle = async () => {
+  const titleVal = $('search-title-select').value;
   if (!titleVal) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
-  document.querySelectorAll('.title-chip').forEach(c => c.classList.toggle('active', c.dataset.title === titleVal));
-  const { data, error } = await _sb
+
+  // Current title holders
+  const { data: current, error } = await _sb
     .from('profiles')
-    .select('pseudo, discord_pseudo, title')
+    .select('id, pseudo, discord_pseudo, title')
     .eq('title', titleVal)
     .order('pseudo')
     .limit(50);
   if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
-  renderSearchResults(data, `Aucun membre avec le titre « ${titleVal} ».`);
+
+  let allMembers = current || [];
+  const currentIds = new Set(allMembers.map(m => m.id));
+
+  // Also find members who have earned an achievement matching this title
+  const { data: matchingAch } = await _sb
+    .from('achievements')
+    .select('id')
+    .ilike('name', `%${titleVal}%`);
+
+  if (matchingAch && matchingAch.length > 0) {
+    const achIds = matchingAch.map(a => a.id);
+    const { data: memberAch } = await _sb
+      .from('member_achievements')
+      .select('member_id')
+      .in('achievement_id', achIds);
+
+    if (memberAch && memberAch.length > 0) {
+      const extraIds = [...new Set(memberAch.map(r => r.member_id))].filter(id => !currentIds.has(id));
+      if (extraIds.length > 0) {
+        const { data: extraProfiles } = await _sb
+          .from('profiles')
+          .select('id, pseudo, discord_pseudo, title')
+          .in('id', extraIds)
+          .order('pseudo');
+        allMembers = [...allMembers, ...(extraProfiles || [])].sort((a, b) =>
+          (a.pseudo || '').localeCompare(b.pseudo || '')
+        );
+      }
+    }
+  }
+
+  renderSearchResults(allMembers, `Aucun membre avec le titre « ${titleVal} ».`);
 };
 
-const loadAndRenderTitleChips = async () => {
-  const wrap = $('title-chips-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = '<span style="opacity:.4;font-size:.85rem">Chargement…</span>';
-  const { data } = await _sb.from('profiles').select('title').not('title', 'is', null).neq('title', '');
-  const counts = {};
-  (data || []).forEach(r => { if (r.title) counts[r.title] = (counts[r.title] || 0) + 1; });
-  wrap.innerHTML = TITLES.map(t => {
-    const n = counts[t] || 0;
-    return `<button class="title-chip${n ? '' : ' title-chip-empty'}" data-title="${t}">
-      ${t}${n ? ` <span class="title-chip-count">(${n})</span>` : ''}
-    </button>`;
+const buildHeroSelectOptions = () => {
+  const grouped = {};
+  CLASS_ORDER.forEach(c => { grouped[c] = []; });
+  HEROES.forEach(h => { if (grouped[h.class]) grouped[h.class].push(h); });
+  return CLASS_ORDER.map(cls => {
+    const heroes = grouped[cls];
+    if (!heroes.length) return '';
+    return `<optgroup label="${cls}">
+      ${heroes.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}
+    </optgroup>`;
   }).join('');
-  wrap.querySelectorAll('.title-chip').forEach(chip => {
-    chip.addEventListener('click', () => searchByTitle(chip.dataset.title));
-  });
-};
-
-const renderHeroDropdown = (filter) => {
-  const dropdown = $('hero-dropdown');
-  if (!dropdown) return;
-  const q = filter.trim().toLowerCase();
-  if (!q) { dropdown.classList.add('hidden'); return; }
-  const matches = HEROES.filter(h => h.name.toLowerCase().includes(q)).slice(0, 12);
-  if (!matches.length) { dropdown.innerHTML = '<div class="hero-dropdown-empty">Aucun héros trouvé</div>'; dropdown.classList.remove('hidden'); return; }
-  dropdown.innerHTML = matches.map(h =>
-    `<div class="hero-dropdown-item" data-id="${h.id}" data-name="${h.name.replace(/"/g, '&quot;')}">
-      <img src="images/${h.img}" alt="" loading="lazy" />
-      <span>${h.name}</span>
-    </div>`
-  ).join('');
-  dropdown.classList.remove('hidden');
-  dropdown.querySelectorAll('.hero-dropdown-item').forEach(item => {
-    item.addEventListener('mousedown', e => {
-      e.preventDefault();
-      _searchHeroId = item.dataset.id;
-      $('search-hero-input').value = item.dataset.name;
-      dropdown.classList.add('hidden');
-    });
-  });
 };
 
 const renderSearchSection = () => {
-  _searchHeroId = null;
+  const titleOptions = TITLES.map(t => `<option value="${t}">${t}</option>`).join('');
 
   $('member-search').innerHTML = `
     <div class="search-section">
@@ -434,19 +437,21 @@ const renderSearchSection = () => {
         <button id="search-pseudo-btn" class="button button-primary">Chercher</button>
       </div>
       <div id="search-hero-mode" class="search-form hidden">
-        <div class="hero-search-wrap">
-          <input type="text" id="search-hero-input" class="profile-input" placeholder="Taper un nom de héros…" autocomplete="off" />
-          <div id="hero-dropdown" class="hero-dropdown hidden"></div>
-        </div>
+        <select id="search-hero-select" class="profile-input profile-select">
+          <option value="">— Choisir un héros —</option>
+          ${buildHeroSelectOptions()}
+        </select>
         <button id="search-hero-btn" class="button button-primary">Chercher</button>
       </div>
-      <div id="search-title-mode" class="hidden">
-        <div id="title-chips-wrap" class="title-chips"></div>
+      <div id="search-title-mode" class="search-form hidden">
+        <select id="search-title-select" class="profile-input profile-select">
+          <option value="">— Choisir un titre —</option>
+          ${titleOptions}
+        </select>
+        <button id="search-title-btn" class="button button-primary">Chercher</button>
       </div>
       <div id="search-results" class="search-results"></div>
     </div>`;
-
-  let titleChipsLoaded = false;
 
   document.querySelectorAll('.search-tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -457,11 +462,6 @@ const renderSearchSection = () => {
       $('search-hero-mode').classList.toggle('hidden', mode !== 'hero');
       $('search-title-mode').classList.toggle('hidden', mode !== 'title');
       $('search-results').innerHTML = '';
-      _searchHeroId = null;
-      if (mode === 'title' && !titleChipsLoaded) {
-        titleChipsLoaded = true;
-        loadAndRenderTitleChips();
-      }
     });
   });
 
@@ -469,14 +469,10 @@ const renderSearchSection = () => {
   $('search-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByPseudo(); });
 
   $('search-hero-btn').addEventListener('click', searchByHero);
-  $('search-hero-input').addEventListener('input', e => {
-    if (!e.target.value.trim()) _searchHeroId = null;
-    renderHeroDropdown(e.target.value);
-  });
-  $('search-hero-input').addEventListener('blur', () => {
-    setTimeout(() => $('hero-dropdown')?.classList.add('hidden'), 150);
-  });
-  $('search-hero-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByHero(); });
+  $('search-hero-select').addEventListener('change', searchByHero);
+
+  $('search-title-btn').addEventListener('click', searchByTitle);
+  $('search-title-select').addEventListener('change', searchByTitle);
 };
 
 /* ---- Achievements ---- */
