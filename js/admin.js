@@ -335,16 +335,20 @@ const syncPlayersToServer = async () => {
   } catch {}
 };
 
-const loadPlayersFromServer = async () => {
-  try {
-    const r = await fetch('/api/players');
-    if (!r.ok) return;
-    const data = await r.json();
-    if (!Array.isArray(data)) return;
-    const players = data.map(normalizePlayer).filter((p) => p.name);
-    localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
-    renderPlayerList();
-  } catch {}
+let _playersReady = null; // Promise that resolves once server data is in localStorage
+
+const loadPlayersFromServer = () => {
+  _playersReady = (async () => {
+    try {
+      const r = await fetch('/api/players');
+      if (!r.ok) return;
+      const data = await r.json();
+      if (!Array.isArray(data)) return;
+      const players = data.map(normalizePlayer).filter((p) => p.name);
+      localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
+      renderPlayerList();
+    } catch {}
+  })();
 };
 
 const syncEventToServer = async (event) => {
@@ -1080,6 +1084,7 @@ const wireEvents = () => {
 
   $('add-player-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (_playersReady) await _playersReady;
     const input = $('player-input');
     const tagSel = $('player-tag-select');
     addPlayer(input.value, tagSel ? tagSel.value : '');
@@ -1101,6 +1106,7 @@ const wireEvents = () => {
       editingPlayerName = null;
       renderPlayerList();
     } else if (action === 'save-player') {
+      if (_playersReady) await _playersReady;
       const li = btn.closest('li');
       const newName = li.querySelector('.admin-player-edit-name')?.value || name;
       const newTag  = li.querySelector('.admin-player-edit-tag')?.value || '';
@@ -1109,6 +1115,7 @@ const wireEvents = () => {
       renderPlayerList();
       await syncPlayersToServer();
     } else if (action === 'remove-player') {
+      if (_playersReady) await _playersReady;
       if (confirm(t('admin.players.confirmRemove', { name }))) {
         removePlayer(name);
         editingPlayerName = null;
