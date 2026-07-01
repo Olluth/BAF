@@ -279,6 +279,14 @@ const updatePlayerTag = (name, tag) => {
   savePlayers(loadPlayers().map((p) => p.name.toLowerCase() === name.toLowerCase() ? { ...p, tag } : p));
 };
 
+const updatePlayer = (oldName, newName, tag) => {
+  savePlayers(loadPlayers().map((p) =>
+    p.name.toLowerCase() === oldName.toLowerCase()
+      ? { name: newName.trim() || p.name, tag: tag || '' }
+      : p
+  ));
+};
+
 // --- Events ---
 
 const loadAdminEvents = () => {
@@ -574,6 +582,8 @@ const closeArticleForm = () => {
 
 // --- Players UI ---
 
+let editingPlayerName = null;
+
 const renderPlayerList = () => {
   const players = loadPlayers();
   const list = $('player-list');
@@ -582,23 +592,35 @@ const renderPlayerList = () => {
     return;
   }
   list.innerHTML = players
-    .map(
-      ({ name, tag }) => {
+    .map(({ name, tag }) => {
+      if (editingPlayerName && name.toLowerCase() === editingPlayerName.toLowerCase()) {
         const tagOptions = ['', ...PLAYER_TAGS].map(
-          (t) => `<option value="${escapeAttr(t)}"${t === tag ? ' selected' : ''}>${t || '—'}</option>`
+          (tg) => `<option value="${escapeAttr(tg)}"${tg === tag ? ' selected' : ''}>${tg || '—'}</option>`
         ).join('');
         return `
-    <li class="admin-list-item">
-      <div class="admin-list-item-info">
-        <span class="admin-list-item-title">${escapeHtml(name)}</span>
+    <li class="admin-list-item admin-list-item-editing">
+      <div class="admin-list-item-edit-fields">
+        <input type="text" class="admin-player-edit-name" value="${escapeAttr(name)}" placeholder="Nom du joueur" />
+        <select class="tracker-select admin-player-edit-tag" style="width:auto;padding:.6rem .7rem;font-size:.85rem;">${tagOptions}</select>
       </div>
       <div class="admin-list-item-actions">
-        <select class="tracker-select admin-player-tag-select" data-action="set-player-tag" data-name="${escapeAttr(name)}" style="width:auto;padding:.4rem .6rem;font-size:.85rem;">${tagOptions}</select>
-        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">${t('admin.players.remove')}</button>
+        <button class="button button-primary" data-action="save-player" data-name="${escapeAttr(name)}">Sauvegarder</button>
+        <button class="button" data-action="cancel-edit-player">Annuler</button>
       </div>
     </li>`;
       }
-    )
+      return `
+    <li class="admin-list-item">
+      <div class="admin-list-item-info">
+        <span class="admin-list-item-title">${escapeHtml(name)}</span>
+        ${tag ? `<span class="agenda-tier-badge" style="font-size:.75rem;padding:.2rem .55rem;">${escapeHtml(tag)}</span>` : ''}
+      </div>
+      <div class="admin-list-item-actions">
+        <button class="button" data-action="edit-player" data-name="${escapeAttr(name)}">${t('admin.articles.edit') || 'Modifier'}</button>
+        <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">${t('admin.players.remove')}</button>
+      </div>
+    </li>`;
+    })
     .join('');
 };
 
@@ -1055,21 +1077,33 @@ const wireEvents = () => {
   });
 
   $('player-list').addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-action="remove-player"]');
+    const btn = e.target.closest('[data-action]');
     if (!btn) return;
-    const name = btn.dataset.name;
-    if (confirm(t('admin.players.confirmRemove', { name }))) {
-      removePlayer(name);
+    const { action, name } = btn.dataset;
+
+    if (action === 'edit-player') {
+      editingPlayerName = name;
+      renderPlayerList();
+      $('player-list').querySelector('.admin-player-edit-name')?.focus();
+    } else if (action === 'cancel-edit-player') {
+      editingPlayerName = null;
+      renderPlayerList();
+    } else if (action === 'save-player') {
+      const li = btn.closest('li');
+      const newName = li.querySelector('.admin-player-edit-name')?.value || name;
+      const newTag  = li.querySelector('.admin-player-edit-tag')?.value || '';
+      updatePlayer(name, newName, newTag);
+      editingPlayerName = null;
       renderPlayerList();
       await syncPlayersToServer();
+    } else if (action === 'remove-player') {
+      if (confirm(t('admin.players.confirmRemove', { name }))) {
+        removePlayer(name);
+        editingPlayerName = null;
+        renderPlayerList();
+        await syncPlayersToServer();
+      }
     }
-  });
-
-  $('player-list').addEventListener('change', async (e) => {
-    const sel = e.target.closest('[data-action="set-player-tag"]');
-    if (!sel) return;
-    updatePlayerTag(sel.dataset.name, sel.value);
-    await syncPlayersToServer();
   });
 
   $('member-list').addEventListener('click', async (e) => {
