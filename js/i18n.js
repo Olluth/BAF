@@ -510,7 +510,7 @@ const setLang = (lang) => {
 
 // --- Init ---
 
-document.addEventListener('DOMContentLoaded', () => {
+const _initI18n = () => {
   applyTranslations();
 
   document.querySelectorAll('.lang-toggle').forEach((btn) => {
@@ -533,7 +533,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-});
+};
+
+// Apply immediately if DOM is ready (scripts are at end of body), otherwise wait.
+// This avoids delays caused by external CDN scripts blocking DOMContentLoaded.
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', _initI18n);
+} else {
+  _initI18n();
+}
 
 window.t = t;
 window.getLang = getLang;

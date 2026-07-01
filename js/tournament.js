@@ -423,10 +423,10 @@ const loadEvent = async (slug) => {
   if (!isRefresh) {
     clearStandings();
     renderVisitorPlayerList(false);
-    setStatus(t('tracker.loading'));
   }
 
   try {
+    if (!isRefresh) setStatus(t('tracker.loading'));
     const r = await fetch(`${STANDINGS_BASE}${encodeURIComponent(slug)}?_=${Date.now()}`);
     if (gen !== _generation) return;
     if (r.status === 404) { setStatus(t('tracker.noStandings'), true); return; }
