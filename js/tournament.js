@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const STORAGE_KEY    = 'baf-tracked-players';
 const EVENTS_KEY     = 'baf-events';
@@ -54,6 +54,7 @@ const fetchEvents = async () => {
 
 const esc  = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const toId = s => 'h' + s.replace(/[^a-zA-Z0-9]/g, '-');
+const normalizeForCompare = s => s.toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 const _HERO_ICON_MAP = [
   ['arakni, marionette',              '/images/icon_arakni_m.webp'],
@@ -226,12 +227,12 @@ const renderStreamEmbed = (slug) => {
 };
 
 const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft) => {
-  const tracked   = trackedSet.has(p.name.toLowerCase().trim());
+  const tracked   = trackedSet.has(normalizeForCompare(p.name));
   const liveMatch = liveMatches[p.name];
   const dropped   = droppedSet.has(p.name);
   const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
   const hid       = toId(p.name);
-  const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
+  const rank      = rankMap.get(normalizeForCompare(p.name)) ?? (i + 1);
 
   const lastH        = p.history.length ? p.history[p.history.length - 1] : null;
   const roundIsDraft = (r) => /draft|booster/i.test(r || '');
@@ -317,17 +318,17 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
     return;
   }
 
-  const trackedSet = new Set(trackedPlayers.map(p => p.name.toLowerCase().trim()));
-  const tagMap     = new Map(trackedPlayers.map(p => [p.name.toLowerCase().trim(), p.tag || '']));
+  const trackedSet = new Set(trackedPlayers.map(p => normalizeForCompare(p.name)));
+  const tagMap     = new Map(trackedPlayers.map(p => [normalizeForCompare(p.name), p.tag || '']));
   const hasLive    = Object.keys(liveMatches).length > 0;
-  const rankMap    = new Map(standings.map((p, i) => [p.name.toLowerCase().trim(), i + 1]));
+  const rankMap    = new Map(standings.map((p, i) => [normalizeForCompare(p.name), i + 1]));
   const total      = standings.length;
   const coverageUrl = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/`;
   const liveBadge   = hasLive ? ` <span class="live-badge">● ${esc(liveRoundName)}</span>` : '';
 
   // When tracked players are configured, show only them
   const filtered = trackedSet.size > 0
-    ? standings.filter(p => trackedSet.has(p.name.toLowerCase().trim()))
+    ? standings.filter(p => trackedSet.has(normalizeForCompare(p.name)))
     : standings;
 
   const sorted = [...filtered].sort((a, b) => {
@@ -344,7 +345,7 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
     // Always render the 3 fixed group tables when tracked players are configured
     const buckets = new Map([...TAG_ORDER, ''].map(tag => [tag, []]));
     for (const p of sorted) {
-      const rawTag = tagMap.get(p.name.toLowerCase().trim()) || '';
+      const rawTag = tagMap.get(normalizeForCompare(p.name)) || '';
       const tag = TAG_ORDER.includes(rawTag) ? rawTag : '';
       buckets.get(tag).push(p);
     }
