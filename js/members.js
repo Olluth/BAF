@@ -36,7 +36,7 @@ const HEROES = [
   { id: 'arakni_m',    name: 'Arakni, Marionette',           img: 'icon_arakni_m.webp',        class: 'Assassin' },
   { id: 'arakni_sttc', name: 'Arakni, Sow the Seeds',        img: 'icon_arakni_sttc-1.webp',   class: 'Assassin' },
   { id: 'arakni_th',   name: 'Arakni, Thousand Hands',       img: 'icon_arakni_th-1.webp',     class: 'Assassin' },
-  { id: 'nuu',         name: 'Nuu',                           img: 'icon_nuu.webp',              class: 'Assassin' },
+  { id: 'nuu',         name: "Nu'u",                          img: 'icon_nuu.webp',              class: 'Assassin' },
   { id: 'uzuri',       name: 'Uzuri',                         img: 'icon_uzuri.webp',            class: 'Assassin' },
   // Brute
   { id: 'kayo_ad',     name: 'Kayo, Armed Diplomacy',         img: 'icon_kayo_ad.webp',          class: 'Brute' },
@@ -91,7 +91,7 @@ const HEROES = [
   { id: 'riptide',     name: 'Riptide',                       img: 'icon_riptide.webp',          class: 'Ranger' },
   // Runeblade
   { id: 'aurora',      name: 'Aurora',                        img: 'icon_aurora.webp',           class: 'Runeblade' },
-  { id: 'aurora_lot',  name: 'Aurora, Legacy of Tempest',     img: 'icon_aurora_lot-2.webp',    class: 'Runeblade' },
+  { id: 'aurora_lot',  name: 'Aurora, Legacy of the Tempest', img: 'icon_aurora_lot-2.webp',    class: 'Runeblade' },
   { id: 'briar',       name: 'Briar',                         img: 'icon_briar.webp',            class: 'Runeblade' },
   { id: 'chane',       name: 'Chane',                         img: 'icon_chane.webp',            class: 'Runeblade' },
   { id: 'florian',     name: 'Florian',                       img: 'icon_florian.webp',          class: 'Runeblade' },
@@ -104,7 +104,7 @@ const HEROES = [
   { id: 'fang',        name: 'Fang',                          img: 'icon_fang.webp',             class: 'Warrior' },
   { id: 'hala',        name: 'Hala',                          img: 'icon_hala_pos.webp',         class: 'Warrior' },
   { id: 'kassai_cs',   name: 'Kassai, Cintari Sellsword',     img: 'icon_kassai_cs.webp',       class: 'Warrior' },
-  { id: 'kassai_gs',   name: 'Kassai of Goldsteel',           img: 'icon_kassai_gs.webp',       class: 'Warrior' },
+  { id: 'kassai_gs',   name: 'Kassai of the Goldsteel',       img: 'icon_kassai_gs.webp',       class: 'Warrior' },
   { id: 'olympia',     name: 'Olympia',                       img: 'icon_olympia.webp',          class: 'Warrior' },
   // Wizard
   { id: 'blaze',       name: 'Blaze',                         img: 'icon_blaze.webp',            class: 'Wizard' },
@@ -346,8 +346,10 @@ const searchByPseudo = async () => {
   renderSearchResults(data, 'Aucun membre trouvé.');
 };
 
+let _searchHeroId = null;
+
 const searchByHero = async () => {
-  const heroId = $('search-hero-select').value;
+  const heroId = _searchHeroId;
   if (!heroId) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
   const { data, error } = await _sb
@@ -374,12 +376,32 @@ const searchByTitle = async () => {
   renderSearchResults(data, `Aucun membre avec le titre « ${titleVal} ».`);
 };
 
+const renderHeroDropdown = (filter) => {
+  const dropdown = $('hero-dropdown');
+  if (!dropdown) return;
+  const q = filter.trim().toLowerCase();
+  if (!q) { dropdown.classList.add('hidden'); return; }
+  const matches = HEROES.filter(h => h.name.toLowerCase().includes(q)).slice(0, 12);
+  if (!matches.length) { dropdown.innerHTML = '<div class="hero-dropdown-empty">Aucun héros trouvé</div>'; dropdown.classList.remove('hidden'); return; }
+  dropdown.innerHTML = matches.map(h =>
+    `<div class="hero-dropdown-item" data-id="${h.id}" data-name="${h.name.replace(/"/g, '&quot;')}">
+      <img src="images/${h.img}" alt="" loading="lazy" />
+      <span>${h.name}</span>
+    </div>`
+  ).join('');
+  dropdown.classList.remove('hidden');
+  dropdown.querySelectorAll('.hero-dropdown-item').forEach(item => {
+    item.addEventListener('mousedown', e => {
+      e.preventDefault();
+      _searchHeroId = item.dataset.id;
+      $('search-hero-input').value = item.dataset.name;
+      dropdown.classList.add('hidden');
+    });
+  });
+};
+
 const renderSearchSection = () => {
-  const heroOptions = CLASS_ORDER.map(cls => {
-    const list = HEROES.filter(h => h.class === cls).sort((a, b) => a.name.localeCompare(b.name));
-    if (!list.length) return '';
-    return `<optgroup label="${cls}">${list.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}</optgroup>`;
-  }).join('');
+  _searchHeroId = null;
 
   const titleOptions = TITLES.map(t => `<option value="${t}">${t}</option>`).join('');
 
@@ -396,10 +418,10 @@ const renderSearchSection = () => {
         <button id="search-pseudo-btn" class="button button-primary">Chercher</button>
       </div>
       <div id="search-hero-mode" class="search-form hidden">
-        <select id="search-hero-select" class="profile-input profile-select">
-          <option value="">— Choisir un héros —</option>
-          ${heroOptions}
-        </select>
+        <div class="hero-search-wrap">
+          <input type="text" id="search-hero-input" class="profile-input" placeholder="Taper un nom de héros…" autocomplete="off" />
+          <div id="hero-dropdown" class="hero-dropdown hidden"></div>
+        </div>
         <button id="search-hero-btn" class="button button-primary">Chercher</button>
       </div>
       <div id="search-title-mode" class="search-form hidden">
@@ -421,12 +443,23 @@ const renderSearchSection = () => {
       $('search-hero-mode').classList.toggle('hidden', mode !== 'hero');
       $('search-title-mode').classList.toggle('hidden', mode !== 'title');
       $('search-results').innerHTML = '';
+      _searchHeroId = null;
     });
   });
 
   $('search-pseudo-btn').addEventListener('click', searchByPseudo);
   $('search-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByPseudo(); });
+
   $('search-hero-btn').addEventListener('click', searchByHero);
+  $('search-hero-input').addEventListener('input', e => {
+    if (!e.target.value.trim()) _searchHeroId = null;
+    renderHeroDropdown(e.target.value);
+  });
+  $('search-hero-input').addEventListener('blur', () => {
+    setTimeout(() => $('hero-dropdown')?.classList.add('hidden'), 150);
+  });
+  $('search-hero-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByHero(); });
+
   $('search-title-btn').addEventListener('click', searchByTitle);
 };
 
