@@ -34,8 +34,8 @@ const CLASS_COLORS = {
 const HEROES = [
   // Assassin
   { id: 'arakni_m',    name: 'Arakni, Marionette',              img: 'icon_arakni_m.webp',        class: 'Assassin' },
-  { id: 'arakni_sttc', name: 'Arakni, Huntsman',                img: 'icon_arakni_sttc-1.webp',   class: 'Assassin' },
-  { id: 'arakni_th',   name: 'Arakni, 5L!p3d 7hRu 7h3 cR4X',   img: 'icon_arakni_th-1.webp',     class: 'Assassin' },
+  { id: 'arakni_sttc', name: 'Arakni, Huntsman',                img: 'icon_arakni_th-1.webp',     class: 'Assassin' },
+  { id: 'arakni_th',   name: 'Arakni, 5L!p3d 7hRu 7h3 cR4X',   img: 'icon_arakni_sttc-1.webp',   class: 'Assassin' },
   { id: 'nuu',         name: "Nu'u",                             img: 'icon_nuu.webp',              class: 'Assassin' },
   { id: 'uzuri',       name: 'Uzuri, Switchblade',               img: 'icon_uzuri.webp',            class: 'Assassin' },
   // Brute
