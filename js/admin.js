@@ -335,6 +335,18 @@ const syncPlayersToServer = async () => {
   } catch {}
 };
 
+const loadPlayersFromServer = async () => {
+  try {
+    const r = await fetch('/api/players');
+    if (!r.ok) return;
+    const data = await r.json();
+    if (!Array.isArray(data)) return;
+    const players = data.map(normalizePlayer).filter((p) => p.name);
+    localStorage.setItem(PLAYERS_KEY, JSON.stringify(players));
+    renderPlayerList();
+  } catch {}
+};
+
 const syncEventToServer = async (event) => {
   const key = getAnalyticsKey();
   if (!key) return;
@@ -445,7 +457,7 @@ const showDashboard = () => {
   $('login-page').classList.add('hidden');
   $('dashboard').classList.remove('hidden');
   renderArticleList();
-  renderPlayerList();
+  loadPlayersFromServer();
   renderEventList();
   const keyInput = $('analytics-key-input');
   if (keyInput) keyInput.value = getAnalyticsKey();
@@ -473,7 +485,7 @@ const switchTab = (tab) => {
   if (tab === 'articles') reconcileArticles();
   if (tab === 'events') loadEventsFromServer();
   if (tab === 'agenda') loadAgendaFromServer();
-  if (tab === 'players') syncPlayersToServer();
+  if (tab === 'players') loadPlayersFromServer();
   if (tab === 'members') loadMembers();
   if (tab === 'achievements') renderAchievementsPanel();
 };
