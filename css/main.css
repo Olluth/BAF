@@ -1553,6 +1553,13 @@ textarea::placeholder {
   flex-shrink: 0;
 }
 
+.csd-loading {
+  padding: 0.75rem 1rem;
+  color: rgba(245, 208, 216, 0.4);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
 .title-chips {
   display: flex;
   flex-wrap: wrap;

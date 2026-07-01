@@ -474,9 +474,6 @@ const buildHeroDropdownHTML = () => {
   }).join('');
 };
 
-const buildTitleDropdownHTML = () =>
-  TITLES.map(t => `<div class="csd-opt" data-value="${t}" data-name="${t}">${t}</div>`).join('');
-
 const renderSearchSection = () => {
   $('member-search').innerHTML = `
     <div class="search-section">
@@ -511,12 +508,24 @@ const renderSearchSection = () => {
             <span class="csd-arrow">▾</span>
           </button>
           <div class="csd-panel hidden" id="title-csd-panel">
-            <div class="csd-list">${buildTitleDropdownHTML()}</div>
+            <div class="csd-list" id="title-csd-list">
+              <div class="csd-loading">Chargement…</div>
+            </div>
           </div>
         </div>
       </div>
       <div id="search-results" class="search-results"></div>
     </div>`;
+
+  // Fetch all distinct titles from DB and populate the dropdown
+  _sb.from('profiles').select('title').not('title', 'is', null).neq('title', '').then(({ data }) => {
+    const titles = [...new Set((data || []).map(r => r.title).filter(Boolean))].sort();
+    const list = $('title-csd-list');
+    if (!list) return;
+    list.innerHTML = titles.length
+      ? titles.map(t => `<div class="csd-opt" data-value="${t.replace(/"/g,'&quot;')}" data-name="${t.replace(/"/g,'&quot;')}">${t.replace(/</g,'&lt;')}</div>`).join('')
+      : '<div class="csd-loading">Aucun titre trouvé</div>';
+  });
 
   document.querySelectorAll('.search-tab').forEach(tab => {
     tab.addEventListener('click', () => {
