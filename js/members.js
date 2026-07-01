@@ -360,6 +360,20 @@ const searchByHero = async () => {
   renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
 };
 
+const searchByTitle = async () => {
+  const titleVal = $('search-title-select').value;
+  if (!titleVal) return;
+  $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
+  const { data, error } = await _sb
+    .from('profiles')
+    .select('pseudo, discord_pseudo, title')
+    .eq('title', titleVal)
+    .order('pseudo')
+    .limit(50);
+  if (error) { $('search-results').innerHTML = `<p class="search-empty" style="color:#fca5a5">${error.message}</p>`; return; }
+  renderSearchResults(data, `Aucun membre avec le titre « ${titleVal} ».`);
+};
+
 const renderSearchSection = () => {
   const heroOptions = CLASS_ORDER.map(cls => {
     const list = HEROES.filter(h => h.class === cls).sort((a, b) => a.name.localeCompare(b.name));
@@ -367,12 +381,15 @@ const renderSearchSection = () => {
     return `<optgroup label="${cls}">${list.map(h => `<option value="${h.id}">${h.name}</option>`).join('')}</optgroup>`;
   }).join('');
 
+  const titleOptions = TITLES.map(t => `<option value="${t}">${t}</option>`).join('');
+
   $('member-search').innerHTML = `
     <div class="search-section">
       <h3 class="search-title">Rechercher un membre</h3>
       <div class="search-tabs">
         <button class="search-tab active" data-mode="pseudo">Par pseudo</button>
         <button class="search-tab" data-mode="hero">Par héros</button>
+        <button class="search-tab" data-mode="title">Par titre</button>
       </div>
       <div id="search-pseudo-mode" class="search-form">
         <input type="text" id="search-pseudo-input" class="profile-input" placeholder="Pseudo…" maxlength="64" />
@@ -385,6 +402,13 @@ const renderSearchSection = () => {
         </select>
         <button id="search-hero-btn" class="button button-primary">Chercher</button>
       </div>
+      <div id="search-title-mode" class="search-form hidden">
+        <select id="search-title-select" class="profile-input profile-select">
+          <option value="">— Choisir un titre —</option>
+          ${titleOptions}
+        </select>
+        <button id="search-title-btn" class="button button-primary">Chercher</button>
+      </div>
       <div id="search-results" class="search-results"></div>
     </div>`;
 
@@ -395,6 +419,7 @@ const renderSearchSection = () => {
       const mode = tab.dataset.mode;
       $('search-pseudo-mode').classList.toggle('hidden', mode !== 'pseudo');
       $('search-hero-mode').classList.toggle('hidden', mode !== 'hero');
+      $('search-title-mode').classList.toggle('hidden', mode !== 'title');
       $('search-results').innerHTML = '';
     });
   });
@@ -402,6 +427,7 @@ const renderSearchSection = () => {
   $('search-pseudo-btn').addEventListener('click', searchByPseudo);
   $('search-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchByPseudo(); });
   $('search-hero-btn').addEventListener('click', searchByHero);
+  $('search-title-btn').addEventListener('click', searchByTitle);
 };
 
 /* ---- Achievements ---- */
