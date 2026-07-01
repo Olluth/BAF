@@ -2480,7 +2480,7 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     justify-content: center;
   }
 
-  /* Admin sidebar: keep vertical, stack full-width */
+  /* Admin sidebar: horizontal scrolling tab bar */
   .site-layout {
     flex-direction: column;
   }
@@ -2492,35 +2492,48 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     top: 0;
     flex-direction: row;
     align-items: center;
-    flex-wrap: wrap;
     padding: 0.6rem 1rem;
     gap: 0.5rem;
+    overflow: hidden;
   }
 
   .site-sidebar .brand {
     margin-bottom: 0;
+    flex-shrink: 0;
   }
 
   .site-sidebar .site-nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex: 1;
     gap: 0.2rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 2px;
+  }
+
+  .site-sidebar .site-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .site-sidebar .site-nav a {
     padding: 0.4rem 0.6rem;
     font-size: 0.88rem;
+    flex-shrink: 0;
   }
 
   .site-sidebar .site-nav a.button {
     margin-top: 0;
     margin-left: 0;
+    flex-shrink: 0;
   }
 
   .site-sidebar .site-nav .admin-tab {
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.88rem;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .sidebar-bottom {
@@ -2541,9 +2554,10 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 
   .admin-list-item-actions {
     width: 100%;
+    flex-wrap: wrap;
   }
 
-  /* Logo: compact for mobile, no straddling */
+  /* Logo: compact for mobile */
   .brand {
     margin-top: 0;
   }
@@ -2559,14 +2573,37 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     padding: 0.4rem 0;
   }
 
-  /* Standings table: horizontal scroll */
+  /* Standings table: responsive, no horizontal scroll */
   .standings-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: visible;
   }
 
   .standings-table {
-    min-width: 480px;
+    min-width: 0;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 0.7rem 0.5rem;
+  }
+
+  /* Hide hero text column and matchup column on mobile */
+  .hero-col,
+  .matchup-col,
+  .matchup-cell {
+    display: none;
+  }
+
+  /* Make the "Voir sur fabtcg.com" header stack below title */
+  .standings-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Tracker event dropdown: full width */
+  .tracker-field {
+    max-width: 100%;
   }
 
   /* Hero */
@@ -2580,7 +2617,7 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 
   /* Sections */
   .section {
-    padding: 2.5rem 0;
+    padding: 2rem 0;
   }
 
   .event-banner {
@@ -2626,6 +2663,33 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   /* Coverage iframe: shorter on mobile */
   .coverage-iframe {
     height: 340px;
+  }
+
+  /* Visitor player list: full width on mobile */
+  .visitor-player-list-card {
+    max-width: 100%;
+  }
+
+  /* History panel: tighter */
+  .history-panel {
+    padding: 0.6rem 0.75rem 0.75rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  /* Member flash: tighter wrap */
+  .member-flash {
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+  }
+
+  .member-flash-heroes img {
+    width: 34px;
+    height: 34px;
   }
 }
 
@@ -2764,5 +2828,32 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 
   .admin-login-card {
     border-radius: 20px;
+  }
+
+  /* Standings: even tighter on very small screens */
+  .standings-table th,
+  .standings-table td {
+    padding: 0.55rem 0.4rem;
+    font-size: 0.82rem;
+  }
+
+  .live-round-col {
+    width: auto;
+  }
+
+  /* Hide last-round column too if screen is very narrow */
+  .live-round-cell,
+  .standings-table th.live-round-col {
+    display: none;
+  }
+
+  /* Section headings: tighter */
+  .section-header {
+    margin-bottom: 1.25rem;
+  }
+
+  /* Container: slightly more edge space */
+  .container {
+    width: calc(100% - 1.5rem);
   }
 }

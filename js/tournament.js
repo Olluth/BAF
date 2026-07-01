@@ -267,7 +267,7 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
           <span class="row-chevron" aria-hidden="true">›</span>
         </span>
       </td>
-      ${isDraft ? '' : `<td>${esc(p.hero)}</td>`}
+      ${isDraft ? '' : `<td class="hero-col">${esc(p.hero)}</td>`}
       ${isDraft ? '' : matchupCell}
       <td class="record-cell${recordClass}">${record}</td>
       ${liveCell}
@@ -299,7 +299,7 @@ const buildStandingsTable = (players, trackedSet, tagMap, liveMatches, liveRound
       <thead><tr>
         <th class="rank-col">#</th>
         <th>${t('tracker.col.player')}</th>
-        ${isDraft ? '' : `<th>${t('tracker.col.hero')}</th>`}
+        ${isDraft ? '' : `<th class="hero-col">${t('tracker.col.hero')}</th>`}
         ${isDraft ? '' : `<th class="matchup-col"></th>`}
         <th>${t('tracker.col.record')}</th>
         <th class="live-round-col">${t('tracker.col.liveRound')}</th>
