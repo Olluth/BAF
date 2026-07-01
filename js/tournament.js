@@ -338,29 +338,43 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
     return a.losses - b.losses;
   });
 
-  // Group by tag when tracked players have tags assigned
-  const hasTags = trackedSet.size > 0 && trackedPlayers.some(p => p.tag);
   let groupsHtml = '';
 
-  if (hasTags) {
+  if (trackedSet.size > 0) {
+    // Always render the 3 fixed group tables when tracked players are configured
     const buckets = new Map([...TAG_ORDER, ''].map(tag => [tag, []]));
     for (const p of sorted) {
-      const tag = TAG_ORDER.includes(tagMap.get(p.name.toLowerCase().trim()) || '') ? tagMap.get(p.name.toLowerCase().trim()) : '';
+      const rawTag = tagMap.get(p.name.toLowerCase().trim()) || '';
+      const tag = TAG_ORDER.includes(rawTag) ? rawTag : '';
       buckets.get(tag).push(p);
     }
-    for (const tag of [...TAG_ORDER, '']) {
+
+    for (const tag of TAG_ORDER) {
       const group = buckets.get(tag) || [];
-      if (!group.length) continue;
-      const label = tag || 'Autres';
       groupsHtml += `
         <div class="standings-group">
           <div class="standings-group-header">
-            <h3>${esc(label)} <span class="standings-group-count">(${group.length})</span>${liveBadge}</h3>
+            <h3>${esc(tag)} <span class="standings-group-count">(${group.length})</span>${liveBadge}</h3>
           </div>
-          ${buildStandingsTable(group, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}
+          ${group.length
+            ? buildStandingsTable(group, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)
+            : `<p class="tracker-empty" style="padding:1rem 0">Aucun joueur suivi dans ce groupe.</p>`}
+        </div>`;
+    }
+
+    // Untagged players shown at the bottom if any
+    const untagged = buckets.get('') || [];
+    if (untagged.length) {
+      groupsHtml += `
+        <div class="standings-group">
+          <div class="standings-group-header">
+            <h3>Sans groupe <span class="standings-group-count">(${untagged.length})</span></h3>
+          </div>
+          ${buildStandingsTable(untagged, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}
         </div>`;
     }
   } else {
+    // No tracked players configured: show full standings in single table
     groupsHtml = `
       <div class="standings-header">
         <h3>${sorted.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
@@ -371,7 +385,7 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
 
   container.innerHTML = `
     <div class="standings-container">
-      ${hasTags ? `
+      ${trackedSet.size > 0 ? `
       <div class="standings-header">
         <span>${t('tracker.col.player')}s${liveBadge}</span>
         <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
