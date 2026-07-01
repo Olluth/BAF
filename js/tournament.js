@@ -6,7 +6,12 @@ const STANDINGS_BASE = '/api/standings/';
 
 /* ---- Storage ---- */
 
-let _trackedPlayers = [];
+let _trackedPlayers = []; // [{name, tag}]
+
+const normalizePlayerEntry = (p) => {
+  if (typeof p === 'string') return { name: p.trim(), tag: '' };
+  return { name: String(p.name || '').trim(), tag: String(p.tag || '').trim() };
+};
 
 const fetchTrackedPlayers = async () => {
   try {
@@ -15,14 +20,14 @@ const fetchTrackedPlayers = async () => {
     const data = await r.json();
     if (Array.isArray(data)) {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-      _trackedPlayers = data.map(n => n.trim()).filter(Boolean);
+      _trackedPlayers = data.map(normalizePlayerEntry).filter(p => p.name);
       return;
     }
   } catch {}
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const p   = raw ? JSON.parse(raw) : [];
-    _trackedPlayers = Array.isArray(p) ? p.map(n => n.trim()).filter(Boolean) : [];
+    _trackedPlayers = Array.isArray(p) ? p.map(normalizePlayerEntry).filter(e => e.name) : [];
   } catch { _trackedPlayers = []; }
 };
 
@@ -162,16 +167,36 @@ const clearStandings = () => {
 const resultBadge = result =>
   `<span class="result-badge result-${result}">${t('tracker.result.' + result)}</span>`;
 
+const TAG_ORDER = ['Local', 'Expat', 'Chocolateam'];
+
 const renderVisitorPlayerList = (hidden = false) => {
   const el = document.getElementById('visitor-player-list');
   if (!el) return;
   if (hidden) { el.innerHTML = ''; return; }
   const players = loadTrackedPlayers();
   if (!players.length) { el.innerHTML = ''; return; }
+
+  const groups = new Map();
+  for (const tag of [...TAG_ORDER, '']) groups.set(tag, []);
+  for (const p of players) {
+    const key = TAG_ORDER.includes(p.tag) ? p.tag : '';
+    groups.get(key).push(p.name);
+  }
+
+  const sections = [...TAG_ORDER, ''].map(tag => {
+    const names = groups.get(tag) || [];
+    if (!names.length) return '';
+    const label = tag || 'Autres';
+    return `<div class="visitor-player-group">
+      <span class="visitor-player-group-label">${esc(label)}</span>
+      <ol>${names.map(n => `<li>${esc(n)}</li>`).join('')}</ol>
+    </div>`;
+  }).join('');
+
   el.innerHTML = `
     <div class="visitor-player-list-card">
       <h3>${t('tracker.trackedTitle')}</h3>
-      <ol>${players.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
+      ${sections}
     </div>`;
 };
 
@@ -200,7 +225,89 @@ const renderStreamEmbed = (slug) => {
   el.innerHTML = `<iframe src="${esc(embedUrl)}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
 };
 
-const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false) => {
+const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft) => {
+  const tracked   = trackedSet.has(p.name.toLowerCase().trim());
+  const liveMatch = liveMatches[p.name];
+  const dropped   = droppedSet.has(p.name);
+  const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
+  const hid       = toId(p.name);
+  const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
+
+  const lastH        = p.history.length ? p.history[p.history.length - 1] : null;
+  const roundIsDraft = (r) => /draft|booster/i.test(r || '');
+  const heroIcon     = (heroName) => { const src = getHeroIcon(heroName || ''); return src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(heroName || '')}" loading="lazy">` : `<span class="hero-icon-text">${esc((heroName || '').split(',')[0])}</span>`; };
+  const matchupCell  = lastH && !roundIsDraft(lastH.round)
+    ? `<td class="matchup-cell"><div class="hero-matchup">${heroIcon(p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHero)}</div></td>`
+    : `<td class="matchup-cell">—</td>`;
+  const liveCell    = `<td class="live-round-cell">${lastH ? esc(lastH.round) : '—'}</td>`;
+  const roundResult = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
+  const recordClass = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
+
+  const histRows = p.history.map(h => `
+    <tr>
+      <td>${esc(h.round)}</td>
+      <td>${esc(h.opponent)}</td>
+      <td>${roundIsDraft(h.round) ? '—' : esc(h.opponentHero)}</td>
+      <td>${resultBadge(h.result)}</td>
+    </tr>`).join('');
+
+  const liveNote = liveMatch
+    ? `<div class="live-pairing-note">● ${esc(liveRoundName)} — ${t('tracker.vs')} ${esc(liveMatch.opponent)} (${esc(liveMatch.opponentHero)})</div>`
+    : '';
+
+  return `
+    <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
+      <td class="rank-cell">${rank}${total ? '/' + total : ''}</td>
+      <td class="player-cell">
+        <span class="player-cell-inner">
+          ${tracked ? '<span class="tracked-indicator" aria-hidden="true"></span>' : ''}
+          <span class="player-name-text">${esc(p.name)}</span>
+          ${dropped ? `<span class="dropped-badge" aria-label="${t('tracker.dropped')}">${t('tracker.dropped')}</span>` : ''}
+          <span class="row-chevron" aria-hidden="true">›</span>
+        </span>
+      </td>
+      ${isDraft ? '' : `<td>${esc(p.hero)}</td>`}
+      ${isDraft ? '' : matchupCell}
+      <td class="record-cell${recordClass}">${record}</td>
+      ${liveCell}
+    </tr>
+    <tr class="history-panel-row hidden" id="${hid}">
+      <td colspan="${isDraft ? 4 : 6}" class="history-panel-cell">
+        <div class="history-panel">
+          ${liveNote}
+          <table class="history-table">
+            <thead><tr>
+              <th>${t('tracker.card.round')}</th>
+              <th>${t('tracker.col.opponent')}</th>
+              <th>${t('tracker.col.hero')}</th>
+              <th>${t('tracker.col.result')}</th>
+            </tr></thead>
+            <tbody>${histRows}</tbody>
+          </table>
+        </div>
+      </td>
+    </tr>`;
+};
+
+const buildStandingsTable = (players, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft) => {
+  const rows = players.map((p, i) =>
+    buildStandingRow(p, i, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)
+  ).join('');
+  return `
+    <table class="standings-table">
+      <thead><tr>
+        <th class="rank-col">#</th>
+        <th>${t('tracker.col.player')}</th>
+        ${isDraft ? '' : `<th>${t('tracker.col.hero')}</th>`}
+        ${isDraft ? '' : `<th class="matchup-col"></th>`}
+        <th>${t('tracker.col.record')}</th>
+        <th class="live-round-col">${t('tracker.col.liveRound')}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+};
+
+const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false) => {
   const container = document.getElementById('standings-container');
   if (!container) return;
   renderVisitorPlayerList(true);
@@ -210,8 +317,13 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     return;
   }
 
-  const trackedSet = new Set(trackedNames.map(n => n.toLowerCase().trim()));
+  const trackedSet = new Set(trackedPlayers.map(p => p.name.toLowerCase().trim()));
+  const tagMap     = new Map(trackedPlayers.map(p => [p.name.toLowerCase().trim(), p.tag || '']));
   const hasLive    = Object.keys(liveMatches).length > 0;
+  const rankMap    = new Map(standings.map((p, i) => [p.name.toLowerCase().trim(), i + 1]));
+  const total      = standings.length;
+  const coverageUrl = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/`;
+  const liveBadge   = hasLive ? ` <span class="live-badge">● ${esc(liveRoundName)}</span>` : '';
 
   // When tracked players are configured, show only them
   const filtered = trackedSet.size > 0
@@ -226,96 +338,46 @@ const renderStandings = (standings, slug, trackedNames, liveMatches = {}, liveRo
     return a.losses - b.losses;
   });
 
-  const rankMap = new Map(standings.map((p, i) => [p.name.toLowerCase().trim(), i + 1]));
-  const total   = standings.length;
+  // Group by tag when tracked players have tags assigned
+  const hasTags = trackedSet.size > 0 && trackedPlayers.some(p => p.tag);
+  let groupsHtml = '';
 
-  const rows = sorted.map((p, i) => {
-    const tracked   = trackedSet.has(p.name.toLowerCase().trim());
-    const liveMatch = liveMatches[p.name];
-    const dropped   = droppedSet.has(p.name);
-    const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
-    const hid       = toId(p.name);
-    const rank      = rankMap.get(p.name.toLowerCase().trim()) ?? (i + 1);
-
-    const lastH          = p.history.length ? p.history[p.history.length - 1] : null;
-    const roundIsDraft   = (r) => /draft|booster/i.test(r || '');
-    const heroIcon       = (heroName) => { const src = getHeroIcon(heroName || ''); return src ? `<img src="${esc(src)}" class="hero-icon" title="${esc(heroName || '')}" loading="lazy">` : `<span class="hero-icon-text">${esc((heroName || '').split(',')[0])}</span>`; };
-    const matchupCell    = lastH && !roundIsDraft(lastH.round)
-      ? `<td class="matchup-cell"><div class="hero-matchup">${heroIcon(p.hero)}<span class="vs-x">×</span>${heroIcon(lastH.opponentHero)}</div></td>`
-      : `<td class="matchup-cell">—</td>`;
-    const liveCell    = `<td class="live-round-cell">${lastH ? esc(lastH.round) : '—'}</td>`;
-    const roundResult = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
-    const recordClass = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
-
-    const histRows = p.history.map(h => `
-      <tr>
-        <td>${esc(h.round)}</td>
-        <td>${esc(h.opponent)}</td>
-        <td>${roundIsDraft(h.round) ? '—' : esc(h.opponentHero)}</td>
-        <td>${resultBadge(h.result)}</td>
-      </tr>`).join('');
-
-    const liveNote = liveMatch
-      ? `<div class="live-pairing-note">● ${esc(liveRoundName)} — ${t('tracker.vs')} ${esc(liveMatch.opponent)} (${esc(liveMatch.opponentHero)})</div>`
-      : '';
-
-    return `
-      <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
-        <td class="rank-cell">${rank}${total ? '/' + total : ''}</td>
-        <td class="player-cell">
-          <span class="player-cell-inner">
-            ${tracked ? '<span class="tracked-indicator" aria-hidden="true"></span>' : ''}
-            <span class="player-name-text">${esc(p.name)}</span>
-            ${dropped ? `<span class="dropped-badge" aria-label="${t('tracker.dropped')}">${t('tracker.dropped')}</span>` : ''}
-            <span class="row-chevron" aria-hidden="true">›</span>
-          </span>
-        </td>
-        ${isDraft ? '' : `<td>${esc(p.hero)}</td>`}
-        ${isDraft ? '' : matchupCell}
-        <td class="record-cell${recordClass}">${record}</td>
-        ${liveCell}
-      </tr>
-      <tr class="history-panel-row hidden" id="${hid}">
-        <td colspan="${isDraft ? 4 : 6}" class="history-panel-cell">
-          <div class="history-panel">
-            ${liveNote}
-            <table class="history-table">
-              <thead><tr>
-                <th>${t('tracker.card.round')}</th>
-                <th>${t('tracker.col.opponent')}</th>
-                <th>${t('tracker.col.hero')}</th>
-                <th>${t('tracker.col.result')}</th>
-              </tr></thead>
-              <tbody>${histRows}</tbody>
-            </table>
+  if (hasTags) {
+    const buckets = new Map([...TAG_ORDER, ''].map(tag => [tag, []]));
+    for (const p of sorted) {
+      const tag = TAG_ORDER.includes(tagMap.get(p.name.toLowerCase().trim()) || '') ? tagMap.get(p.name.toLowerCase().trim()) : '';
+      buckets.get(tag).push(p);
+    }
+    for (const tag of [...TAG_ORDER, '']) {
+      const group = buckets.get(tag) || [];
+      if (!group.length) continue;
+      const label = tag || 'Autres';
+      groupsHtml += `
+        <div class="standings-group">
+          <div class="standings-group-header">
+            <h3>${esc(label)} <span class="standings-group-count">(${group.length})</span>${liveBadge}</h3>
           </div>
-        </td>
-      </tr>`;
-  }).join('');
-
-  const coverageUrl = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/`;
-  const liveBadge   = hasLive
-    ? ` <span class="live-badge">● ${esc(liveRoundName)}</span>`
-    : '';
+          ${buildStandingsTable(group, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}
+        </div>`;
+    }
+  } else {
+    groupsHtml = `
+      <div class="standings-header">
+        <h3>${sorted.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
+        <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
+      </div>
+      ${buildStandingsTable(sorted, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}`;
+  }
 
   container.innerHTML = `
     <div class="standings-container">
+      ${hasTags ? `
       <div class="standings-header">
-        <h3>${filtered.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
+        <span>${t('tracker.col.player')}s${liveBadge}</span>
         <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
-      </div>
+      </div>` : ''}
       ${hasLive ? '<div id="tracker-live-status" class="tracker-live-status"></div>' : ''}
-      <table class="standings-table">
-        <thead><tr>
-          <th class="rank-col">#</th>
-          <th>${t('tracker.col.player')}</th>
-          ${isDraft ? '' : `<th>${t('tracker.col.hero')}</th>`}
-          ${isDraft ? '' : `<th class="matchup-col"></th>`}
-          <th>${t('tracker.col.record')}</th>
-          <th class="live-round-col">${t('tracker.col.liveRound')}</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
+      ${groupsHtml}
     </div>`;
 
   container.querySelectorAll('.standings-row').forEach(row => {

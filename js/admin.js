@@ -236,30 +236,47 @@ const deleteArticle = (id) => saveArticles(loadArticles().filter((a) => a.id !==
 
 // --- Players ---
 
+const PLAYER_TAGS = ['Local', 'Expat', 'Chocolateam'];
+
+const normalizePlayer = (p) => {
+  if (typeof p === 'string') return { name: p.trim(), tag: '' };
+  return { name: String(p.name || '').trim(), tag: String(p.tag || '').trim() };
+};
+
 const loadPlayers = () => {
   try {
     const raw = localStorage.getItem(PLAYERS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.map((n) => String(n).trim()).filter(Boolean) : [];
+    return Array.isArray(parsed) ? parsed.map(normalizePlayer).filter((p) => p.name) : [];
   } catch {
     return [];
   }
 };
 
 const savePlayers = (players) => {
-  const deduped = [...new Set(players.map((n) => n.trim()).filter(Boolean))];
+  const seen = new Set();
+  const deduped = players.filter((p) => {
+    const key = p.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   localStorage.setItem(PLAYERS_KEY, JSON.stringify(deduped));
 };
 
-const addPlayer = (name) => {
+const addPlayer = (name, tag) => {
   const players = loadPlayers();
   const cleaned = name.trim();
-  if (!cleaned || players.some((p) => p.toLowerCase() === cleaned.toLowerCase())) return;
-  savePlayers([...players, cleaned]);
+  if (!cleaned || players.some((p) => p.name.toLowerCase() === cleaned.toLowerCase())) return;
+  savePlayers([...players, { name: cleaned, tag: tag || '' }]);
 };
 
 const removePlayer = (name) => {
-  savePlayers(loadPlayers().filter((p) => p.toLowerCase() !== name.toLowerCase()));
+  savePlayers(loadPlayers().filter((p) => p.name.toLowerCase() !== name.toLowerCase()));
+};
+
+const updatePlayerTag = (name, tag) => {
+  savePlayers(loadPlayers().map((p) => p.name.toLowerCase() === name.toLowerCase() ? { ...p, tag } : p));
 };
 
 // --- Events ---
@@ -566,15 +583,21 @@ const renderPlayerList = () => {
   }
   list.innerHTML = players
     .map(
-      (name) => `
+      ({ name, tag }) => {
+        const tagOptions = ['', ...PLAYER_TAGS].map(
+          (t) => `<option value="${escapeAttr(t)}"${t === tag ? ' selected' : ''}>${t || '—'}</option>`
+        ).join('');
+        return `
     <li class="admin-list-item">
       <div class="admin-list-item-info">
         <span class="admin-list-item-title">${escapeHtml(name)}</span>
       </div>
       <div class="admin-list-item-actions">
+        <select class="tracker-select admin-player-tag-select" data-action="set-player-tag" data-name="${escapeAttr(name)}" style="width:auto;padding:.4rem .6rem;font-size:.85rem;">${tagOptions}</select>
         <button class="button admin-btn-danger" data-action="remove-player" data-name="${escapeAttr(name)}">${t('admin.players.remove')}</button>
       </div>
-    </li>`,
+    </li>`;
+      }
     )
     .join('');
 };
@@ -1024,7 +1047,8 @@ const wireEvents = () => {
   $('add-player-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = $('player-input');
-    addPlayer(input.value);
+    const tagSel = $('player-tag-select');
+    addPlayer(input.value, tagSel ? tagSel.value : '');
     input.value = '';
     renderPlayerList();
     await syncPlayersToServer();
@@ -1039,6 +1063,13 @@ const wireEvents = () => {
       renderPlayerList();
       await syncPlayersToServer();
     }
+  });
+
+  $('player-list').addEventListener('change', async (e) => {
+    const sel = e.target.closest('[data-action="set-player-tag"]');
+    if (!sel) return;
+    updatePlayerTag(sel.dataset.name, sel.value);
+    await syncPlayersToServer();
   });
 
   $('member-list').addEventListener('click', async (e) => {

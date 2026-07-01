@@ -501,6 +501,48 @@ textarea::placeholder {
   margin-top: 1.5rem;
 }
 
+.standings-group {
+  margin-bottom: 2rem;
+}
+
+.standings-group-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.2);
+}
+
+.standings-group-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.standings-group-count {
+  font-weight: 400;
+  color: rgba(245, 208, 216, 0.5);
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
+}
+
+.visitor-player-group {
+  margin-bottom: 0.75rem;
+}
+
+.visitor-player-group-label {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(245, 208, 216, 0.55);
+  margin-bottom: 0.3rem;
+}
+
 .standings-table {
   width: 100%;
   border-collapse: collapse;

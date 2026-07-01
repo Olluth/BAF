@@ -68,7 +68,7 @@ const notifyDiscord = async (slug, newStandings, oldData, trackedPlayers, liveRo
   if (!DISCORD_WEBHOOK_URL || !trackedPlayers.length) return;
 
   const norm    = s => s.trim().toLowerCase();
-  const tracked = new Set(trackedPlayers.map(norm));
+  const tracked = new Set(trackedPlayers.map(p => norm(typeof p === 'string' ? p : p.name)));
 
   const oldLen = {};
   (oldData?.standings || []).forEach(p => {
@@ -191,7 +191,10 @@ app.get('/api/players', (req, res) => {
 app.post('/api/players', requireAuth, (req, res) => {
   const { players } = req.body || {};
   if (!Array.isArray(players)) return res.status(400).json({ error: 'invalid data' });
-  const cleaned = players.map(p => String(p).trim()).filter(Boolean);
+  const cleaned = players.map(p => {
+    if (typeof p === 'string') return { name: p.trim(), tag: '' };
+    return { name: String(p.name || '').trim(), tag: String(p.tag || '').trim() };
+  }).filter(p => p.name);
   savePlayersData(cleaned);
   res.json({ ok: true, count: cleaned.length });
 });

@@ -94,6 +94,12 @@
 
               <form id="add-player-form" class="admin-add-form" novalidate>
                 <input type="text" id="player-input" data-i18n-placeholder="admin.players.placeholder" placeholder="Nom du joueur" required />
+                <select id="player-tag-select" class="tracker-select" style="width:auto;padding:.9rem .8rem;">
+                  <option value="">— Tag —</option>
+                  <option value="Local">Local</option>
+                  <option value="Expat">Expat</option>
+                  <option value="Chocolateam">Chocolateam</option>
+                </select>
                 <button type="submit" class="button button-primary" data-i18n="admin.players.add">Ajouter</button>
               </form>
 
