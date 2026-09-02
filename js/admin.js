@@ -483,6 +483,7 @@ const switchTab = (tab) => {
   $('panel-events').classList.toggle('hidden', tab !== 'events');
   $('panel-members').classList.toggle('hidden', tab !== 'members');
   $('panel-agenda').classList.toggle('hidden', tab !== 'agenda');
+  $('panel-scraper').classList.toggle('hidden', tab !== 'scraper');
   $('panel-achievements').classList.toggle('hidden', tab !== 'achievements');
   $('panel-analytics').classList.toggle('hidden', tab !== 'analytics');
   if (tab === 'analytics') loadAnalytics();
@@ -492,6 +493,7 @@ const switchTab = (tab) => {
   if (tab === 'players') loadPlayersFromServer();
   if (tab === 'members') loadMembers();
   if (tab === 'achievements') renderAchievementsPanel();
+  if (tab === 'scraper') { loadScraperStatus(); startScraperPolling(); } else { stopScraperPolling(); }
 };
 
 // --- Analytics ---
@@ -1002,6 +1004,85 @@ const loadAgendaFromServer = async () => {
   } catch {}
 };
 
+// --- Scraper (VPS live tracking) ---
+
+let _scraperPollTimer = null;
+
+const setScraperStatus = (msg, isError = false) => {
+  const el = $('scraper-status');
+  if (!el) return;
+  if (!msg) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.innerHTML = msg;
+};
+
+const timeAgo = (iso) => {
+  if (!iso) return null;
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}min`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
+};
+
+const renderScraperStatus = (state) => {
+  if (!state) { setScraperStatus('Erreur de communication avec le serveur.', true); return; }
+  const badge = state.running
+    ? `<strong style="color:#8fbfa0">● En cours</strong> — ${escapeHtml(state.slug)}`
+    : `<strong style="opacity:.6">■ Arrêté</strong>`;
+  const lastUpdate = state.lastSuccessAt ? `<br>Dernière mise à jour il y a ${timeAgo(state.lastSuccessAt)}${state.lastPlayersCount != null ? ` (${state.lastPlayersCount} joueurs)` : ''}` : '';
+  const errorBanner = state.consecutiveErrors > 0
+    ? `<br><span style="color:#d47f7f">⚠️ ${state.consecutiveErrors} échec(s) consécutif(s) : ${escapeHtml(state.lastError || '')}</span>`
+    : '';
+  setScraperStatus(badge + lastUpdate + errorBanner, state.consecutiveErrors > 0);
+};
+
+const loadScraperStatus = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setScraperStatus('Clé API manquante (onglet Analytics).', true); return; }
+  try {
+    const r = await fetch('/api/scraper/status', { headers: { 'Authorization': `Bearer ${key}` } });
+    if (!r.ok) { setScraperStatus('Erreur serveur ' + r.status, true); return; }
+    renderScraperStatus(await r.json());
+  } catch { setScraperStatus('Erreur réseau', true); }
+};
+
+const startScraperPolling = () => {
+  stopScraperPolling();
+  _scraperPollTimer = setInterval(loadScraperStatus, 5000);
+};
+
+const stopScraperPolling = () => {
+  if (_scraperPollTimer) { clearInterval(_scraperPollTimer); _scraperPollTimer = null; }
+};
+
+const startScraper = async (slug) => {
+  const key = getAnalyticsKey();
+  if (!key) { setScraperStatus('Clé API manquante (onglet Analytics).', true); return; }
+  try {
+    const r = await fetch('/api/scraper/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({ slug }),
+    });
+    const data = await r.json().catch(() => null);
+    if (!r.ok) { setScraperStatus(data?.error === 'already running' ? `Un autre suivi (${escapeHtml(data.status?.slug || '')}) est déjà en cours — arrêtez-le d'abord.` : 'Erreur serveur ' + r.status, true); return; }
+    renderScraperStatus(data.status);
+  } catch { setScraperStatus('Erreur réseau', true); }
+};
+
+const stopScraper = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setScraperStatus('Clé API manquante (onglet Analytics).', true); return; }
+  try {
+    const r = await fetch('/api/scraper/stop', { method: 'POST', headers: { 'Authorization': `Bearer ${key}` } });
+    const data = await r.json().catch(() => null);
+    if (!r.ok) { setScraperStatus('Erreur serveur ' + r.status, true); return; }
+    renderScraperStatus(data.status);
+  } catch { setScraperStatus('Erreur réseau', true); }
+};
+
 // --- Event Wiring ---
 
 const wireEvents = () => {
@@ -1273,6 +1354,15 @@ const wireEvents = () => {
     if (ok) { setAgendaStatus('Événement ajouté !'); setTimeout(() => setAgendaStatus(''), 2500); }
     $('agenda-form').reset();
   });
+
+  $('scraper-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const slug = $('scraper-slug').value.trim();
+    if (!slug) return;
+    await startScraper(slug);
+  });
+
+  $('scraper-stop-btn')?.addEventListener('click', () => stopScraper());
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();

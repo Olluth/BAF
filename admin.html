@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Bookmarklet <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -43,6 +43,7 @@
           <button class="admin-tab" data-tab="players" data-i18n="admin.tab.players">Joueurs suivis</button>
           <button class="admin-tab" data-tab="events" data-i18n="admin.tab.events">Tournois</button>
           <button class="admin-tab" data-tab="agenda">Agenda</button>
+          <button class="admin-tab" data-tab="scraper">Suivi live (VPS)</button>
           <button class="admin-tab" data-tab="members" data-i18n="admin.tab.members">Membres</button>
           <button class="admin-tab" data-tab="achievements" data-i18n="admin.tab.achievements">Hauts faits</button>
           <button class="admin-tab" data-tab="analytics" data-i18n="admin.tab.analytics">Analytics</button>
@@ -195,6 +196,25 @@
 
               <div id="agenda-status" class="tracker-status hidden" style="margin:.75rem 0"></div>
               <ul id="agenda-list" class="admin-list" style="margin-top:1.5rem"></ul>
+            </div>
+
+            <!-- Panneau Scraper -->
+            <div id="panel-scraper" class="admin-panel-section hidden">
+              <div class="admin-panel-header">
+                <h2>Suivi live (VPS)</h2>
+              </div>
+              <p class="admin-panel-desc">Lance le suivi automatique d'un tournoi directement depuis le serveur, sans navigateur ouvert. ⚠️ Peut être bloqué par Cloudflare — en cas d'échecs répétés, repasse par le bookmarklet habituel.</p>
+
+              <form id="scraper-form" class="admin-form" style="max-width:480px" novalidate>
+                <label for="scraper-slug">Slug du tournoi</label>
+                <input type="text" id="scraper-slug" placeholder="ex : calling-toulouse" pattern="[a-z0-9-]+" required />
+                <div class="admin-form-actions">
+                  <button type="submit" class="button button-primary">Démarrer</button>
+                  <button type="button" id="scraper-stop-btn" class="button">Arrêter</button>
+                </div>
+              </form>
+
+              <div id="scraper-status" class="tracker-status hidden" style="margin:.75rem 0"></div>
             </div>
 
             <!-- Panneau Membres -->

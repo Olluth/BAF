@@ -20,6 +20,9 @@ const ARTICLES_FILE  = path.join(DATA_DIR, 'articles.json');
 const AGENDA_FILE    = path.join(DATA_DIR, 'agenda.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
+const scraper = require('./scraper')({ dataDir: DATA_DIR, workerPath: path.join(__dirname, 'scraper-worker.js') });
+scraper.resume();
+
 app.use(express.json({ limit: '2mb' }));
 
 const requireAuth = (req, res, next) => {
@@ -179,6 +182,25 @@ app.get('/api/standings/:slug', (req, res) => {
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(file);
+});
+
+/* ---- Scraper (VPS-side live tracking) ---- */
+
+app.post('/api/scraper/start', requireAuth, (req, res) => {
+  const { slug } = req.body || {};
+  if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
+  const result = scraper.start(slug);
+  res.status(result.code).json(result.code === 409 ? { error: 'already running', status: result.status } : { ok: true, status: result.status });
+});
+
+app.post('/api/scraper/stop', requireAuth, (req, res) => {
+  const result = scraper.stop();
+  res.json({ ok: true, status: result.status });
+});
+
+app.get('/api/scraper/status', requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(scraper.status());
 });
 
 /* ---- Players ---- */
