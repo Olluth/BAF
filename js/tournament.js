@@ -226,6 +226,8 @@ const renderStreamEmbed = (slug) => {
   el.innerHTML = `<iframe src="${esc(embedUrl)}" allowfullscreen allow="autoplay; fullscreen"></iframe>`;
 };
 
+const TAG_CLASS = { Local: 'tag-local', Expat: 'tag-expat', Chocolateam: 'tag-chocolateam' };
+
 const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft) => {
   const tracked   = trackedSet.has(normalizeForCompare(p.name));
   const liveMatch = liveMatches[p.name];
@@ -233,6 +235,7 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
   const record    = `${p.wins}–${p.losses}${p.draws > 0 ? `–${p.draws}` : ''}`;
   const hid       = toId(p.name);
   const rank      = rankMap.get(normalizeForCompare(p.name)) ?? (i + 1);
+  const tagClass  = TAG_CLASS[tagMap.get(normalizeForCompare(p.name))] || '';
 
   const lastH        = p.history.length ? p.history[p.history.length - 1] : null;
   const roundIsDraft = (r) => /draft|booster/i.test(r || '');
@@ -257,11 +260,11 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
     : '';
 
   return `
-    <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
+    <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}${tagClass ? ' ' + tagClass : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
       <td class="rank-cell">${rank}${total ? '/' + total : ''}</td>
       <td class="player-cell">
         <span class="player-cell-inner">
-          ${tracked ? '<span class="tracked-indicator" aria-hidden="true"></span>' : ''}
+          ${tracked ? `<span class="tracked-indicator${tagClass ? ' ' + tagClass : ''}" aria-hidden="true"></span>` : ''}
           <span class="player-name-text">${esc(p.name)}</span>
           ${dropped ? `<span class="dropped-badge" aria-label="${t('tracker.dropped')}">${t('tracker.dropped')}</span>` : ''}
           <span class="row-chevron" aria-hidden="true">›</span>
@@ -339,60 +342,28 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
     return a.losses - b.losses;
   });
 
-  let groupsHtml = '';
+  const usedTags = trackedSet.size > 0
+    ? TAG_ORDER.filter(tag => sorted.some(p => tagMap.get(normalizeForCompare(p.name)) === tag))
+    : [];
+  const tagLegend = usedTags.length
+    ? `<div class="tag-legend">${usedTags.map(tag => `<span class="tag-legend-item"><span class="tracked-indicator ${TAG_CLASS[tag]}" aria-hidden="true"></span>${esc(tag)}</span>`).join('')}</div>`
+    : '';
 
-  if (trackedSet.size > 0) {
-    // Always render the 3 fixed group tables when tracked players are configured
-    const buckets = new Map([...TAG_ORDER, ''].map(tag => [tag, []]));
-    for (const p of sorted) {
-      const rawTag = tagMap.get(normalizeForCompare(p.name)) || '';
-      const tag = TAG_ORDER.includes(rawTag) ? rawTag : '';
-      buckets.get(tag).push(p);
-    }
-
-    for (const tag of TAG_ORDER) {
-      const group = buckets.get(tag) || [];
-      groupsHtml += `
-        <div class="standings-group">
-          <div class="standings-group-header">
-            <h3>${esc(tag)} <span class="standings-group-count">(${group.length})</span>${liveBadge}</h3>
-          </div>
-          ${group.length
-            ? buildStandingsTable(group, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)
-            : `<p class="tracker-empty" style="padding:1rem 0">Aucun joueur suivi dans ce groupe.</p>`}
-        </div>`;
-    }
-
-    // Untagged players shown at the bottom if any
-    const untagged = buckets.get('') || [];
-    if (untagged.length) {
-      groupsHtml += `
-        <div class="standings-group">
-          <div class="standings-group-header">
-            <h3>Sans groupe <span class="standings-group-count">(${untagged.length})</span></h3>
-          </div>
-          ${buildStandingsTable(untagged, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}
-        </div>`;
-    }
-  } else {
-    // No tracked players configured: show full standings in single table
-    groupsHtml = `
-      <div class="standings-header">
-        <h3>${sorted.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}</h3>
-        <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
-      </div>
-      ${buildStandingsTable(sorted, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)}`;
-  }
+  const headerLabel = trackedSet.size > 0
+    ? `${t('tracker.col.player')}s${liveBadge}`
+    : `${sorted.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}`;
 
   container.innerHTML = `
     <div class="standings-container">
-      ${trackedSet.size > 0 ? `
       <div class="standings-header">
-        <span>${t('tracker.col.player')}s${liveBadge}</span>
+        <span>${headerLabel}</span>
         <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
-      </div>` : ''}
+      </div>
+      ${tagLegend}
       ${hasLive ? '<div id="tracker-live-status" class="tracker-live-status"></div>' : ''}
-      ${groupsHtml}
+      ${sorted.length
+        ? buildStandingsTable(sorted, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft)
+        : `<p class="tracker-empty">${t('tracker.noStandings')}</p>`}
     </div>`;
 
   container.querySelectorAll('.standings-row').forEach(row => {

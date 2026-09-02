@@ -501,34 +501,6 @@ textarea::placeholder {
   margin-top: 1.5rem;
 }
 
-.standings-group {
-  margin-bottom: 2rem;
-}
-
-.standings-group-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.6rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(245, 208, 216, 0.2);
-}
-
-.standings-group-header h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.standings-group-count {
-  font-weight: 400;
-  color: rgba(245, 208, 216, 0.5);
-  font-size: 0.9rem;
-  margin-left: 0.3rem;
-}
-
 .visitor-player-group {
   margin-bottom: 0.75rem;
 }
@@ -2564,6 +2536,25 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   border-radius: 50%;
   background: #f5d0d8;
   flex-shrink: 0;
+}
+
+.tracked-indicator.tag-local       { background: #9db89a; }
+.tracked-indicator.tag-expat       { background: #8fa8c4; }
+.tracked-indicator.tag-chocolateam { background: #c9a96e; }
+
+.tag-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: rgba(245, 208, 216, 0.6);
+}
+
+.tag-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .row-chevron {
