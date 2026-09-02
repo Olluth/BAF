@@ -45,7 +45,10 @@ const parsePairings = html => { const d = parseDoc(html); const p = {}; d.queryS
 const fetchPage = async (browser, url) => {
   const page = await browser.newPage();
   try {
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8' });
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7' });
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+    );
     const res = await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
     if (!res.ok()) throw new Error(`HTTP ${res.status()}`);
     const html = await page.content();
