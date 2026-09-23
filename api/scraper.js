@@ -3,7 +3,7 @@ const { spawn } = require('child_process');
 const fs        = require('fs');
 const path      = require('path');
 
-const CYCLE_MS = 90 * 1000;
+const CYCLE_MS = 2 * 60 * 1000;
 
 module.exports = ({ dataDir, workerPath }) => {
   const statePath = path.join(dataDir, 'scraper-state.json');
