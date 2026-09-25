@@ -11,6 +11,7 @@
   <link rel="icon" href="images/baf_logo_mini.png" type="image/png" />
 </head>
 <body>
+  <!-- Site header: same markup on every public page, update them all together -->
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="brand"><img src="images/baf_logo.png" alt="LA BAF" /></a>
@@ -101,6 +102,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- i18n.js loads first: the other scripts use its t() helper -->
   <script src="js/i18n.js"></script>
   <script src="js/members.js"></script>
   <script src="js/nav-auth.js"></script>

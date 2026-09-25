@@ -1,17 +1,25 @@
+/*
+ * Browser bookmarklet for live tournament tracking (fallback when the VPS scraper
+ * is blocked). Run it on a fabtcg.com/coverage/<slug>/ page: every 90s it re-reads
+ * all round results, rebuilds the standings and POSTs them to bafbordeaux.fr/api/standings.
+ * The admin page generates the bookmark link, with the API key passed as ?key=.
+ * Same parsing logic as api/scraper-worker.js: keep both in sync.
+ */
 (function () {
   'use strict';
 
-  // Prevent double-injection
+  // Clicking the bookmark again pauses / resumes instead of injecting a second copy
   if (window.__bafTrackerRunning) {
     window.__bafTrackerRunning.toggle();
     return;
   }
 
+  // API key comes from this script's own URL (…/bookmarklet.js?key=…).
   const _src = document.currentScript?.src || '';
   const API_KEY = new URL(_src || 'https://x/?key=').searchParams.get('key') || '';
   const INTERVAL_MS = 90 * 1000; // 90 seconds
 
-  /* ---- Overlay ---- */
+  /* ---- Overlay (status box pinned to the top-right of the page) ---- */
   const el = document.createElement('div');
   el.style.cssText = [
     'position:fixed', 'top:1rem', 'right:1rem', 'z-index:2147483647',
@@ -26,6 +34,7 @@
   let _countdownTimer = null;
   let _nextRun = 0;
 
+  // Redraws the overlay; the countdown is hidden while an update is running.
   const renderOverlay = (status, isRunning = false) => {
     const now = Date.now();
     const remaining = _stopped ? 0 : Math.max(0, Math.ceil((_nextRun - now) / 1000));
@@ -45,6 +54,7 @@
     document.getElementById('__baf_stop')?.addEventListener('click', () => window.__bafTrackerRunning.toggle());
   };
 
+  // Ticks the "next update in mm:ss" line every second.
   const startCountdown = () => {
     if (_countdownTimer) clearInterval(_countdownTimer);
     _countdownTimer = setInterval(() => {
@@ -63,6 +73,7 @@
   /* ---- Scraping logic ---- */
   const parseDoc = html => new DOMParser().parseFromString(html, 'text/html');
 
+  // Extracts both players, heroes and the winner from one match row.
   const extractMatch = row => {
     const p1El = row.querySelector('.player-details.player-left');
     const p2El = row.querySelector('.player-details.player-right');
@@ -81,8 +92,8 @@
   };
 
   const parseResults  = html => { const d = parseDoc(html); const m = []; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (x) m.push(x); }); return m; };
-  const parsePairings = html => { const d = parseDoc(html); const p = {}; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (!x) return; p[x.p1Name] = { opponent: x.p2Name, opponentHero: x.p2Hero }; p[x.p2Name] = { opponent: x.p1Name, opponentHero: x.p1Hero }; }); return p; };
 
+  // One full update: read rounds, rebuild standings, push to the API, schedule the next run.
   const doUpdate = async () => {
     if (_stopped) return;
     try {
@@ -120,6 +131,7 @@
       const liveRound = rounds[rounds.length - 1];
       const liveRoundNameForBuild = liveRound.roundName;
 
+      // Rebuild each player's record; a "draw" in the latest round is a match still in progress.
       const map = {};
       const get = (name, hero) => { if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] }; return map[name]; };
       allRounds.forEach(({ roundName, matches }) => {

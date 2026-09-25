@@ -1,4 +1,11 @@
 'use strict';
+/*
+ * FR/EN translations, loaded on every page before the other scripts.
+ * Static text: add data-i18n="key" (or data-i18n-placeholder) to the element.
+ * From JS: t('key', { var }) replaces {var} placeholders. Missing EN strings fall back to FR.
+ * Switching language fires a 'langchange' event so scripts can re-render.
+ * Also wires the mobile hamburger menu, since every page loads this file.
+ */
 
 const LANG_KEY = 'baf-lang';
 const DEFAULT_LANG = 'fr';
@@ -23,13 +30,6 @@ const translations = {
     'nav.contact': 'Contact',
     'nav.tracker': 'Suivi de tournoi',
 
-    // Hero
-    'hero.eyebrow': 'Communauté Flesh and Blood',
-    'hero.desc': 'Accompagner les joueurs, organiser des événements et célébrer la compétition Flesh and Blood.',
-    'hero.cta': 'Voir le suivi de tournoi',
-    'hero.card.title': 'Rejoindre la communauté',
-    'hero.card.desc': 'Connectez-vous avec les joueurs locaux, suivez les classements en direct et restez informé des tournois à venir.',
-
     // About
     'about.eyebrow': 'Association',
     'about.title': 'La BAF',
@@ -41,10 +41,7 @@ const translations = {
     // Events
     'events.eyebrow': 'Événements',
     'events.title': 'Événements',
-    'events.next': 'Prochain grand événement',
     'events.weekly': 'Rendez-vous hebdomadaires',
-    'events.card1.title': 'France National',
-    'events.card1.desc': '26–28 juin 2026 · Partenaire : Uchronies Games.',
     'events.card2.title': 'Armory du mardi',
     'events.card2.desc': 'Chaque mardi à 19h30 — Decaféine',
     'events.card3.title': 'Armory du jeudi',
@@ -101,39 +98,17 @@ const translations = {
     'tracker.event.label': 'Événement',
     'tracker.event.placeholder': 'Sélectionner un événement…',
     'tracker.event.empty': 'Aucun événement configuré.',
-    'tracker.noEvents': 'Aucun événement configuré pour le moment. Revenez bientôt !',
 
     // Tournament tracker — JS strings
-    'tracker.round.detecting': 'Détection du round en cours…',
-    'tracker.noPlayers': 'Aucun joueur suivi configuré pour le moment.',
     'tracker.trackedTitle': 'Joueurs suivis',
     'tracker.noStandings': 'Aucune donnée de classement disponible pour ce round.',
-    'tracker.col.rank': 'Rang',
     'tracker.col.player': 'Joueur',
     'tracker.col.hero': 'Héros',
     'tracker.col.opponent': 'Adversaire',
-    'tracker.col.score': 'Score',
     'tracker.col.record': 'Bilan',
     'tracker.loading': 'Chargement des classements…',
     'tracker.loadError': 'Impossible de charger les données',
-    'tracker.formatError': "Le format des classements n'est pas pris en charge par le tracker.",
-    'tracker.loaded': '{count} joueur suivi mis en avant.',
-    'tracker.loaded.plural': '{count} joueurs suivis mis en avant.',
-    'tracker.fetchError': 'Erreur lors du chargement des classements :',
-    'tracker.networkError': "Impossible de charger les classements en direct. Vérifiez le slug de l'événement, la vue et le round, ou vérifiez l'accès réseau au point de couverture.",
-    'tracker.viewFallback': 'Vue alternative utilisée: {view}',
-    'tracker.fillFields': 'Veuillez remplir tous les champs du tracker.',
-    'tracker.noTrackedFound': 'Aucun joueur suivi trouvé dans les classements actuels.',
-    'tracker.card.rank': 'Rang actuel',
-    'tracker.card.hero': 'Héros',
-    'tracker.card.opponent': 'Adversaire',
-    'tracker.card.score': 'Score',
-    'tracker.card.record': 'Bilan',
     'tracker.card.round': 'Round',
-    'tracker.unknown': 'Inconnu',
-    'tracker.tbd': 'À définir',
-    'tracker.coverage.heading': 'Couverture en direct',
-    'tracker.coverage.external': 'Ouvrir ↗',
     'tracker.col.result': 'Résultat',
     'tracker.col.liveRound': 'Ronde en cours',
     'tracker.result.win': 'Victoire',
@@ -141,7 +116,6 @@ const translations = {
     'tracker.result.draw': 'Nul',
     'tracker.result.ongoing': 'En cours',
     'tracker.openCoverage': 'Voir sur fabtcg.com ↗',
-    'tracker.roundsLoaded': '{done}/{total} rondes chargées…',
     'tracker.vs': 'vs',
     'tracker.updated': 'Mis à jour il y a {min}m',
     'tracker.dropped': 'Abandon',
@@ -188,7 +162,6 @@ const translations = {
     'admin.events.name.placeholder': 'Ex : Championnats de France 2026',
     'admin.events.slug.label': "Slug de l'événement",
     'admin.events.slug.placeholder': 'national-championship-2026-france',
-    'admin.events.view.label': 'Vue de couverture',
     'admin.events.active.label': 'Afficher dans le sélecteur',
     'admin.events.setDefault': '★ Défaut',
     'admin.events.edit': 'Modifier',
@@ -197,14 +170,6 @@ const translations = {
     'admin.events.save': 'Enregistrer',
     'admin.events.cancel': 'Annuler',
 
-    // Admin — proxy config
-    'admin.proxy.label': 'Proxy CORS personnalisé (optionnel)',
-    'admin.proxy.desc': "Si tous les proxies publics échouent, entrez l'URL de votre propre proxy ici.",
-    'admin.proxy.placeholder': 'https://…/?url=',
-    'admin.proxy.save': 'Enregistrer',
-    'admin.proxy.clear': 'Effacer',
-    'admin.proxy.saved': 'Proxy enregistré.',
-    'admin.proxy.cleared': 'Proxy effacé.',
 
     // Admin — articles panel
     'admin.articles.title': 'Articles',
@@ -256,13 +221,6 @@ const translations = {
     'nav.contact': 'Contact',
     'nav.tracker': 'Tournament Tracker',
 
-    // Hero
-    'hero.eyebrow': 'Flesh and Blood Community',
-    'hero.desc': 'Supporting players, organizing events, and celebrating competitive Flesh and Blood play.',
-    'hero.cta': 'View Tournament Tracker',
-    'hero.card.title': 'Join the community',
-    'hero.card.desc': 'Connect with local players, follow live standings, and stay up to date with upcoming tournaments.',
-
     // About
     'about.eyebrow': 'Association',
     'about.title': 'La BAF',
@@ -274,10 +232,7 @@ const translations = {
     // Events
     'events.eyebrow': 'Events',
     'events.title': 'Events',
-    'events.next': 'Next major event',
     'events.weekly': 'Weekly events',
-    'events.card1.title': 'French Nationals',
-    'events.card1.desc': 'June 26–28, 2026 · Partner: Uchronies Games.',
     'events.card2.title': 'Tuesday Armory',
     'events.card2.desc': 'Every Tuesday at 7:30 PM — Decaféine',
     'events.card3.title': 'Thursday Armory',
@@ -334,39 +289,17 @@ const translations = {
     'tracker.event.label': 'Event',
     'tracker.event.placeholder': 'Select an event…',
     'tracker.event.empty': 'No events configured.',
-    'tracker.noEvents': 'No events configured yet. Check back soon!',
 
     // Tournament tracker — JS strings
-    'tracker.round.detecting': 'Detecting current round…',
-    'tracker.noPlayers': 'No tracked players configured yet.',
     'tracker.trackedTitle': 'Tracked Players',
     'tracker.noStandings': 'No standings data available for this round.',
-    'tracker.col.rank': 'Rank',
     'tracker.col.player': 'Player',
     'tracker.col.hero': 'Hero',
     'tracker.col.opponent': 'Opponent',
-    'tracker.col.score': 'Score',
     'tracker.col.record': 'Record',
     'tracker.loading': 'Loading standings…',
     'tracker.loadError': 'Unable to load data',
-    'tracker.formatError': 'Standings format is not supported by the tracker.',
-    'tracker.loaded': '{count} tracked player highlighted.',
-    'tracker.loaded.plural': '{count} tracked players highlighted.',
-    'tracker.fetchError': 'Error loading standings:',
-    'tracker.networkError': 'Unable to load live standings. Verify the event slug, view, and round, or check network access to the coverage endpoint.',
-    'tracker.viewFallback': 'Fallback view used: {view}',
-    'tracker.fillFields': 'Please fill in all tracker fields.',
-    'tracker.noTrackedFound': 'No tracked players found in the current standings.',
-    'tracker.card.rank': 'Current Rank',
-    'tracker.card.hero': 'Hero',
-    'tracker.card.opponent': 'Opponent',
-    'tracker.card.score': 'Score',
-    'tracker.card.record': 'Record',
     'tracker.card.round': 'Round',
-    'tracker.unknown': 'Unknown',
-    'tracker.tbd': 'TBD',
-    'tracker.coverage.heading': 'Live Coverage',
-    'tracker.coverage.external': 'Open ↗',
     'tracker.col.result': 'Result',
     'tracker.col.liveRound': 'Ongoing round',
     'tracker.result.win': 'Win',
@@ -374,7 +307,6 @@ const translations = {
     'tracker.result.draw': 'Draw',
     'tracker.result.ongoing': 'In progress',
     'tracker.openCoverage': 'View on fabtcg.com ↗',
-    'tracker.roundsLoaded': '{done}/{total} rounds loaded…',
     'tracker.vs': 'vs',
     'tracker.updated': 'Updated {min}m ago',
     'tracker.dropped': 'Dropped',
@@ -421,7 +353,6 @@ const translations = {
     'admin.events.name.placeholder': 'e.g. French Nationals 2026',
     'admin.events.slug.label': 'Event slug',
     'admin.events.slug.placeholder': 'national-championship-2026-france',
-    'admin.events.view.label': 'Coverage view',
     'admin.events.active.label': 'Show in selector',
     'admin.events.setDefault': '★ Set as default',
     'admin.events.edit': 'Edit',
@@ -430,14 +361,6 @@ const translations = {
     'admin.events.save': 'Save',
     'admin.events.cancel': 'Cancel',
 
-    // Admin — proxy config
-    'admin.proxy.label': 'Custom CORS proxy (optional)',
-    'admin.proxy.desc': 'If all public proxies fail, enter your own proxy URL here.',
-    'admin.proxy.placeholder': 'https://…/?url=',
-    'admin.proxy.save': 'Save',
-    'admin.proxy.clear': 'Clear',
-    'admin.proxy.saved': 'Proxy saved.',
-    'admin.proxy.cleared': 'Proxy cleared.',
 
     // Admin — articles panel
     'admin.articles.title': 'Articles',
@@ -475,6 +398,7 @@ const translations = {
 
 const getLang = () => localStorage.getItem(LANG_KEY) || DEFAULT_LANG;
 
+// Translated string for `key` in the current language (FR fallback, then the key itself).
 const t = (key, vars = {}) => {
   const lang = getLang();
   let str = translations[lang]?.[key] ?? translations[DEFAULT_LANG][key] ?? key;
@@ -484,6 +408,7 @@ const t = (key, vars = {}) => {
   return str;
 };
 
+// Rewrites every [data-i18n] text and [data-i18n-placeholder] in the page.
 const applyTranslations = (lang = getLang()) => {
   document.documentElement.lang = lang;
 
@@ -502,6 +427,7 @@ const applyTranslations = (lang = getLang()) => {
   });
 };
 
+// Saves the choice, re-translates the page and notifies dynamic widgets.
 const setLang = (lang) => {
   localStorage.setItem(LANG_KEY, lang);
   applyTranslations(lang);
@@ -517,6 +443,7 @@ const _initI18n = () => {
     btn.addEventListener('click', () => setLang(getLang() === 'fr' ? 'en' : 'fr'));
   });
 
+  // Mobile hamburger menu: toggles the nav, and closes it when a link is tapped.
   const navToggle = document.getElementById('nav-toggle');
   const siteNav = document.querySelector('.site-header .site-nav');
   if (navToggle && siteNav) {
@@ -543,6 +470,7 @@ if (document.readyState === 'loading') {
   _initI18n();
 }
 
+// Exposed for the other scripts (some are wrapped in IIFEs).
 window.t = t;
 window.getLang = getLang;
 window.applyTranslations = applyTranslations;

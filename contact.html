@@ -11,6 +11,7 @@
   <link rel="icon" href="images/baf_logo_mini.png" type="image/png" />
 </head>
 <body>
+  <!-- Site header: same markup on every public page, update them all together -->
   <header class="site-header">
     <div class="container header-inner">
       <a href="index.html" class="brand"><img src="images/baf_logo.png" alt="LA BAF" /></a>
@@ -32,6 +33,7 @@
   </header>
 
   <main>
+    <!-- Member flash card (visible when logged in, filled by js/member-card.js) -->
     <section id="member-flash-card" class="member-flash-section hidden">
       <div class="container">
         <div class="member-flash">
@@ -80,6 +82,7 @@
     </div>
   </footer>
 
+  <!-- i18n.js loads first: the other scripts use its t() helper -->
   <script src="js/i18n.js"></script>
   <script src="js/main.js"></script>
   <script src="js/tracker.js"></script>

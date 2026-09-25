@@ -1,12 +1,20 @@
 'use strict';
+/*
+ * Public agenda of upcoming tournaments (edited in the admin "Agenda" tab).
+ * index.html: featured next big event + strip of local events.
+ * events.html: full list of upcoming events + those from the last 7 days.
+ */
 (function () {
+  // Last successful /api/agenda response, used as a fallback when the API is unreachable.
   const CACHE_KEY = 'baf-agenda-cache';
 
+  // Tiers eligible for the featured "major event" card vs the "local events" strip.
   const BIG_TIERS = new Set(['Calling', 'World Championship', 'Battleground', 'WCQ']);
   const MID_TIERS = new Set(['Skirmish', 'Pro Quest', 'Road to National']);
 
   const esc     = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const today   = () => new Date().toISOString().slice(0, 10);
+  // Past events stay listed on events.html for 7 days.
   const cutoff  = () => { const d = new Date(); d.setDate(d.getDate() - 7); return d.toISOString().slice(0, 10); };
   const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString(
     document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR',
@@ -17,6 +25,7 @@
     { day: 'numeric', month: 'short' }
   );
 
+  // Tier name -> badge colour class (see "Agenda cards" in main.css).
   const TIER_CLASS = {
     'Armory':               'agenda-tier-armory',
     'Skirmish':             'agenda-tier-skirmish',
@@ -31,6 +40,7 @@
     'World Championship':   'agenda-tier-world',
   };
 
+  // Fetches the agenda and refreshes the local cache; returns the cache on failure.
   const fetchAgenda = async () => {
     try {
       const r = await fetch('/api/agenda');
@@ -52,6 +62,7 @@
     return `<span class="agenda-tier-badge ${cls}">${esc(tier)}</span>`;
   };
 
+  // One agenda card; `muted` greys out events that already happened.
   const card = (e, muted) => `
     <div class="agenda-card${muted ? ' agenda-card-past' : ''}">
       ${e.link

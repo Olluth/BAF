@@ -1,4 +1,10 @@
 'use strict';
+/*
+ * BAF API (Express), run on the VPS by systemd (see vps-setup/baf-api.service) and
+ * reached through nginx at /api/*. Stores site data as JSON files in DATA_DIR,
+ * page views in SQLite (db.js), and proxies member admin calls to Supabase.
+ * Routes marked requireAuth need "Authorization: Bearer <API_KEY>" (the admin key).
+ */
 const express = require('express');
 const cors    = require('cors');
 const crypto  = require('crypto');
@@ -25,14 +31,17 @@ scraper.resume();
 
 app.use(express.json({ limit: '2mb' }));
 
+// Guards admin-only routes with the shared API key.
 const requireAuth = (req, res, next) => {
   if (!API_KEY) return res.status(503).json({ error: 'API_KEY not set' });
   if (req.headers['authorization'] !== `Bearer ${API_KEY}`) return res.status(401).json({ error: 'unauthorized' });
   next();
 };
 
+// Tournament slugs are used as file names, so only allow [a-z0-9-].
 const validSlug = (s) => typeof s === 'string' && /^[a-z0-9-]+$/.test(s) && s.length < 80;
 
+// JSON file helpers: a missing or corrupt file reads as an empty list.
 const loadEventsData = () => {
   try {
     if (!fs.existsSync(EVENTS_FILE)) return [];
@@ -67,6 +76,8 @@ const saveAgendaData = (agenda) => fs.writeFileSync(AGENDA_FILE, JSON.stringify(
 
 /* ---- Discord notifications ---- */
 
+// Posts newly finished rounds of tracked players to the Discord webhook.
+// Compares with the previous upload so each result is announced only once.
 const notifyDiscord = async (slug, newStandings, oldData, trackedPlayers, liveRoundName) => {
   if (!DISCORD_WEBHOOK_URL || !trackedPlayers.length) return;
 
@@ -115,6 +126,7 @@ const notifyDiscord = async (slug, newStandings, oldData, trackedPlayers, liveRo
 
 /* ---- Analytics ---- */
 
+// Public page-view beacon (js/tracker.js). The IP is hashed with the date as salt.
 app.post('/api/track', (req, res) => {
   const { page, referrer } = req.body || {};
   if (!page || typeof page !== 'string') return res.status(400).json({ error: 'page required' });
@@ -143,6 +155,8 @@ const openCors = cors({
 
 app.options('/api/standings', openCors);
 
+// Receives standings from the bookmarklet or the VPS scraper worker and saves them
+// to standings/<slug>.json; also auto-registers the event and notifies Discord.
 app.post('/api/standings', openCors, requireAuth, (req, res) => {
   const { slug, standings, liveMatches, liveRoundName, droppedPlayers, lastUpdated } = req.body || {};
   if (!validSlug(slug) || !Array.isArray(standings)) return res.status(400).json({ error: 'invalid data' });
@@ -175,6 +189,7 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
   res.json({ ok: true, players: standings.length });
 });
 
+// Public: standings for one tournament (tournament.html).
 app.get('/api/standings/:slug', (req, res) => {
   const { slug } = req.params;
   if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
@@ -210,6 +225,7 @@ app.get('/api/scraper/status', requireAuth, (req, res) => {
 
 /* ---- Players ---- */
 
+// Tracked players (name + Local/Expat/Chocolateam tag) highlighted on the tracker.
 app.get('/api/players', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json(loadPlayersData());
@@ -233,6 +249,7 @@ const supabaseAdminHeaders = () => ({
   'apikey': SUPABASE_SERVICE_KEY,
 });
 
+// Admin: list / delete Supabase user accounts (needs the service key).
 app.get('/api/members', requireAuth, async (req, res) => {
   if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return res.status(503).json({ error: 'Supabase not configured' });
   try {
@@ -274,6 +291,7 @@ app.get('/api/recent-members', async (req, res) => {
 
 /* ---- Articles ---- */
 
+// Public: published articles only. Admin POST replaces the whole list.
 app.get('/api/articles', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json(loadArticlesData().filter(a => a.published));
@@ -293,6 +311,7 @@ app.get('/api/agenda', (req, res) => {
   res.json(loadAgendaData());
 });
 
+// Admin: replaces the whole agenda, trimming each field to a safe length.
 app.post('/api/agenda', requireAuth, (req, res) => {
   const { agenda } = req.body || {};
   if (!Array.isArray(agenda)) return res.status(400).json({ error: 'invalid data' });
@@ -310,11 +329,13 @@ app.post('/api/agenda', requireAuth, (req, res) => {
 
 /* ---- Events ---- */
 
+// Tournaments listed in the tracker's event selector.
 app.get('/api/events', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json(loadEventsData());
 });
 
+// Admin: create or update an event (matched by slug).
 app.post('/api/events', requireAuth, (req, res) => {
   const { slug, name, active, streamUrl, isDraft } = req.body || {};
   if (!validSlug(slug) || typeof name !== 'string' || !name.trim()) {
@@ -330,6 +351,7 @@ app.post('/api/events', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// Admin: marks one event as the tracker's default selection.
 app.post('/api/events/:slug/set-default', requireAuth, (req, res) => {
   const { slug } = req.params;
   if (!validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });

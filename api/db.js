@@ -1,4 +1,9 @@
 'use strict';
+/*
+ * SQLite storage for page-view analytics (<DATA_DIR>/analytics.db).
+ * Written by POST /api/track, read by GET /api/stats for the admin Analytics tab.
+ * Visitors are counted by a daily-salted IP hash, so no raw IP is stored.
+ */
 const Database = require('better-sqlite3');
 const path     = require('path');
 const fs       = require('fs');
@@ -25,6 +30,7 @@ const stmtInsert = db.prepare(
   `INSERT INTO pageviews (page, referrer, ua, ip_hash) VALUES (?, ?, ?, ?)`
 );
 
+// Unix timestamp (seconds) of `days` days ago.
 const since = (days) => Math.floor(Date.now() / 1000) - days * 86400;
 
 module.exports = {
@@ -32,6 +38,7 @@ module.exports = {
     stmtInsert.run(page, referrer, ua, ipHash);
   },
 
+  // Total views and unique visitors over the period.
   getOverview(days) {
     const s = since(days);
     return {
@@ -40,6 +47,7 @@ module.exports = {
     };
   },
 
+  // Views and visitors per day, oldest first (bar chart).
   getDaily(days) {
     return db.prepare(`
       SELECT date(created_at, 'unixepoch') AS day,
@@ -50,6 +58,7 @@ module.exports = {
     `).all(since(days));
   },
 
+  // Top 20 pages by views.
   getByPage(days) {
     return db.prepare(`
       SELECT page,

@@ -1,5 +1,12 @@
 ﻿'use strict';
+/*
+ * Public tournament tracker (tournament.html). Visitors pick an event; standings come
+ * from /api/standings/<slug> (pushed by the VPS scraper or the bookmarklet) and are
+ * filtered to the club's tracked players, colour-coded by tag. Auto-refreshes every
+ * minute while a round is live. Click a row to see that player's match history.
+ */
 
+// localStorage fallbacks, used when the API is unreachable.
 const STORAGE_KEY    = 'baf-tracked-players';
 const EVENTS_KEY     = 'baf-events';
 const STANDINGS_BASE = '/api/standings/';
@@ -8,11 +15,13 @@ const STANDINGS_BASE = '/api/standings/';
 
 let _trackedPlayers = []; // [{name, tag}]
 
+// Accepts both the old format (plain name string) and {name, tag} objects.
 const normalizePlayerEntry = (p) => {
   if (typeof p === 'string') return { name: p.trim(), tag: '' };
   return { name: String(p.name || '').trim(), tag: String(p.tag || '').trim() };
 };
 
+// Loads tracked players from the API (and caches them), else from the cache.
 const fetchTrackedPlayers = async () => {
   try {
     const r = await fetch('/api/players');
@@ -33,6 +42,7 @@ const fetchTrackedPlayers = async () => {
 
 const loadTrackedPlayers = () => _trackedPlayers;
 
+// Events shown in the selector (hidden ones have active === false), with cache fallback.
 const fetchEvents = async () => {
   try {
     const r = await fetch('/api/events');
@@ -52,10 +62,14 @@ const fetchEvents = async () => {
 
 /* ---- UI helpers ---- */
 
+// esc: HTML-escape. toId: player name -> safe element id.
+// normalizeForCompare: case- and accent-insensitive name matching.
 const esc  = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const toId = s => 'h' + s.replace(/[^a-zA-Z0-9]/g, '-');
 const normalizeForCompare = s => s.toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
+// Hero name prefix (as written on fabtcg.com) -> icon. Matched with startsWith, in order,
+// so specific versions ("arakni, marionette") must come before the generic name ("arakni").
 const _HERO_ICON_MAP = [
   ['arakni, marionette',              '/images/icon_arakni_m.webp'],
   ['arakni, 5l!p3d',                  '/images/icon_arakni_sttc-1.webp'],
@@ -143,7 +157,7 @@ const getHeroIcon = (heroName) => {
   return null;
 };
 
-let _refreshTimer = null;
+let _refreshTimer = null; // auto-refresh while a round is live
 
 const clearRefreshTimer = () => {
   if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
@@ -170,6 +184,7 @@ const resultBadge = result =>
 
 const TAG_ORDER = ['Local', 'Expat', 'Chocolateam'];
 
+// "Joueurs suivis" card, grouped by tag. Shown before an event is picked; hidden once standings load.
 const renderVisitorPlayerList = (hidden = false) => {
   const el = document.getElementById('visitor-player-list');
   if (!el) return;
@@ -204,6 +219,7 @@ const renderVisitorPlayerList = (hidden = false) => {
 let _currentSlug  = null;
 let _eventsCache  = [];
 
+// Turns a YouTube / Twitch link (set in the admin Events tab) into an embeddable player URL.
 const toEmbedUrl = (url) => {
   if (!url) return null;
   const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -214,6 +230,7 @@ const toEmbedUrl = (url) => {
   return null;
 };
 
+// Shows the event's stream above the standings; skipped if already showing this event.
 const renderStreamEmbed = (slug) => {
   const el = document.getElementById('stream-embed');
   if (!el) return;
@@ -228,6 +245,8 @@ const renderStreamEmbed = (slug) => {
 
 const TAG_CLASS = { Local: 'tag-local', Expat: 'tag-expat', Chocolateam: 'tag-chocolateam' };
 
+// One player row + its hidden history row. Draft rounds hide hero columns (heroes vary per pod).
+// The record is highlighted green/red according to the player's result in the live round.
 const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, droppedSet, rankMap, total, isDraft) => {
   const tracked   = trackedSet.has(normalizeForCompare(p.name));
   const liveMatch = liveMatches[p.name];
@@ -311,6 +330,8 @@ const buildStandingsTable = (players, trackedSet, tagMap, liveMatches, liveRound
     </table>`;
 };
 
+// Renders the header, tag legend and table, then wires click/keyboard expand on each row.
+// Rank shown is the overall tournament rank, even when only tracked players are listed.
 const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false) => {
   const container = document.getElementById('standings-container');
   if (!container) return;
@@ -384,8 +405,11 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
 
 /* ---- Load event ---- */
 
+// Incremented on every load; a response from an older request is discarded
+// (e.g. the visitor switched event while the previous one was still loading).
 let _generation = 0;
 
+// Loads and renders one event's standings. Re-loading the same slug is a silent refresh.
 const loadEvent = async (slug) => {
   const isRefresh = slug === _currentSlug;
   _currentSlug = slug;
@@ -429,6 +453,7 @@ const loadEvent = async (slug) => {
 
 /* ---- Dropdown ---- */
 
+// Fills the event selector and auto-loads the admin's default event (if any).
 const populateEventDropdown = async () => {
   const select = document.getElementById('event-select');
   if (!select) return;

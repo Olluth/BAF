@@ -1,9 +1,16 @@
 'use strict';
+/*
+ * "Member flash" card shown at the top of public pages when a member is signed in:
+ * pseudo, profile title and favourite hero icons. Hidden for visitors.
+ * Needs the Supabase CDN script and a #member-flash-card section in the page.
+ */
 (function () {
   const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
   const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Hero id (as stored in profiles.favorite_heroes) -> icon file in /images.
+  // Keep in sync with HEROES in members.js (and the hero icon map in tournament.js).
   const HERO_IMG = {
     arakni_m:'icon_arakni_m.webp',       arakni_sttc:'icon_arakni_sttc-1.webp',
     arakni_th:'icon_arakni_th-1.webp',   aurora:'icon_aurora.webp',
@@ -44,6 +51,7 @@
     zen:'icon_zen.webp',                 zyggy:'icon_zyggy-1.webp',
   };
 
+  // Loads the member's profile and fills + reveals the flash card.
   const showCard = async (user) => {
     const pseudo = user.user_metadata?.pseudo || user.email;
 
@@ -73,6 +81,7 @@
     document.getElementById('member-flash-card').classList.remove('hidden');
   };
 
+  // Fires on page load (restored session) and on every sign-in / sign-out.
   _sb.auth.onAuthStateChange((_event, session) => {
     if (session?.user) {
       showCard(session.user);

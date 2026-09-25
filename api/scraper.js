@@ -1,8 +1,15 @@
 'use strict';
+/*
+ * VPS-side live tournament tracking (admin tab "Suivi live (VPS)").
+ * While running, spawns scraper-worker.js for the tracked slug, waits for it to exit,
+ * then schedules the next run CYCLE_MS later. Only one tournament at a time.
+ * State is saved to <dataDir>/scraper-state.json so tracking resumes after a restart.
+ */
 const { spawn } = require('child_process');
 const fs        = require('fs');
 const path      = require('path');
 
+// Delay between the end of one scrape and the start of the next.
 const CYCLE_MS = 2 * 60 * 1000;
 
 module.exports = ({ dataDir, workerPath }) => {
@@ -19,14 +26,16 @@ module.exports = ({ dataDir, workerPath }) => {
     consecutiveErrors: 0,
     lastPlayersCount: null,
   };
-  let timer = null;
-  let inFlight = false;
+  let timer = null;       // pending setTimeout for the next cycle
+  let inFlight = false;   // true while a worker process is running
 
   const loadState = () => {
     try { state = { ...state, ...JSON.parse(fs.readFileSync(statePath, 'utf8')) }; } catch {}
   };
   const persist = () => { try { fs.writeFileSync(statePath, JSON.stringify(state, null, 2)); } catch {} };
 
+  // Runs one scrape in a child process; records success/failure, then re-arms the timer.
+  // The worker's last output line becomes lastError on failure, shown in the admin panel.
   const runCycle = () => {
     inFlight = true;
     state.lastRunAt = new Date().toISOString();
@@ -55,6 +64,7 @@ module.exports = ({ dataDir, workerPath }) => {
     });
   };
 
+  // Starts tracking `slug`. Refused (409) if another tournament is already tracked.
   const start = (slug) => {
     if (state.running && state.slug !== slug) {
       return { ok: false, code: 409, status: { ...state } };
@@ -75,6 +85,7 @@ module.exports = ({ dataDir, workerPath }) => {
     return { ok: true, code: 200, status: { ...state } };
   };
 
+  // "Scraper maintenant": skips the wait and scrapes immediately (no-op if one is already running).
   const runNow = () => {
     if (!state.running) return { ok: false, code: 409, error: 'not running', status: status() };
     if (inFlight) return { ok: true, code: 200, status: status() };
@@ -85,6 +96,7 @@ module.exports = ({ dataDir, workerPath }) => {
 
   const status = () => ({ ...state, inFlight });
 
+  // Called once at server start-up: restores saved state and resumes tracking if it was on.
   const resume = () => {
     loadState();
     if (state.running && state.slug) {

@@ -1,4 +1,8 @@
 'use strict';
+/*
+ * Toggles the header's "Se connecter" link / "DÃ©connexion" button based on
+ * the member's Supabase session. Loaded on every public page.
+ */
 (function () {
   const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';

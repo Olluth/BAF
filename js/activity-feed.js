@@ -1,11 +1,18 @@
 'use strict';
+/*
+ * Home page "ActivitÃ© rÃ©cente" feed: mixes new members, published articles and
+ * achievements granted, and renders the 5 most recent into #activity-feed.
+ * Loaded by index.html only; needs the Supabase CDN script and i18n.js.
+ */
 (function () {
   const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
   const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // Minimal HTML escaping for user-provided strings (pseudos, titles).
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 
+  // Relative time ("il y a 5 min"); falls back to a short date after 30 days.
   const timeAgo = (dateStr) => {
     const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
     const tr = window.t || ((k, v) => k);
@@ -20,6 +27,7 @@
   const TIER_CLASS = { Silver: 'ach-tier-silver', Gold: 'ach-tier-gold', Diamond: 'ach-tier-diamond' };
   const TIER_LABELS = { fr: { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' }, en: { Silver: 'Silver', Gold: 'Gold', Diamond: 'Diamond' } };
 
+  // Last fetched feed, kept so a language switch can re-render without refetching.
   let _cachedItems = [];
 
   const renderFeed = () => {
@@ -60,6 +68,8 @@
     }).join('');
   };
 
+  // Fetches all three sources in parallel, then keeps a balanced mix:
+  // up to 4 members, 2 articles and 4 achievements, trimmed to the 5 newest overall.
   const loadFeed = async () => {
     const [membersData, achRes] = await Promise.all([
       fetch('/api/recent-members').then(r => r.ok ? r.json() : []).catch(() => []),

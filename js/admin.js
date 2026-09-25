@@ -1,5 +1,14 @@
 'use strict';
+/*
+ * Admin panel (admin.html). Login is checked locally (hashed credentials in
+ * localStorage, see initCredentials); real protection is the API key, entered in the
+ * Analytics tab and sent as a Bearer token on every write to /api/*.
+ * Tabs: articles, tracked players, tracker events (+ bookmarklet), agenda,
+ * VPS live scraper, Supabase members, achievements, analytics.
+ * Most lists are kept in localStorage and mirrored to the API after each change.
+ */
 
+// localStorage keys
 const CREDS_KEY    = 'baf-admin-credentials';
 const SESSION_KEY  = 'baf-admin-session';
 const ARTICLES_KEY = 'baf-articles';
@@ -8,10 +17,12 @@ const EVENTS_KEY   = 'baf-events';
 const ANALYTICS_KEY_STORE = 'baf-analytics-key';
 
 // --- Crypto ---
+// Fallbacks for browsers/contexts without Web Crypto (e.g. the page opened over plain http).
 
 const supportsWebCrypto = () => typeof crypto !== 'undefined' && crypto?.subtle && typeof crypto.subtle.digest === 'function';
 const supportsRandomUUID = () => typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function';
 
+// True if localStorage / sessionStorage can actually be written (blocked in some private modes).
 const storageAvailable = (type) => {
   try {
     const storage = window[type];
@@ -60,6 +71,7 @@ const randomUUID = () => {
   return `${hex.slice(0, 4).join('')}-${hex.slice(4, 6).join('')}-${hex.slice(6, 8).join('')}-${hex.slice(8, 10).join('')}-${hex.slice(10, 16).join('')}`;
 };
 
+// Pure-JS SHA-256, only used when crypto.subtle is unavailable.
 const jsSha256 = (text) => {
   const utf8 = new TextEncoder().encode(text);
   const K = [
@@ -159,6 +171,7 @@ const initCredentials = async () => {
   storage.setItem(CREDS_KEY, JSON.stringify({ username: 'admin', passwordHash: hash }));
 };
 
+// Compares the typed credentials with the stored username + password hash.
 const verifyLogin = async (username, password) => {
   const storage = getStorage('localStorage');
   const raw = storage.getItem(CREDS_KEY);
@@ -180,6 +193,7 @@ const verifyLogin = async (username, password) => {
 };
 
 // --- Session ---
+// Login lasts for the browser tab (sessionStorage), not across restarts.
 
 const isLoggedIn = () => {
   try {
@@ -198,6 +212,7 @@ const destroySession = () => {
 };
 
 // --- Articles ---
+// Local copy of articles; pushed to /api/articles after each change (syncArticlesToServer).
 
 const loadArticles = () => {
   try {
@@ -236,8 +251,10 @@ const deleteArticle = (id) => saveArticles(loadArticles().filter((a) => a.id !==
 
 // --- Players ---
 
+// Tags that colour-code tracked players on the tournament tracker.
 const PLAYER_TAGS = ['Local', 'Expat', 'Chocolateam'];
 
+// Accepts the old format (plain name string) and {name, tag} objects.
 const normalizePlayer = (p) => {
   if (typeof p === 'string') return { name: p.trim(), tag: '' };
   return { name: String(p.name || '').trim(), tag: String(p.tag || '').trim() };
@@ -253,6 +270,7 @@ const loadPlayers = () => {
   }
 };
 
+// Saves the list, dropping case-insensitive duplicate names.
 const savePlayers = (players) => {
   const seen = new Set();
   const deduped = players.filter((p) => {
@@ -275,10 +293,6 @@ const removePlayer = (name) => {
   savePlayers(loadPlayers().filter((p) => p.name.toLowerCase() !== name.toLowerCase()));
 };
 
-const updatePlayerTag = (name, tag) => {
-  savePlayers(loadPlayers().map((p) => p.name.toLowerCase() === name.toLowerCase() ? { ...p, tag } : p));
-};
-
 const updatePlayer = (oldName, newName, tag) => {
   savePlayers(loadPlayers().map((p) =>
     p.name.toLowerCase() === oldName.toLowerCase()
@@ -288,6 +302,7 @@ const updatePlayer = (oldName, newName, tag) => {
 };
 
 // --- Events ---
+// Tournaments shown in the public tracker's selector. Local list keyed by id; the server keys by slug.
 
 const loadAdminEvents = () => {
   try {
@@ -310,6 +325,8 @@ const updateAdminEvent = (id, changes) => {
 };
 
 const deleteAdminEvent = (id) => saveAdminEvents(loadAdminEvents().filter((e) => e.id !== id));
+
+// --- Server sync (all writes need the API key; failures are silent) ---
 
 const syncArticlesToServer = async () => {
   const key = getAnalyticsKey();
@@ -337,6 +354,8 @@ const syncPlayersToServer = async () => {
 
 let _playersReady = null; // Promise that resolves once server data is in localStorage
 
+// Refreshes the local player list from the server. Edits wait for this (_playersReady)
+// so they don't overwrite newer server data with a stale local copy.
 const loadPlayersFromServer = () => {
   _playersReady = (async () => {
     try {
@@ -374,6 +393,7 @@ const deleteEventFromServer = async (slug) => {
   } catch {}
 };
 
+// Server is the source of truth: rebuilds the local list from it, keeping local ids.
 const loadEventsFromServer = async () => {
   try {
     const r = await fetch('/api/events');
@@ -425,6 +445,7 @@ const showLogin = () => {
   $('login-username').focus();
 };
 
+// Builds the draggable bookmarklet link (Events tab). It loads js/bookmarklet.js with the API key.
 const renderBookmarklet = () => {
   const wrap = $('bookmarklet-wrap');
   if (!wrap) return;
@@ -437,6 +458,7 @@ const renderBookmarklet = () => {
   wrap.innerHTML = `<a href="${loader}" class="button button-primary" style="display:inline-block;cursor:grab" draggable="true">🎴 BAF — Mettre à jour les standings</a><p class="admin-panel-desc" style="margin-top:.6rem;font-size:.8rem">Ne clique pas ici — glisse-le dans ta barre de favoris.</p>`;
 };
 
+// Merges server and local articles: server wins, local-only articles are pushed up.
 const reconcileArticles = async () => {
   try {
     const res = await fetch('/api/articles');
@@ -472,6 +494,7 @@ const showDashboard = () => {
   } catch {}
 };
 
+// Shows one panel, remembers it for next visit, and loads that tab's data.
 const switchTab = (tab) => {
   try { localStorage.setItem('baf-admin-tab', tab); } catch {}
 
@@ -498,8 +521,9 @@ const switchTab = (tab) => {
 
 // --- Analytics ---
 
-let _analyticsDays = 7;
+let _analyticsDays = 7; // selected period (7 / 30 / 90 days buttons)
 
+// The admin API key, stored in this browser only. Used by every authenticated call.
 const getAnalyticsKey = () => { try { return localStorage.getItem(ANALYTICS_KEY_STORE) || ''; } catch { return ''; } };
 
 const setAnalyticsStatus = (msg, isError = false) => {
@@ -511,6 +535,7 @@ const setAnalyticsStatus = (msg, isError = false) => {
   el.textContent = msg;
 };
 
+// Fills the totals, the daily bar chart (bars scaled to the busiest day) and the top pages table.
 const renderAnalytics = ({ overview, daily, pages }) => {
   $('stat-views').textContent    = overview.views.toLocaleString('fr-FR');
   $('stat-visitors').textContent = overview.visitors.toLocaleString('fr-FR');
@@ -600,7 +625,7 @@ const closeArticleForm = () => {
 
 // --- Players UI ---
 
-let editingPlayerName = null;
+let editingPlayerName = null; // player row currently in inline-edit mode
 
 const renderPlayerList = () => {
   const players = loadPlayers();
@@ -644,7 +669,7 @@ const renderPlayerList = () => {
 
 // --- Events UI ---
 
-let editingEventId = null;
+let editingEventId = null; // event open in the form, null when creating
 
 const renderEventList = () => {
   const events = loadAdminEvents();
@@ -704,6 +729,7 @@ const setMembersStatus = (msg, isError = false) => {
   el.textContent = msg;
 };
 
+// Supabase accounts (via /api/members), with a delete button each.
 const renderMemberList = (members) => {
   const list = $('member-list');
   if (!list) return;
@@ -743,6 +769,8 @@ const loadMembers = async () => {
 };
 
 // --- Achievements Admin ---
+// Talks to Supabase directly, signed in as a member account whose profile has is_admin = true
+// (row-level security only lets admins write member_achievements).
 
 const _ACH_SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
 const _ACH_SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
@@ -754,8 +782,8 @@ const getAchSb = () => {
 
 let _allAchievements = [];
 let _selectedMember = null;
-let _memberGranted = new Set();
-let _memberPending = new Set();
+let _memberGranted = new Set(); // achievement ids saved in the database
+let _memberPending = new Set(); // ids currently ticked (saved on "Sauvegarder")
 
 const TIER_ORDER_ADM = ['Silver', 'Gold', 'Diamond'];
 const TIER_LABELS_ADM = { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' };
@@ -769,6 +797,7 @@ const setAchStatus = (msg, isError = false) => {
   el.textContent = msg;
 };
 
+// Shows the sign-in form, or (for an admin account) the member picker.
 const renderAchievementsPanel = async () => {
   const sb = getAchSb();
   if (!sb) return;
@@ -840,6 +869,7 @@ const selectMemberForGrant = async (memberId) => {
   renderMemberAchievementGrid();
 };
 
+// Checkbox grid of all achievements for the selected member, grouped by tier.
 const renderMemberAchievementGrid = () => {
   const result = $('ach-member-result');
   if (!result || !_selectedMember) return;
@@ -884,6 +914,7 @@ const renderMemberAchievementGrid = () => {
   $('ach-save-btn').addEventListener('click', saveAchievementChanges);
 };
 
+// Applies the difference between ticked and saved achievements (inserts, then deletes).
 const saveAchievementChanges = async () => {
   if (!_selectedMember) return;
   const btn = $('ach-save-btn');
@@ -917,6 +948,7 @@ const saveAchievementChanges = async () => {
 };
 
 // --- Agenda ---
+// Server-only list (no local copy): every change re-sends the whole agenda.
 
 let _agenda = [];
 
@@ -943,8 +975,10 @@ const saveAgendaToServer = async () => {
   } catch (err) { setAgendaStatus('Erreur réseau', true); return false; }
 };
 
+// Keep in sync with TIER_CLASS in agenda.js and the <select id="agenda-tier"> in admin.html.
 const AGENDA_TIERS = ['Armory','Skirmish','Showdown','Pro Quest','Road to National','Battleground','WCQ','Calling','Pro Tour','National Championship','World Championship'];
 
+// Agenda entries by date (past ones greyed), with an inline tier selector and delete button.
 const renderAgendaList = () => {
   const ul = $('agenda-list');
   if (!ul) return;
@@ -1006,7 +1040,7 @@ const loadAgendaFromServer = async () => {
 
 // --- Scraper (VPS live tracking) ---
 
-let _scraperPollTimer = null;
+let _scraperPollTimer = null; // refreshes the status box every 5s while the tab is open
 
 const setScraperStatus = (msg, isError = false) => {
   const el = $('scraper-status');
@@ -1017,6 +1051,7 @@ const setScraperStatus = (msg, isError = false) => {
   el.innerHTML = msg;
 };
 
+// "42s", "5min", "1h05" since an ISO date.
 const timeAgo = (iso) => {
   if (!iso) return null;
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
@@ -1026,6 +1061,7 @@ const timeAgo = (iso) => {
   return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
 };
 
+// Status box: running/stopped, scrape in progress, last success and error streak.
 const renderScraperStatus = (state) => {
   if (!state) { setScraperStatus('Erreur de communication avec le serveur.', true); return; }
   const badge = state.running
@@ -1096,6 +1132,7 @@ const runScraperNow = async () => {
 };
 
 // --- Event Wiring ---
+// All button / form handlers, attached once at start-up.
 
 const wireEvents = () => {
   $('login-form').addEventListener('submit', async (e) => {
@@ -1289,45 +1326,7 @@ const wireEvents = () => {
     }
   });
 
-  // Proxy configuration
-  const proxyInput  = $('proxy-url-input');
-  const proxyStatus = $('proxy-status');
-  const showProxyStatus = (msg, ok = true) => {
-    if (!proxyStatus) return;
-    proxyStatus.textContent = msg;
-    proxyStatus.className = 'admin-proxy-status' + (ok ? ' admin-proxy-ok' : ' admin-proxy-err');
-  };
-
-  if (proxyInput) {
-    proxyInput.value = (() => { try { return localStorage.getItem('baf-proxy-url') || ''; } catch { return ''; } })();
-  }
-
-  $('proxy-save-btn')?.addEventListener('click', () => {
-    const val = proxyInput?.value.trim() || '';
-    try {
-      if (val) {
-        localStorage.setItem('baf-proxy-url', val);
-        showProxyStatus(t('admin.proxy.saved'));
-      } else {
-        localStorage.removeItem('baf-proxy-url');
-        showProxyStatus(t('admin.proxy.cleared'));
-      }
-    } catch (err) {
-      showProxyStatus(err.message, false);
-    }
-  });
-
-  $('proxy-clear-btn')?.addEventListener('click', () => {
-    try {
-      localStorage.removeItem('baf-proxy-url');
-      if (proxyInput) proxyInput.value = '';
-      showProxyStatus(t('admin.proxy.cleared'));
-    } catch (err) {
-      showProxyStatus(err.message, false);
-    }
-  });
-
-  // Analytics controls
+  // Analytics controls (the API key saved here is also used by every other admin API call)
   $('analytics-key-save')?.addEventListener('click', () => {
     const val = $('analytics-key-input')?.value.trim() || '';
     try {

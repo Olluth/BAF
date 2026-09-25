@@ -1,5 +1,12 @@
 'use strict';
+/*
+ * Member area (members.html), backed by Supabase auth + database.
+ * Signed out: sign-in / sign-up forms and the list of all achievements.
+ * Signed in: own profile (title, Discord, up to 3 favourite heroes), member search
+ * (by pseudo, hero or title) and the member's unlocked achievements.
+ */
 
+// Public (publishable) Supabase key: access is enforced by row-level security.
 const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
 
@@ -10,6 +17,7 @@ const $ = id => document.getElementById(id);
 
 /* ---- Hero data ---- */
 
+// Class groups for the hero picker / search dropdown, in display order, with their accent colour.
 const CLASS_ORDER = [
   'Assassin', 'Brute', 'Guardian', 'Illusionist', 'Marchand',
   'Mechanologist', 'Nécromancien', 'Ninja', 'Ranger', 'Runeblade', 'Warrior', 'Wizard', 'Autres',
@@ -31,6 +39,8 @@ const CLASS_COLORS = {
   Autres:        '#888888',
 };
 
+// Every selectable hero. `id` is what's stored in profiles.favorite_heroes;
+// keep ids in sync with HERO_IMG in member-card.js.
 const HEROES = [
   // Assassin
   { id: 'arakni_m',    name: 'Arakni, Marionette',              img: 'icon_arakni_m.webp',        class: 'Assassin' },
@@ -123,6 +133,7 @@ const HEROES = [
 
 /* ---- UI helpers ---- */
 
+// Shows a green (success) or red (error) message in the element `id`.
 const setStatus = (id, msg, isError = false) => {
   const el = $(id);
   if (!el) return;
@@ -135,12 +146,14 @@ const clearStatus = id => $(id)?.classList.add('hidden');
 
 /* ---- Profile ---- */
 
-let _currentUser = null;
-let _selectedHeroes = [];
-let _cachedAchievements = null;
+let _currentUser = null;         // signed-in Supabase user
+let _selectedHeroes = [];        // hero ids ticked in the profile editor
+let _cachedAchievements = null;  // full achievements list, fetched once
 
+// Titles a member can pick for themselves in the profile editor.
 const TITLES = ['Newcomer', 'Old Timer', 'Judge', 'BAF Staff'];
 
+// Reads the member's profile row. The legacy "Oldtimer" title is shown as "Old Timer".
 const loadProfile = async (userId) => {
   const { data } = await _sb
     .from('profiles')
@@ -156,6 +169,7 @@ const loadProfile = async (userId) => {
 
 const heroById = id => HEROES.find(h => h.id === id);
 
+// Read-only profile card with a "Modifier" button.
 const renderProfileDisplay = (profile) => {
   const content = $('member-content');
   const discord = profile.discord_pseudo || '';
@@ -197,6 +211,7 @@ const renderProfileDisplay = (profile) => {
   $('profile-edit-btn').addEventListener('click', () => renderProfileEdit(profile));
 };
 
+// Profile edit form: title select, Discord pseudo and hero picker.
 const renderProfileEdit = (profile) => {
   _selectedHeroes = [...(profile.favorite_heroes || [])];
   const content    = $('member-content');
@@ -238,6 +253,8 @@ const renderProfileEdit = (profile) => {
   $('profile-cancel-btn').addEventListener('click', () => renderProfileDisplay(profile));
 };
 
+// Hero grid grouped by class; max 3 selected, others are greyed out once the limit is hit.
+// Re-renders itself on every toggle.
 const renderHeroPicker = () => {
   const picker  = $('hero-picker');
   const grouped = {};
@@ -282,6 +299,7 @@ const renderHeroPicker = () => {
   });
 };
 
+// Saves the edit form to the member's profile row, then switches back to display mode.
 const saveProfile = async () => {
   const btn = $('profile-save-btn');
   btn.disabled = true;
@@ -309,6 +327,7 @@ const saveProfile = async () => {
 
 /* ---- Member search ---- */
 
+// Result list: pseudo, title badge and Discord handle.
 const renderSearchResults = (members, emptyMsg) => {
   const el = $('search-results');
   if (!members || !members.length) {
@@ -333,6 +352,7 @@ const renderSearchResults = (members, emptyMsg) => {
   }).join('');
 };
 
+// Partial, case-insensitive pseudo match (max 10 results).
 const searchByPseudo = async () => {
   const term = $('search-pseudo-input').value.trim();
   if (!term) return;
@@ -346,6 +366,7 @@ const searchByPseudo = async () => {
   renderSearchResults(data, 'Aucun membre trouvé.');
 };
 
+// Members whose favourite heroes include `heroId` (max 20).
 const searchByHero = async (heroId) => {
   if (!heroId) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
@@ -359,6 +380,8 @@ const searchByHero = async (heroId) => {
   renderSearchResults(data, `Aucun membre avec ${hero ? hero.name : heroId} comme héros favori.`);
 };
 
+// Members holding a title: those who picked it as their profile title, plus those who
+// were granted an achievement with a matching name. Merged and sorted by pseudo.
 const searchByTitle = async (titleVal) => {
   if (!titleVal) return;
   $('search-results').innerHTML = '<p style="opacity:.5">Recherche…</p>';
@@ -404,6 +427,8 @@ const searchByTitle = async (titleVal) => {
   renderSearchResults(allMembers, `Aucun membre avec le titre « ${titleVal} ».`);
 };
 
+// "Custom select dropdown" (csd): a styled dropdown with an optional filter box.
+// Wires open/close, filtering and selection; calls onSelect(value, name) on pick.
 const makeCsd = (wrapperId, panelId, onSelect) => {
   const wrap  = $(wrapperId);
   const panel = $(panelId);
@@ -443,6 +468,7 @@ const makeCsd = (wrapperId, panelId, onSelect) => {
     });
   });
 
+  // mousedown (not click) so the pick registers before the filter input loses focus.
   list?.addEventListener('mousedown', e => {
     const opt = e.target.closest('.csd-opt');
     if (!opt) return;
@@ -457,6 +483,7 @@ const makeCsd = (wrapperId, panelId, onSelect) => {
   document.addEventListener('click', () => close(), { capture: false });
 };
 
+// Options for the "search by hero" dropdown, grouped by class.
 const buildHeroDropdownHTML = () => {
   const grouped = {};
   CLASS_ORDER.forEach(c => { grouped[c] = []; });
@@ -474,6 +501,7 @@ const buildHeroDropdownHTML = () => {
   }).join('');
 };
 
+// Builds the search block (3 modes as tabs) and wires its controls.
 const renderSearchSection = () => {
   $('member-search').innerHTML = `
     <div class="search-section">
@@ -556,6 +584,7 @@ const renderSearchSection = () => {
 
 /* ---- Achievements ---- */
 
+// Achievement tiers, lowest first, with their French labels.
 const TIER_ORDER = ['Silver', 'Gold', 'Diamond'];
 const TIER_LABELS = { Silver: 'Argent', Gold: 'Or', Diamond: 'Diamant' };
 
@@ -565,6 +594,7 @@ const loadAllAchievements = async () => {
   return data || [];
 };
 
+// Ids of the achievements granted to this member (granted by admins in the "Hauts faits" tab).
 const loadMemberAchievements = async (userId) => {
   const { data } = await _sb
     .from('member_achievements')
@@ -573,6 +603,7 @@ const loadMemberAchievements = async (userId) => {
   return (data || []).map(r => r.achievement_id);
 };
 
+// All achievements grouped by tier, with unlocked ones ticked and an "x / total" counter.
 const renderAchievementsSection = (all, unlockedIds) => {
   const container = $('member-achievements');
   if (!container) return;
@@ -617,6 +648,7 @@ const renderAchievementsSection = (all, unlockedIds) => {
 
 /* ---- Auth UI ---- */
 
+// Signed-in view: greeting, profile, search and achievements (loaded in parallel).
 const showDashboard = async (user) => {
   _currentUser = user;
   $('auth-container').classList.add('hidden');
@@ -635,6 +667,7 @@ const showDashboard = async (user) => {
   renderAchievementsSection(allAchievements, memberAchievements);
 };
 
+// Signed-out view: auth forms, plus all achievements shown as locked.
 const showAuth = async () => {
   _currentUser = null;
   $('auth-container').classList.remove('hidden');
@@ -658,6 +691,7 @@ document.querySelectorAll('.admin-tab').forEach(btn => {
 
 /* ---- Sign in ---- */
 
+// Members sign in with their pseudo: look up the matching email, then use Supabase password auth.
 $('signin-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('signin-btn');
@@ -692,6 +726,8 @@ $('signin-form').addEventListener('submit', async (e) => {
 
 /* ---- Sign up ---- */
 
+// Creates the account (pseudo must be unique; stored lowercase). Supabase sends a
+// confirmation email that links back to members.html.
 $('signup-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = $('signup-btn');
@@ -738,6 +774,7 @@ $('signout-btn').addEventListener('click', async () => {
 
 /* ---- Auth state ---- */
 
+// Fires on load (restored session) and on every sign-in / sign-out: switches views.
 _sb.auth.onAuthStateChange((_event, session) => {
   if (session?.user) {
     showDashboard(session.user);

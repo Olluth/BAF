@@ -22,6 +22,7 @@ if (!slug) {
 
 const parseDoc = html => new JSDOM(html).window.document;
 
+// Extracts both players, heroes and the winner from one fabtcg.com match row.
 const extractMatch = row => {
   const p1El = row.querySelector('.player-details.player-left');
   const p2El = row.querySelector('.player-details.player-right');
@@ -39,9 +40,10 @@ const extractMatch = row => {
   return { p1Name, p2Name, p1Hero: getHero(p1El), p2Hero: getHero(p2El), p1Won: p1El.classList.contains('winner'), p2Won: p2El.classList.contains('winner') };
 };
 
+// All matches on a round's results page.
 const parseResults  = html => { const d = parseDoc(html); const m = []; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (x) m.push(x); }); return m; };
-const parsePairings = html => { const d = parseDoc(html); const p = {}; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (!x) return; p[x.p1Name] = { opponent: x.p2Name, opponentHero: x.p2Hero }; p[x.p2Name] = { opponent: x.p1Name, opponentHero: x.p1Hero }; }); return p; };
 
+// Fetches a fabtcg.com page through ScraperAPI (JS rendering on, 90s timeout).
 const fetchPage = async (url) => {
   const apiUrl = `http://api.scraperapi.com/?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(url)}&render=true`;
   const res = await fetch(apiUrl, { signal: AbortSignal.timeout(90000) });
@@ -57,13 +59,13 @@ async function main() {
 
   console.log(`Fetching standings for: ${slug}`);
 
-  const fetchUrl = url => fetchPage(url);
   const absHref = (href, base) => { if (!href) return null; try { return new URL(href, base).href; } catch { return null; } };
 
   const coverageUrl  = `https://fabtcg.com/coverage/${encodeURIComponent(slug)}/`;
-  const coverageHtml = await fetchUrl(coverageUrl);
+  const coverageHtml = await fetchPage(coverageUrl);
   const coverageDoc  = parseDoc(coverageHtml);
 
+  // Coverage page lists every round with its pairings / results links.
   const rounds = [];
   coverageDoc.querySelectorAll('table tbody tr').forEach(row => {
     const nameCell    = row.querySelector('td.rounds');
@@ -79,12 +81,13 @@ async function main() {
   });
   if (!rounds.length) { console.error('No rounds found.'); process.exit(1); }
 
+  // Fetch results of every round that has them; a failed round counts as empty.
   const completed = rounds.filter(r => r.hasResults);
   const allRounds  = [];
   for (let i = 0; i < completed.length; i++) {
     console.log(`Round ${i + 1}/${completed.length}: ${completed[i].roundName}`);
     try {
-      const html = await fetchUrl(completed[i].resultsUrl);
+      const html = await fetchPage(completed[i].resultsUrl);
       allRounds.push({ roundName: completed[i].roundName, matches: parseResults(html) });
     } catch (e) {
       console.error(`  ✗ ${completed[i].roundName}: ${e.message}`);
@@ -95,6 +98,8 @@ async function main() {
   const liveRound = rounds[rounds.length - 1];
   const liveRoundNameForBuild = liveRound.roundName;
 
+  // Rebuild each player's record and match history from the round results.
+  // A "draw" in the latest round is really a match still in progress -> 'ongoing'.
   const map = {};
   const get = (name, hero) => { if (!map[name]) map[name] = { name, hero, wins: 0, losses: 0, draws: 0, history: [] }; return map[name]; };
   allRounds.forEach(({ roundName, matches }) => {
@@ -112,7 +117,7 @@ async function main() {
   if (completed.length > 0) {
     try {
       const standingsUrl = absHref(`standings/${completed.length}/`, coverageUrl);
-      const sHtml = await fetchUrl(standingsUrl);
+      const sHtml = await fetchPage(standingsUrl);
       const sDoc  = parseDoc(sHtml);
       sDoc.querySelectorAll('table tbody tr').forEach((row, idx) => {
         const cells = [...row.querySelectorAll('td')];
@@ -150,6 +155,7 @@ async function main() {
     ? Object.keys(map).filter(name => !lastRoundPlayers.has(name))
     : [];
 
+  // Hand the result to the API, which saves it and handles Discord notifications.
   console.log(`Sending to local API: ${standings.length} players — ${liveRoundName || 'terminé'}`);
   const res = await fetch(`http://127.0.0.1:${PORT}/api/standings`, {
     method:  'POST',
