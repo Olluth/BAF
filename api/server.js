@@ -198,6 +198,11 @@ app.post('/api/scraper/stop', requireAuth, (req, res) => {
   res.json({ ok: true, status: result.status });
 });
 
+app.post('/api/scraper/run-now', requireAuth, (req, res) => {
+  const result = scraper.runNow();
+  res.status(result.code).json(result.ok ? { ok: true, status: result.status } : { error: result.error, status: result.status });
+});
+
 app.get('/api/scraper/status', requireAuth, (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json(scraper.status());

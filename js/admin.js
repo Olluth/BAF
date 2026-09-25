@@ -1031,11 +1031,12 @@ const renderScraperStatus = (state) => {
   const badge = state.running
     ? `<strong style="color:#8fbfa0">● En cours</strong> — ${escapeHtml(state.slug)}`
     : `<strong style="opacity:.6">■ Arrêté</strong>`;
+  const inFlight = state.running && state.inFlight ? `<br>⏳ Scraping en cours…` : '';
   const lastUpdate = state.lastSuccessAt ? `<br>Dernière mise à jour il y a ${timeAgo(state.lastSuccessAt)}${state.lastPlayersCount != null ? ` (${state.lastPlayersCount} joueurs)` : ''}` : '';
   const errorBanner = state.consecutiveErrors > 0
     ? `<br><span style="color:#d47f7f">⚠️ ${state.consecutiveErrors} échec(s) consécutif(s) : ${escapeHtml(state.lastError || '')}</span>`
     : '';
-  setScraperStatus(badge + lastUpdate + errorBanner, state.consecutiveErrors > 0);
+  setScraperStatus(badge + inFlight + lastUpdate + errorBanner, state.consecutiveErrors > 0);
 };
 
 const loadScraperStatus = async () => {
@@ -1079,6 +1080,17 @@ const stopScraper = async () => {
     const r = await fetch('/api/scraper/stop', { method: 'POST', headers: { 'Authorization': `Bearer ${key}` } });
     const data = await r.json().catch(() => null);
     if (!r.ok) { setScraperStatus('Erreur serveur ' + r.status, true); return; }
+    renderScraperStatus(data.status);
+  } catch { setScraperStatus('Erreur réseau', true); }
+};
+
+const runScraperNow = async () => {
+  const key = getAnalyticsKey();
+  if (!key) { setScraperStatus('Clé API manquante (onglet Analytics).', true); return; }
+  try {
+    const r = await fetch('/api/scraper/run-now', { method: 'POST', headers: { 'Authorization': `Bearer ${key}` } });
+    const data = await r.json().catch(() => null);
+    if (!r.ok) { setScraperStatus(data?.error === 'not running' ? 'Aucun suivi en cours — démarrez-en un d’abord.' : 'Erreur serveur ' + r.status, true); return; }
     renderScraperStatus(data.status);
   } catch { setScraperStatus('Erreur réseau', true); }
 };
@@ -1362,6 +1374,7 @@ const wireEvents = () => {
     await startScraper(slug);
   });
 
+  $('scraper-run-now-btn')?.addEventListener('click', () => runScraperNow());
   $('scraper-stop-btn')?.addEventListener('click', () => stopScraper());
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {

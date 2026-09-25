@@ -20,6 +20,7 @@ module.exports = ({ dataDir, workerPath }) => {
     lastPlayersCount: null,
   };
   let timer = null;
+  let inFlight = false;
 
   const loadState = () => {
     try { state = { ...state, ...JSON.parse(fs.readFileSync(statePath, 'utf8')) }; } catch {}
@@ -27,6 +28,7 @@ module.exports = ({ dataDir, workerPath }) => {
   const persist = () => { try { fs.writeFileSync(statePath, JSON.stringify(state, null, 2)); } catch {} };
 
   const runCycle = () => {
+    inFlight = true;
     state.lastRunAt = new Date().toISOString();
     persist();
 
@@ -36,6 +38,7 @@ module.exports = ({ dataDir, workerPath }) => {
     child.stderr.on('data', d => { output += d; });
 
     child.on('close', code => {
+      inFlight = false;
       if (code === 0) {
         state.lastSuccessAt = new Date().toISOString();
         state.consecutiveErrors = 0;
@@ -62,7 +65,7 @@ module.exports = ({ dataDir, workerPath }) => {
     state = { ...state, running: true, slug, startedAt: new Date().toISOString(), consecutiveErrors: 0, lastError: null };
     persist();
     runCycle();
-    return { ok: true, code: 200, status: { ...state } };
+    return { ok: true, code: 200, status: status() };
   };
 
   const stop = () => {
@@ -72,7 +75,15 @@ module.exports = ({ dataDir, workerPath }) => {
     return { ok: true, code: 200, status: { ...state } };
   };
 
-  const status = () => ({ ...state });
+  const runNow = () => {
+    if (!state.running) return { ok: false, code: 409, error: 'not running', status: status() };
+    if (inFlight) return { ok: true, code: 200, status: status() };
+    if (timer) { clearTimeout(timer); timer = null; }
+    runCycle();
+    return { ok: true, code: 200, status: status() };
+  };
+
+  const status = () => ({ ...state, inFlight });
 
   const resume = () => {
     loadState();
@@ -82,5 +93,5 @@ module.exports = ({ dataDir, workerPath }) => {
     }
   };
 
-  return { start, stop, status, resume };
+  return { start, stop, runNow, status, resume };
 };
