@@ -13,6 +13,8 @@ Environment=PORT=3001
 Environment=DATA_DIR=/opt/baf-api/data
 # Set your secret key below — generate one with: openssl rand -hex 32
 Environment=API_KEY=CHANGE_ME
+# ScraperAPI key (scraperapi.com dashboard) — required by the VPS live scraper
+Environment=SCRAPER_API_KEY=CHANGE_ME
 
 [Install]
 WantedBy=multi-user.target
