@@ -267,6 +267,36 @@ textarea {
   background: #ffe0e8;
 }
 
+/* Press feedback: quick shrink on click, springs back on release */
+.button:active,
+.site-nav a.button:active,
+.site-sidebar .site-nav a.button:active,
+.admin-tab:active,
+.site-sidebar .site-nav .admin-tab:active,
+.analytics-period-btn:active {
+  transform: translateY(1px) scale(0.95);
+  transition-duration: 0.06s;
+}
+
+.button:active {
+  background: rgba(245, 208, 216, 0.24);
+}
+
+.button-primary:active {
+  background: #e8b8c3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button:active,
+  .site-nav a.button:active,
+  .site-sidebar .site-nav a.button:active,
+  .admin-tab:active,
+  .site-sidebar .site-nav .admin-tab:active,
+  .analytics-period-btn:active {
+    transform: none;
+  }
+}
+
 .hero {
   padding: 5rem 0 3rem;
 }
@@ -1973,7 +2003,7 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   font-weight: 600;
   padding: 0.75rem 1.25rem;
   margin-bottom: -1px;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .admin-tab:hover {
@@ -2272,7 +2302,7 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   font: inherit;
   font-weight: 600;
   margin-bottom: 0;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .site-sidebar .site-nav .admin-tab:hover {
