@@ -1,9 +1,8 @@
 /*
- * Browser bookmarklet for live tournament tracking (fallback when the VPS scraper
- * is blocked). Run it on a fabtcg.com/coverage/<slug>/ page: every 90s it re-reads
+ * Browser bookmarklet for live tournament tracking.
+ * Run it on a fabtcg.com/coverage/<slug>/ page: every 90s it re-reads
  * all round results, rebuilds the standings and POSTs them to bafbordeaux.fr/api/standings.
  * The admin page generates the bookmark link, with the API key passed as ?key=.
- * Same parsing logic as api/scraper-worker.js: keep both in sync.
  */
 (function () {
   'use strict';

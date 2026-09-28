@@ -1,7 +1,7 @@
 ﻿'use strict';
 /*
  * Public tournament tracker (tournament.html). Visitors pick an event; standings come
- * from /api/standings/<slug> (pushed by the VPS scraper or the bookmarklet) and are
+ * from /api/standings/<slug> (pushed by the bookmarklet) and are
  * filtered to the club's tracked players, colour-coded by tag. Auto-refreshes every
  * minute while a round is live. Click a row to see that player's match history.
  */
