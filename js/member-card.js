@@ -35,6 +35,7 @@
     kayo_ad:'icon_kayo_ad.webp',         kayo_br:'icon_kayo_br_resized.png',
     kayo_uc:'icon_kayo_uc-2.webp',       levia:'icon_levia.webp',
     lexi:'icon_lexi.webp',               lyath:'icon_lyath-2.webp',
+    malice:'malice.webp',                malice_dotd:'malice-domina-of-the-dead.webp',
     marlynn:'icon_marlynn.webp',         maxxnitro:'icon_maxxnitro.webp',
     melody:'icon_melody.webp',           nuu:'icon_nuu.webp',
     oldhim:'icon_oldhim-1.webp',         olympia:'icon_olympia.webp',

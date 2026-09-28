@@ -126,6 +126,8 @@ const _HERO_ICON_MAP = [
   ['kavdaen',                         '/images/icon_kavdaen.webp'],
   ['levia',                           '/images/icon_levia.webp'],
   ['lexi',                            '/images/icon_lexi.webp'],
+  ['malice, domina of the dead',      '/images/malice-domina-of-the-dead.webp'],
+  ['malice',                          '/images/malice.webp'],
   ['marlynn',                         '/images/icon_marlynn.webp'],
   ['maxx nitro',                      '/images/icon_maxxnitro.webp'],
   ['melody',                          '/images/icon_melody.webp'],

@@ -88,6 +88,8 @@ const HEROES = [
   { id: 'teklovossen', name: 'Teklovossen, Esteemed Magnate',    img: 'icon_teklovossen.webp',      class: 'Mechanologist' },
   // Nécromancien
   { id: 'frankie',     name: 'Frankie',                          img: 'icon_frankie.webp',          class: 'Nécromancien' },
+  { id: 'malice',      name: 'Malice',                           img: 'malice.webp',                class: 'Nécromancien' },
+  { id: 'malice_dotd', name: 'Malice, Domina of the Dead',       img: 'malice-domina-of-the-dead.webp', class: 'Nécromancien' },
   // Ninja
   { id: 'benji',       name: 'Benji',                            img: 'icon_benji.webp',            class: 'Ninja' },
   { id: 'fai',         name: 'Fai, Rising Rebellion',            img: 'icon_fai.webp',              class: 'Ninja' },
