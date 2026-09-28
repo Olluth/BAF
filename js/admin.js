@@ -3,8 +3,8 @@
  * Admin panel (admin.html). Login is checked locally (hashed credentials in
  * localStorage, see initCredentials); real protection is the API key, entered in the
  * Analytics tab and sent as a Bearer token on every write to /api/*.
- * Tabs: articles, tracked players, tracker events (+ bookmarklet), agenda,
- * Supabase members, achievements, analytics.
+ * Tabs: articles, tracked players, tracker events (+ bookmarklet), live tracking
+ * (home PC relay + phone bookmarklet), agenda, Supabase members, achievements, analytics.
  * Most lists are kept in localStorage and mirrored to the API after each change.
  */
 
@@ -193,19 +193,22 @@ const verifyLogin = async (username, password) => {
 };
 
 // --- Session ---
-// Login lasts for the browser tab (sessionStorage), not across restarts.
+// Login lasts for the browser tab (sessionStorage), or survives restarts
+// (localStorage) when "Rester connecté" is ticked — handy for the installed admin app.
 
 const isLoggedIn = () => {
   try {
-    return !!getStorage('sessionStorage').getItem(SESSION_KEY);
+    return !!getStorage('sessionStorage').getItem(SESSION_KEY) || !!getStorage('localStorage').getItem(SESSION_KEY);
   } catch {
     return false;
   }
 };
-const createSession = () => getStorage('sessionStorage').setItem(SESSION_KEY, randomUUID());
+const createSession = (remember = false) =>
+  getStorage(remember ? 'localStorage' : 'sessionStorage').setItem(SESSION_KEY, randomUUID());
 const destroySession = () => {
   try {
     getStorage('sessionStorage').removeItem(SESSION_KEY);
+    getStorage('localStorage').removeItem(SESSION_KEY);
   } catch {
     // ignore
   }
@@ -442,20 +445,46 @@ let editingArticleId = null;
 const showLogin = () => {
   $('login-page').classList.remove('hidden');
   $('dashboard').classList.add('hidden');
+  // In the installed admin app, staying signed in is what you want by default.
+  if (window.matchMedia('(display-mode: standalone)').matches) $('login-remember').checked = true;
   $('login-username').focus();
 };
 
-// Builds the draggable bookmarklet link (Events tab). It loads js/bookmarklet.js with the API key.
+// javascript: URL that loads js/bookmarklet.js with the API key.
+const bookmarkletLoader = (key) =>
+  `javascript:(function(){var s=document.createElement('script');s.src='https://bafbordeaux.fr/js/bookmarklet.js?key=${encodeURIComponent(key)}&t='+Date.now();document.head.appendChild(s)})()`;
+
+const NO_KEY_HTML = `<p class="admin-panel-desc" style="color:rgba(249,230,197,.45)">Configure ta clé API dans l'onglet Analytics d'abord.</p>`;
+
+// Draggable bookmarklet link (Events tab, desktop) + copy button (Suivi live tab, phones).
 const renderBookmarklet = () => {
-  const wrap = $('bookmarklet-wrap');
-  if (!wrap) return;
   const key = getAnalyticsKey();
-  if (!key) {
-    wrap.innerHTML = `<p class="admin-panel-desc" style="color:rgba(249,230,197,.45)">Configure ta clé API dans l'onglet Analytics d'abord.</p>`;
-    return;
+  const wrap = $('bookmarklet-wrap');
+  if (wrap) {
+    wrap.innerHTML = key
+      ? `<a href="${bookmarkletLoader(key)}" class="button button-primary" style="display:inline-block;cursor:grab" draggable="true">🎴 BAF — Mettre à jour les standings</a><p class="admin-panel-desc" style="margin-top:.6rem;font-size:.8rem">Ne clique pas ici — glisse-le dans ta barre de favoris.</p>`
+      : NO_KEY_HTML;
   }
-  const loader = `javascript:(function(){var s=document.createElement('script');s.src='https://bafbordeaux.fr/js/bookmarklet.js?key=${encodeURIComponent(key)}&t='+Date.now();document.head.appendChild(s)})()`;
-  wrap.innerHTML = `<a href="${loader}" class="button button-primary" style="display:inline-block;cursor:grab" draggable="true">🎴 BAF — Mettre à jour les standings</a><p class="admin-panel-desc" style="margin-top:.6rem;font-size:.8rem">Ne clique pas ici — glisse-le dans ta barre de favoris.</p>`;
+  const phone = $('phone-bookmarklet-wrap');
+  if (phone) {
+    phone.innerHTML = key
+      ? `<button type="button" id="copy-bookmarklet-btn" class="button button-primary">📋 Copier le code du bookmarklet</button>
+         <textarea id="bookmarklet-code" class="hidden" readonly rows="3" style="width:100%;margin-top:.6rem;font-size:.75rem">${escapeHtml(bookmarkletLoader(key))}</textarea>`
+      : NO_KEY_HTML;
+    $('copy-bookmarklet-btn')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      try {
+        await navigator.clipboard.writeText(bookmarkletLoader(key));
+        btn.textContent = '✅ Copié !';
+        setTimeout(() => { btn.textContent = '📋 Copier le code du bookmarklet'; }, 2500);
+      } catch {
+        // Clipboard blocked: show the code so it can be selected by hand.
+        const ta = $('bookmarklet-code');
+        ta.classList.remove('hidden');
+        ta.select();
+      }
+    });
+  }
 };
 
 // Merges server and local articles: server wins, local-only articles are pushed up.
@@ -506,6 +535,7 @@ const switchTab = (tab) => {
   $('panel-articles').classList.toggle('hidden', tab !== 'articles');
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
+  $('panel-live').classList.toggle('hidden', tab !== 'live');
   $('panel-members').classList.toggle('hidden', tab !== 'members');
   $('panel-agenda').classList.toggle('hidden', tab !== 'agenda');
   $('panel-achievements').classList.toggle('hidden', tab !== 'achievements');
@@ -517,6 +547,7 @@ const switchTab = (tab) => {
   if (tab === 'players') loadPlayersFromServer();
   if (tab === 'members') loadMembers();
   if (tab === 'achievements') renderAchievementsPanel();
+  if (tab === 'live') { loadLiveStatus(); loadLiveSlugOptions(); startLivePolling(); } else { stopLivePolling(); }
 };
 
 // --- Analytics ---
@@ -1038,6 +1069,92 @@ const loadAgendaFromServer = async () => {
   } catch {}
 };
 
+// --- Suivi live (home PC relay) ---
+// The admin sets the job (tournament + running) on the server; scripts/live-agent.js
+// on the home PC polls it every 10 s and reports back its status, shown here.
+
+let _livePollTimer = null; // refreshes the status every 5 s while the tab is open
+
+// "42s", "5min", "1h05" since an ISO date.
+const timeAgo = (iso) => {
+  if (!iso) return null;
+  const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}min`;
+  return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
+};
+
+const setLiveStatus = (html, isError = false) => {
+  const el = $('live-status');
+  if (!el) return;
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '');
+  el.innerHTML = html;
+};
+
+const renderLiveStatus = ({ job, agent }) => {
+  const online = agent.lastSeenAt && Date.now() - new Date(agent.lastSeenAt).getTime() < 45000;
+  const relay = online
+    ? `<strong style="color:#8fbfa0">● PC relais connecté</strong>`
+    : `<strong style="color:#d47f7f">● PC relais hors ligne</strong>${agent.lastSeenAt ? ` <span style="opacity:.6">(vu il y a ${timeAgo(agent.lastSeenAt)})</span>` : ''}`;
+  const jobLine = job.running
+    ? `<br>Suivi demandé : <strong>${escapeHtml(job.slug)}</strong>`
+    : `<br><span style="opacity:.7">Aucun suivi en cours</span>`;
+  const details = online && job.running
+    ? `<br>${escapeHtml(agent.status || '')}` +
+      (agent.lastSuccessAt ? `<br><span style="opacity:.7">Dernière mise à jour du site il y a ${timeAgo(agent.lastSuccessAt)}</span>` : '')
+    : '';
+  const warn = job.running && !online
+    ? `<br><span style="color:#d47f7f">Lance scripts/live-agent.bat sur ton PC (ou utilise le bookmarklet téléphone ci-dessous).</span>`
+    : '';
+  setLiveStatus(relay + jobLine + details + warn, (job.running && !online) || agent.consecutiveErrors > 0);
+  if (job.running && document.activeElement !== $('live-slug')) $('live-slug').value = job.slug;
+};
+
+const liveRequest = async (method, body) => {
+  const key = getAnalyticsKey();
+  if (!key) { setLiveStatus('Clé API manquante (onglet Analytics).', true); return null; }
+  try {
+    const r = await fetch('/api/live', {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!r.ok) { setLiveStatus('Erreur serveur ' + r.status, true); return null; }
+    const data = await r.json();
+    renderLiveStatus(data);
+    return data;
+  } catch { setLiveStatus('Erreur réseau', true); return null; }
+};
+
+const loadLiveStatus = () => liveRequest('GET');
+
+// Accepts a bare slug or any fabtcg.com coverage link.
+const parseSlug = (input) => {
+  const v = input.trim().toLowerCase();
+  const m = v.match(/coverage\/([a-z0-9-]+)/);
+  return m ? m[1] : v;
+};
+
+// Suggests the events already registered on the site.
+const loadLiveSlugOptions = async () => {
+  try {
+    const r = await fetch('/api/events');
+    if (!r.ok) return;
+    const events = await r.json();
+    $('live-slug-options').innerHTML = events.map((e) => `<option value="${escapeAttr(e.slug)}">${escapeHtml(e.name || e.slug)}</option>`).join('');
+  } catch {}
+};
+
+const startLivePolling = () => {
+  stopLivePolling();
+  _livePollTimer = setInterval(loadLiveStatus, 5000);
+};
+
+const stopLivePolling = () => {
+  if (_livePollTimer) { clearInterval(_livePollTimer); _livePollTimer = null; }
+};
+
 // --- Event Wiring ---
 // All button / form handlers, attached once at start-up.
 
@@ -1056,7 +1173,7 @@ const wireEvents = () => {
     try {
       const result = await verifyLogin(username, password);
       if (result === true) {
-        createSession();
+        createSession($('login-remember')?.checked);
         showDashboard();
       } else {
         errorEl.textContent = t('admin.login.error');
@@ -1272,6 +1389,16 @@ const wireEvents = () => {
     if (ok) { setAgendaStatus('Événement ajouté !'); setTimeout(() => setAgendaStatus(''), 2500); }
     $('agenda-form').reset();
   });
+
+  $('live-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const slug = parseSlug($('live-slug').value);
+    if (!/^[a-z0-9-]+$/.test(slug)) { setLiveStatus('Slug invalide : ex. calling-bilbao, ou colle le lien de la page coverage.', true); return; }
+    $('live-slug').value = slug;
+    await liveRequest('POST', { slug, running: true });
+  });
+
+  $('live-stop-btn')?.addEventListener('click', () => liveRequest('POST', { running: false }));
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();

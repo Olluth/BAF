@@ -24,6 +24,7 @@ const EVENTS_FILE    = path.join(DATA_DIR, 'events.json');
 const PLAYERS_FILE   = path.join(DATA_DIR, 'players.json');
 const ARTICLES_FILE  = path.join(DATA_DIR, 'articles.json');
 const AGENDA_FILE    = path.join(DATA_DIR, 'agenda.json');
+const LIVE_JOB_FILE  = path.join(DATA_DIR, 'live-job.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '2mb' }));
@@ -206,6 +207,46 @@ app.get('/api/standings/:slug', (req, res) => {
   if (!fs.existsSync(file)) return res.status(404).json({ error: 'not found' });
   res.setHeader('Cache-Control', 'no-store');
   res.sendFile(file);
+});
+
+/* ---- Live tracking relay ---- */
+// The admin picks which tournament to track (the "job"); the home PC relay
+// (scripts/live-agent.js) polls /api/live/agent every few seconds, reports its status
+// and gets the job back. The relay pushes standings through /api/standings as usual.
+
+const loadLiveJob = () => {
+  try { return JSON.parse(fs.readFileSync(LIVE_JOB_FILE, 'utf8')); }
+  catch { return { slug: '', running: false, updatedAt: null }; }
+};
+
+// Last report from the relay; kept in memory only (an API restart just waits for the next poll).
+let liveAgent = { lastSeenAt: null, slug: '', status: '', lastSuccessAt: null, consecutiveErrors: 0 };
+
+app.get('/api/live', requireAuth, (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ job: loadLiveJob(), agent: liveAgent, now: new Date().toISOString() });
+});
+
+app.post('/api/live', requireAuth, (req, res) => {
+  const { slug, running } = req.body || {};
+  if (running && !validSlug(slug)) return res.status(400).json({ error: 'invalid slug' });
+  const job = { slug: running ? slug : loadLiveJob().slug, running: !!running, updatedAt: new Date().toISOString() };
+  fs.writeFileSync(LIVE_JOB_FILE, JSON.stringify(job));
+  console.log(running ? `Live tracking started: ${slug}` : 'Live tracking stopped');
+  res.json({ job, agent: liveAgent, now: new Date().toISOString() });
+});
+
+app.post('/api/live/agent', requireAuth, (req, res) => {
+  const b = req.body || {};
+  liveAgent = {
+    lastSeenAt:        new Date().toISOString(),
+    slug:              String(b.slug || '').slice(0, 80),
+    status:            String(b.status || '').slice(0, 300),
+    lastSuccessAt:     typeof b.lastSuccessAt === 'string' ? b.lastSuccessAt : null,
+    consecutiveErrors: Number(b.consecutiveErrors) || 0,
+  };
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(loadLiveJob());
 });
 
 /* ---- Players ---- */

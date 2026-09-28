@@ -3076,3 +3076,35 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     max-width: 24vw;
   }
 }
+
+/* ---- Admin: login "stay signed in" + collapsible help blocks (Suivi live) ---- */
+.admin-remember {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.admin-remember input {
+  width: auto;
+  accent-color: #f5d0d8;
+}
+
+.admin-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.admin-help ol {
+  padding-left: 1.2rem;
+  line-height: 1.6;
+}
+
+.admin-help code {
+  background: rgba(245, 208, 216, 0.1);
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+}

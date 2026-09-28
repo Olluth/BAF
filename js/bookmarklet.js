@@ -5,6 +5,9 @@
  * The admin page generates the bookmark link, with the API key passed as ?key=.
  * Finished rounds are cached, so each cycle only re-downloads the last two rounds;
  * if a round can't be loaded the update is skipped rather than pushing partial data.
+ * On phones it keeps the screen awake while running (browsers pause hidden tabs).
+ * The home PC relay (scripts/live-agent.js) runs this same script in a hidden Chrome
+ * and reads window.__bafTrackerRunning.getStatus().
  */
 (function () {
   'use strict';
@@ -32,6 +35,21 @@
 
   let _stopped = false;
   let _timer = null;
+  let _lastSuccessAt = null;   // ISO date of the last successful push
+  let _consecutiveErrors = 0;
+
+  // Keep the screen on while tracking (phones suspend the page when it turns off).
+  // The lock is dropped whenever the tab is hidden, so take it again when it's back.
+  let _wakeLock = null;
+  const keepAwake = async () => {
+    if (_stopped || _wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+    try {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    } catch {}
+  };
+  const releaseAwake = () => { _wakeLock?.release().catch(() => {}); _wakeLock = null; };
+  document.addEventListener('visibilitychange', keepAwake);
   let _countdownTimer = null;
   let _nextRun = 0;
 
@@ -245,6 +263,8 @@
       }
 
       const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      _lastSuccessAt = new Date().toISOString();
+      _consecutiveErrors = 0;
       _lastStatus = `✅ ${standings.length} joueurs — ${liveRoundName || 'Terminé'}<br><small style="opacity:.6">Dernière màj : ${time}</small>`;
       _nextRun = Date.now() + INTERVAL_MS;
       renderOverlay(_lastStatus);
@@ -253,6 +273,7 @@
       _timer = setTimeout(doUpdate, INTERVAL_MS);
 
     } catch (err) {
+      _consecutiveErrors++;
       _lastStatus = `❌ ${err.message}`;
       renderOverlay(_lastStatus);
       if (!_stopped) {
@@ -269,13 +290,25 @@
       if (_stopped) {
         clearTimeout(_timer);
         clearInterval(_countdownTimer);
+        releaseAwake();
         _lastStatus = '⏸ Auto-update arrêté';
         renderOverlay(_lastStatus);
       } else {
+        keepAwake();
         doUpdate();
       }
     },
+    // Plain-text state, read by the home PC relay.
+    getStatus() {
+      return {
+        text: _lastStatus.replace(/<br>/g, ' — ').replace(/<[^>]+>/g, '').trim(),
+        lastSuccessAt: _lastSuccessAt,
+        consecutiveErrors: _consecutiveErrors,
+        stopped: _stopped,
+      };
+    },
   };
 
+  keepAwake();
   doUpdate();
 })();

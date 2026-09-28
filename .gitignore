@@ -2,3 +2,4 @@ node_modules/
 scripts/node_modules/
 scripts/package-lock.json
 api/data/
+scripts/live-agent.config.json

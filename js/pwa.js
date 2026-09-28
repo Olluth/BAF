@@ -1,8 +1,8 @@
 'use strict';
 /*
- * Installable app (PWA): registers sw.js and drives the "Installer l'app" button
- * (#pwa-install-btn in the header menu). Android / desktop Chrome: the button opens the
- * browser's install prompt. iPhone Safari has no prompt, so the button shows the
+ * Installable app (PWA): registers sw.js and drives the "Installer l'app" buttons
+ * (#pwa-install-btn in the header menu, .pwa-install-btn in the admin).
+ * Android / desktop Chrome: the button opens the browser's install prompt. iPhone Safari has no prompt, so the button shows the
  * "Share → Add to Home Screen" steps instead. Hidden once the app is installed.
  */
 (() => {
@@ -10,8 +10,9 @@
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
   }
 
-  const btn = document.getElementById('pwa-install-btn');
-  if (!btn) return;
+  const btns = [...document.querySelectorAll('#pwa-install-btn, .pwa-install-btn')];
+  if (!btns.length) return;
+  const show = (on) => btns.forEach((b) => b.classList.toggle('hidden', !on));
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   if (isStandalone) return;
@@ -26,24 +27,24 @@
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    btn.classList.remove('hidden');
+    show(true);
   });
 
   window.addEventListener('appinstalled', () => {
     deferredPrompt = null;
-    btn.classList.add('hidden');
+    show(false);
   });
 
-  if (isIos) btn.classList.remove('hidden');
+  if (isIos) show(true);
 
-  btn.addEventListener('click', async () => {
+  btns.forEach((btn) => btn.addEventListener('click', async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       await deferredPrompt.userChoice.catch(() => {});
       deferredPrompt = null;
-      btn.classList.add('hidden');
+      show(false);
       return;
     }
     if (isIos) alert(tr('pwa.iosHelp', "Pour installer l'app : touchez le bouton Partager, puis « Sur l'écran d'accueil »."));
-  });
+  }));
 })();
