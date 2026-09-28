@@ -29,6 +29,8 @@ const translations = {
     'nav.resources': 'Ressources',
     'nav.contact': 'Contact',
     'nav.tracker': 'Suivi de tournoi',
+    'nav.install': "Installer l'app",
+    'pwa.iosHelp': "Pour installer l'app : touchez le bouton Partager, puis « Sur l'écran d'accueil ».",
 
     // About
     'about.eyebrow': 'Association',
@@ -221,6 +223,8 @@ const translations = {
     'nav.resources': 'Resources',
     'nav.contact': 'Contact',
     'nav.tracker': 'Tournament Tracker',
+    'nav.install': 'Install the app',
+    'pwa.iosHelp': 'To install the app: tap the Share button, then "Add to Home Screen".',
 
     // About
     'about.eyebrow': 'Association',
