@@ -162,14 +162,26 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
   let oldData = null;
   try { if (fs.existsSync(file)) oldData = JSON.parse(fs.readFileSync(file, 'utf8')); } catch {}
 
-  fs.writeFileSync(file, JSON.stringify({
+  // Safety net against a bad scrape: the number of rounds never goes down during an event.
+  const roundCount = (list) => new Set((list || []).flatMap(p => (p.history || []).map(h => h.round))).size;
+  const oldRounds = roundCount(oldData?.standings);
+  const newRounds = roundCount(standings);
+  if (newRounds < oldRounds) {
+    console.warn(`Standings rejected: ${slug} has ${newRounds} rounds, ${oldRounds} already saved`);
+    return res.status(409).json({ error: `${newRounds} rounds reçus, ${oldRounds} déjà enregistrés` });
+  }
+
+  // Write to a temp file then rename, so visitors never read a half-written file.
+  const tmp = `${file}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({
     slug,
     lastUpdated:    lastUpdated || new Date().toISOString(),
     standings,
     liveMatches:    liveMatches    || {},
     liveRoundName:  liveRoundName  || '',
     droppedPlayers: droppedPlayers || [],
-  }, null, 2));
+  }));
+  fs.renameSync(tmp, file);
   console.log(`Standings saved: ${slug} (${standings.length} players)`);
 
   // Auto-register event on first upload so visitors can find it

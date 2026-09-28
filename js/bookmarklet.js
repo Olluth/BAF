@@ -3,6 +3,8 @@
  * Run it on a fabtcg.com/coverage/<slug>/ page: every 90s it re-reads
  * all round results, rebuilds the standings and POSTs them to bafbordeaux.fr/api/standings.
  * The admin page generates the bookmark link, with the API key passed as ?key=.
+ * Finished rounds are cached, so each cycle only re-downloads the last two rounds;
+ * if a round can't be loaded the update is skipped rather than pushing partial data.
  */
 (function () {
   'use strict';
@@ -92,6 +94,33 @@
 
   const parseResults  = html => { const d = parseDoc(html); const m = []; d.querySelectorAll('tr.match-row').forEach(r => { const x = extractMatch(r); if (x) m.push(x); }); return m; };
 
+  // fetch() that fails on HTTP errors instead of returning an error / Cloudflare page as text.
+  const fetchText = async (url) => {
+    const r = await fetch(url, { cache: 'no-store' });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return r.text();
+  };
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+  // Downloads one round's results, retrying twice. A page with no match rows is treated
+  // as a failure too (that's what a rate-limit or challenge page looks like).
+  const fetchRound = async (url) => {
+    let lastErr;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt) await sleep(2000 * attempt);
+      try {
+        const matches = parseResults(await fetchText(url));
+        if (matches.length) return matches;
+        lastErr = new Error('page vide');
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr;
+  };
+
+  // Results of finished rounds, keyed by results URL. Only the last two completed
+  // rounds are re-downloaded each cycle (late score corrections, live round).
+  const roundCache = {};
+
   // One full update: read rounds, rebuild standings, push to the API, schedule the next run.
   const doUpdate = async () => {
     if (_stopped) return;
@@ -104,15 +133,15 @@
 
       setStatus(`<b>${slug}</b> — Lecture des rounds…`);
 
-      const coverageHtml = await fetch(location.href).then(r => r.text());
+      const coverageHtml = await fetchText(location.href);
       const coverageDoc  = parseDoc(coverageHtml);
       const absHref = el => { if (!el) return null; const h = el.getAttribute('href'); if (!h) return null; try { return new URL(h, location.href).href; } catch { return null; } };
       const rounds = [];
       coverageDoc.querySelectorAll('table tbody tr').forEach(row => {
         const nameCell    = row.querySelector('td.rounds');
         const pairingsLnk = row.querySelector('td.pairings a');
-        if (!nameCell || !pairingsLnk) return;
-        const resultsLnk = row.querySelector('td.results a');
+        const resultsLnk  = row.querySelector('td.results a');
+        if (!nameCell || (!pairingsLnk && !resultsLnk)) return;
         rounds.push({ roundName: nameCell.textContent.trim(), pairingsUrl: absHref(pairingsLnk), resultsUrl: absHref(resultsLnk), hasResults: !!resultsLnk });
       });
       if (!rounds.length) { setStatus('❌ Aucun round trouvé.'); return; }
@@ -120,11 +149,24 @@
       const completed = rounds.filter(r => r.hasResults);
       const allRounds = [];
       for (let i = 0; i < completed.length; i++) {
+        const { roundName, resultsUrl } = completed[i];
+        const isRecent = i >= completed.length - 2;
+        if (!isRecent && roundCache[resultsUrl]) {
+          allRounds.push({ roundName, matches: roundCache[resultsUrl] });
+          continue;
+        }
         setStatus(`Rounds : ${i + 1} / ${completed.length}…`);
         try {
-          const html = await fetch(completed[i].resultsUrl).then(r => r.text());
-          allRounds.push({ roundName: completed[i].roundName, matches: parseResults(html) });
-        } catch { allRounds.push({ roundName: completed[i].roundName, matches: [] }); }
+          const matches = await fetchRound(resultsUrl);
+          roundCache[resultsUrl] = matches;
+          allRounds.push({ roundName, matches });
+        } catch (e) {
+          // Keep the previous copy of this round if we have one, otherwise skip this
+          // update entirely: pushing a round with no matches would wipe it on the site.
+          if (roundCache[resultsUrl]) { allRounds.push({ roundName, matches: roundCache[resultsUrl] }); continue; }
+          throw new Error(`${roundName} illisible (${e.message}) — màj ignorée, nouvel essai bientôt`);
+        }
+        if (i < completed.length - 1) await sleep(400); // be gentle with fabtcg.com
       }
 
       const liveRound = rounds[rounds.length - 1];
@@ -146,9 +188,10 @@
       let officialRankMap = {};
       if (completed.length > 0) {
         try {
-          const standingsUrl = new URL(`standings/${completed.length}/`, location.href).href;
+          const lastNum = completed[completed.length - 1].roundName.match(/(\d+)/)?.[1] || completed.length;
+          const standingsUrl = new URL(`standings/${lastNum}/`, location.href).href;
           setStatus('Classement officiel…');
-          const sHtml = await fetch(standingsUrl).then(r => r.text());
+          const sHtml = await fetchText(standingsUrl);
           const sDoc  = parseDoc(sHtml);
           sDoc.querySelectorAll('table tbody tr').forEach((row, idx) => {
             const cells = [...row.querySelectorAll('td')];
@@ -174,17 +217,21 @@
       const standings = allPlayers;
       const liveMatches = {}, liveRoundName = liveRound.roundName;
 
-      // Players seen in last completed round — anyone absent = dropped
-      const lastRoundPlayers = new Set();
-      if (allRounds.length > 0) {
-        allRounds[allRounds.length - 1].matches.forEach(({ p1Name, p2Name }) => {
-          lastRoundPlayers.add(p1Name);
-          lastRoundPlayers.add(p2Name);
-        });
-      }
-      const droppedPlayers = allRounds.length > 1
-        ? Object.keys(map).filter(name => !lastRoundPlayers.has(name))
-        : [];
+      // Dropped = stopped playing although the next round was not a cut. A round with
+      // under 60% of the previous round's players is a cut (day 2, top 8…): players who
+      // didn't make it were eliminated, not dropped.
+      const roundPlayers = allRounds.map(({ matches }) => {
+        const set = new Set();
+        matches.forEach(({ p1Name, p2Name }) => { set.add(p1Name); set.add(p2Name); });
+        return set;
+      });
+      const droppedPlayers = [];
+      Object.keys(map).forEach(name => {
+        let last = -1;
+        roundPlayers.forEach((set, i) => { if (set.has(name)) last = i; });
+        const next = roundPlayers[last + 1];
+        if (last >= 0 && next && next.size >= roundPlayers[last].size * 0.6) droppedPlayers.push(name);
+      });
 
       setStatus('Envoi vers bafbordeaux.fr…');
       const res = await fetch('https://bafbordeaux.fr/api/standings', {
@@ -192,7 +239,10 @@
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
         body:    JSON.stringify({ slug, lastUpdated: new Date().toISOString(), standings, liveMatches, liveRoundName, droppedPlayers }),
       });
-      if (!res.ok) throw new Error(`API ${res.status}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(`API ${res.status}${body?.error ? ` : ${body.error}` : ''}`);
+      }
 
       const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       _lastStatus = `✅ ${standings.length} joueurs — ${liveRoundName || 'Terminé'}<br><small style="opacity:.6">Dernière màj : ${time}</small>`;

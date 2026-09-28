@@ -447,7 +447,13 @@ const loadEvent = async (slug) => {
 
   } catch (err) {
     if (gen !== _generation) return;
-    setStatus(`${t('tracker.loadError')}: ${err.message}`, true);
+    // Keep showing the last standings we had and try again shortly: a single failed
+    // refresh (flaky venue Wi-Fi, server restart) must not stop the live updates.
+    const hasStandings = !!document.querySelector('#standings-container table');
+    setStatus(hasStandings ? t('tracker.retrying') : `${t('tracker.loadError')}: ${err.message}`, true);
+    _refreshTimer = setTimeout(() => {
+      if (gen === _generation) loadEvent(slug);
+    }, (hasStandings ? 30 : 15) * 1000);
   }
 };
 
