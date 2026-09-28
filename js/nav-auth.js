@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Toggles the header's "Se connecter" link / "DÃ©connexion" button based on
+ * Toggles the header's "Se connecter" link / "Déconnexion" button based on
  * the member's Supabase session. Loaded on every public page.
  */
 (function () {

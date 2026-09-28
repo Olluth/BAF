@@ -501,6 +501,8 @@ const switchTab = (tab) => {
   document.querySelectorAll('.admin-tab').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.tab === tab);
   });
+  // Mobile: the tab strip scrolls sideways, keep the active tab visible
+  document.querySelector(`.admin-tab[data-tab="${tab}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   $('panel-articles').classList.toggle('hidden', tab !== 'articles');
   $('panel-players').classList.toggle('hidden', tab !== 'players');
   $('panel-events').classList.toggle('hidden', tab !== 'events');
@@ -992,7 +994,7 @@ const renderAgendaList = () => {
     const dateStr = new Date(e.date + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     const past = e.date < new Date().toISOString().slice(0, 10);
     return `<li class="admin-list-item${past ? ' admin-list-item-muted' : ''}">
-      <div style="display:flex;align-items:center;gap:.75rem;flex:1;min-width:0">
+      <div class="agenda-item-main" style="display:flex;align-items:center;gap:.75rem;flex:1;min-width:0">
         ${e.image ? `<img src="${escapeAttr(e.image)}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0" />` : ''}
         <div style="min-width:0">
           <div style="font-weight:600;color:#f9e6c5">${escapeHtml(e.name)}${past ? ' <span style="opacity:.4;font-size:.75rem">(passé)</span>' : ''}</div>

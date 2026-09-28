@@ -1,6 +1,6 @@
 'use strict';
 /*
- * Home page "ActivitÃ© rÃ©cente" feed: mixes new members, published articles and
+ * Home page "Activité récente" feed: mixes new members, published articles and
  * achievements granted, and renders the 5 most recent into #activity-feed.
  * Loaded by index.html only; needs the Supabase CDN script and i18n.js.
  */

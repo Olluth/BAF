@@ -2811,3 +2811,253 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     width: calc(100% - 1.5rem);
   }
 }
+
+/* Grid children default to min-width:auto, so a long nowrap line (activity feed)
+   would stretch the whole page sideways on phones */
+.events-feed-layout > * {
+  min-width: 0;
+}
+
+/* ---- Mobile refinements (phones, portrait) ----
+   Kept last so it overrides the earlier responsive blocks. */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Header: slimmer bar, logo left, menu + language right */
+  .header-inner {
+    height: 4rem;
+    gap: 0.5rem;
+  }
+
+  .brand img {
+    height: 2.9rem;
+  }
+
+  .nav-toggle {
+    width: 44px;
+    height: 44px;
+    align-items: center;
+  }
+
+  .site-header .lang-toggle-btn {
+    padding: 0.35rem 0.7rem;
+  }
+
+  /* Dropdown menu: opaque panel, full-width links, big tap targets */
+  .site-header .site-nav {
+    background: #0f0009;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0.5rem 1rem 1rem;
+    gap: 0;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  .site-header .site-nav a:not(.button) {
+    padding: 0.9rem 0.25rem;
+    font-size: 1.05rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(245, 208, 216, 0.08);
+  }
+
+  .site-header .site-nav a.button,
+  .site-header .site-nav button.button,
+  #nav-signin-link,
+  #nav-signout-btn {
+    margin: 0.75rem 0 0;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    justify-content: center;
+  }
+
+  /* Page titles: less shouting on narrow screens */
+  h1,
+  .event-banner h1,
+  .event-banner .section-header .eyebrow {
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  h2 {
+    font-size: clamp(1.4rem, 6.5vw, 1.8rem);
+    line-height: 1.2;
+  }
+
+  /* Activity feed: let the text wrap instead of being cut off */
+  .activity-feed-box {
+    padding: 1rem 0.75rem;
+  }
+
+  .feed-item {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.6rem;
+    padding: 0.55rem 0.7rem;
+  }
+
+  .feed-text {
+    white-space: normal;
+    flex-basis: 100%;
+    order: 3;
+  }
+
+  /* Admin: two-row top bar — logo + actions, then a swipeable tab strip */
+  .site-sidebar {
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem 0;
+    gap: 0.4rem 0.5rem;
+    overflow: visible;
+    border-right: none;
+    border-bottom: 1px solid rgba(245, 208, 216, 0.12);
+  }
+
+  .site-sidebar .brand {
+    padding: 0;
+  }
+
+  .site-sidebar .brand img {
+    height: 2.4rem;
+    max-width: 30vw;
+  }
+
+  .site-sidebar .admin-badge {
+    margin: 0 !important;
+    align-self: center !important;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+  }
+
+  .sidebar-bottom {
+    margin-left: auto;
+    gap: 0.35rem;
+  }
+
+  .sidebar-bottom .button {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .site-sidebar .site-nav {
+    order: 10;
+    flex: 0 0 100%;
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem 0.5rem;
+    width: calc(100% + 1.5rem);
+    gap: 0.3rem;
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent);
+    mask-image: linear-gradient(to right, #000 85%, transparent);
+  }
+
+  .site-sidebar .site-nav .admin-tab {
+    display: inline-flex;
+    width: auto;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(245, 208, 216, 0.14);
+  }
+
+  .site-sidebar .site-nav .admin-tab.active {
+    background: #f5d0d8;
+    color: #0f0009;
+    border-color: #f5d0d8;
+  }
+
+  .admin-main {
+    padding-top: 1.25rem;
+  }
+
+  /* Admin lists: name on top, compact action buttons below */
+  .admin-list-item {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.75rem 0.9rem;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .admin-list-item-info {
+    flex: 1 1 10rem;
+  }
+
+  .admin-list-item-actions {
+    width: auto;
+    margin-left: auto;
+  }
+
+  .admin-list-item-info,
+  .admin-list-item-title {
+    max-width: 100%;
+  }
+
+  .admin-list-item-actions .button,
+  .admin-list-item-actions button {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .admin-list-item-edit-fields {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  /* Agenda rows: event info on its own line, tier select + delete below */
+  .agenda-item-main {
+    flex-basis: 100% !important;
+  }
+
+  .agenda-tier-select {
+    flex: 1 !important;
+  }
+
+  .admin-list-item > .button {
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  /* Analytics API key field: match the other admin inputs */
+  #analytics-key-input {
+    padding: 0.75rem 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(245, 208, 216, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #f5d0d8;
+  }
+
+  /* Forms: full-width inputs and primary actions */
+  .admin-proxy-row > input,
+  .admin-proxy-row > .button,
+  .admin-form input,
+  .admin-form select,
+  .admin-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-form-actions {
+    flex-wrap: wrap;
+  }
+
+  /* 16px inputs stop iOS Safari from zooming in on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Tiny phones: squeeze the admin top-bar actions a bit more */
+@media (max-width: 400px) {
+  .sidebar-bottom .button {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  .site-sidebar .brand img {
+    max-width: 24vw;
+  }
+}
