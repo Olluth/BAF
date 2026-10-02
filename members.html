@@ -52,7 +52,7 @@
         <div id="auth-container" class="admin-login-page">
           <div class="admin-login-card">
 
-            <div class="admin-tabs" style="margin-bottom:1.5rem">
+            <div class="admin-tabs" id="auth-tabs" style="margin-bottom:1.5rem">
               <button class="admin-tab active" data-tab="signin">Se connecter</button>
               <button class="admin-tab" data-tab="signup">Créer un compte</button>
             </div>
@@ -63,10 +63,14 @@
                 <label for="signin-pseudo">Pseudo</label>
                 <input type="text" id="signin-pseudo" required autocomplete="username" placeholder="votre pseudo" />
                 <label for="signin-password" style="margin-top:1rem">Mot de passe</label>
-                <input type="password" id="signin-password" required autocomplete="current-password" placeholder="••••••••" />
+                <div class="password-field">
+                  <input type="password" id="signin-password" required autocomplete="current-password" placeholder="••••••••" />
+                  <button type="button" class="password-toggle" data-target="signin-password" aria-label="Afficher le mot de passe">Afficher</button>
+                </div>
                 <div id="signin-status" class="admin-login-error hidden"></div>
                 <button type="submit" class="button button-primary" id="signin-btn" style="width:100%;margin-top:1.25rem">Se connecter</button>
               </form>
+              <button type="button" class="link-button" id="forgot-link">Mot de passe oublié ?</button>
             </div>
 
             <!-- Sign up -->
@@ -77,9 +81,38 @@
                 <label for="signup-email" style="margin-top:1rem">Email</label>
                 <input type="email" id="signup-email" required autocomplete="email" placeholder="votre@email.com" />
                 <label for="signup-password" style="margin-top:1rem">Mot de passe <small style="opacity:.5">(8 caractères min.)</small></label>
-                <input type="password" id="signup-password" required autocomplete="new-password" placeholder="••••••••" minlength="8" />
+                <div class="password-field">
+                  <input type="password" id="signup-password" required autocomplete="new-password" placeholder="••••••••" minlength="8" />
+                  <button type="button" class="password-toggle" data-target="signup-password" aria-label="Afficher le mot de passe">Afficher</button>
+                </div>
                 <div id="signup-status" class="admin-login-error hidden"></div>
                 <button type="submit" class="button button-primary" id="signup-btn" style="width:100%;margin-top:1.25rem">Créer mon compte</button>
+              </form>
+            </div>
+
+            <!-- Forgot password: sends a reset link by email -->
+            <div id="forgot-panel" class="hidden">
+              <form id="forgot-form" class="admin-login-form">
+                <p class="auth-hint">Entrez votre pseudo ou votre email : vous recevrez un lien pour choisir un nouveau mot de passe.</p>
+                <label for="forgot-identifier">Pseudo ou email</label>
+                <input type="text" id="forgot-identifier" required autocomplete="username" placeholder="votre pseudo ou email" />
+                <div id="forgot-status" class="admin-login-error hidden"></div>
+                <button type="submit" class="button button-primary" id="forgot-btn" style="width:100%;margin-top:1.25rem">Envoyer le lien</button>
+              </form>
+              <button type="button" class="link-button" id="forgot-back">← Retour à la connexion</button>
+            </div>
+
+            <!-- Reset password: shown after following the emailed link -->
+            <div id="reset-panel" class="hidden">
+              <form id="reset-form" class="admin-login-form">
+                <p class="auth-hint">Choisissez votre nouveau mot de passe.</p>
+                <label for="reset-password">Nouveau mot de passe <small style="opacity:.5">(8 caractères min.)</small></label>
+                <div class="password-field">
+                  <input type="password" id="reset-password" required autocomplete="new-password" placeholder="••••••••" minlength="8" />
+                  <button type="button" class="password-toggle" data-target="reset-password" aria-label="Afficher le mot de passe">Afficher</button>
+                </div>
+                <div id="reset-status" class="admin-login-error hidden"></div>
+                <button type="submit" class="button button-primary" id="reset-btn" style="width:100%;margin-top:1.25rem">Enregistrer</button>
               </form>
             </div>
 

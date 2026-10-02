@@ -10,6 +10,10 @@
 const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
 
+// Read before the Supabase client consumes the URL: a password reset link lands here
+// with type=recovery in the hash.
+let _recoveryMode = location.hash.includes('type=recovery');
+
 const { createClient } = window.supabase;
 const _sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -685,9 +689,25 @@ document.querySelectorAll('.admin-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    $('signin-panel').classList.toggle('hidden', tab !== 'signin');
-    $('signup-panel').classList.toggle('hidden', tab !== 'signup');
+    showAuthPanel(btn.dataset.tab);
+  });
+});
+
+// Shows one of the auth panels (signin, signup, forgot, reset) and hides the others.
+const showAuthPanel = (name) => {
+  ['signin', 'signup', 'forgot', 'reset'].forEach(p => $(`${p}-panel`).classList.toggle('hidden', p !== name));
+  $('auth-tabs').classList.toggle('hidden', name === 'reset');
+};
+
+/* ---- Password visibility ---- */
+
+document.querySelectorAll('.password-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = $(btn.dataset.target);
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    btn.textContent = show ? 'Masquer' : 'Afficher';
+    btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
   });
 });
 
@@ -768,6 +788,71 @@ $('signup-form').addEventListener('submit', async (e) => {
   btn.textContent = 'Créer mon compte';
 });
 
+/* ---- Forgot / reset password ---- */
+
+$('forgot-link').addEventListener('click', () => {
+  clearStatus('forgot-status');
+  $('forgot-identifier').value = $('signin-pseudo').value;
+  showAuthPanel('forgot');
+});
+
+$('forgot-back').addEventListener('click', () => showAuthPanel('signin'));
+
+// Accepts a pseudo or an email; Supabase emails a link back to members.html.
+// The same message is shown whether or not the account exists.
+$('forgot-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('forgot-btn');
+  btn.disabled = true;
+  btn.textContent = 'Envoi…';
+  clearStatus('forgot-status');
+
+  const identifier = $('forgot-identifier').value.trim();
+  let email = identifier;
+  if (!identifier.includes('@')) {
+    const { data: profile } = await _sb
+      .from('profiles')
+      .select('email')
+      .eq('pseudo', identifier.toLowerCase())
+      .single();
+    email = profile?.email || '';
+  }
+
+  const { error } = email
+    ? await _sb.auth.resetPasswordForEmail(email, { redirectTo: `${location.origin}/members.html` })
+    : { error: null };
+
+  if (error) {
+    setStatus('forgot-status', error.message, true);
+  } else {
+    setStatus('forgot-status', "Si ce compte existe, un email avec un lien de réinitialisation vient d'être envoyé.");
+  }
+  btn.disabled = false;
+  btn.textContent = 'Envoyer le lien';
+});
+
+// Saves the new password on the recovery session, then opens the dashboard.
+$('reset-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = $('reset-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+  clearStatus('reset-status');
+
+  const { data, error } = await _sb.auth.updateUser({ password: $('reset-password').value });
+
+  btn.disabled = false;
+  btn.textContent = 'Enregistrer';
+  if (error) {
+    setStatus('reset-status', error.message, true);
+    return;
+  }
+  _recoveryMode = false;
+  $('reset-form').reset();
+  showAuthPanel('signin');
+  showDashboard(data.user);
+});
+
 /* ---- Sign out ---- */
 
 $('signout-btn').addEventListener('click', async () => {
@@ -777,7 +862,15 @@ $('signout-btn').addEventListener('click', async () => {
 /* ---- Auth state ---- */
 
 // Fires on load (restored session) and on every sign-in / sign-out: switches views.
-_sb.auth.onAuthStateChange((_event, session) => {
+// A recovery session (from the reset link) shows the new-password form instead.
+_sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') _recoveryMode = true;
+  if (_recoveryMode && session?.user) {
+    $('auth-container').classList.remove('hidden');
+    $('member-dashboard').classList.add('hidden');
+    showAuthPanel('reset');
+    return;
+  }
   if (session?.user) {
     showDashboard(session.user);
   } else {
