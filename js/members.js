@@ -683,6 +683,21 @@ const showAuth = async () => {
   renderAchievementsSection(all, []);
 };
 
+/* ---- Pseudo lookup ---- */
+
+// Case-insensitive exact match: older accounts keep their original capitalisation
+// (e.g. "Olluth"). % and _ are escaped so ilike doesn't treat them as wildcards.
+const findProfileByPseudo = async (pseudo, columns) => {
+  const pattern = pseudo.trim().replace(/[\\%_]/g, c => `\\${c}`);
+  const { data, error } = await _sb
+    .from('profiles')
+    .select(columns)
+    .ilike('pseudo', pattern)
+    .limit(1)
+    .maybeSingle();
+  return { profile: data, error };
+};
+
 /* ---- Tab switching ---- */
 
 document.querySelectorAll('.admin-tab').forEach(btn => {
@@ -721,14 +736,10 @@ $('signin-form').addEventListener('submit', async (e) => {
   btn.textContent = 'Connexion…';
   clearStatus('signin-status');
 
-  const pseudo   = $('signin-pseudo').value.trim().toLowerCase();
+  const pseudo   = $('signin-pseudo').value;
   const password = $('signin-password').value;
 
-  const { data: profile, error: lookupError } = await _sb
-    .from('profiles')
-    .select('email')
-    .eq('pseudo', pseudo)
-    .single();
+  const { profile, error: lookupError } = await findProfileByPseudo(pseudo, 'email');
 
   if (lookupError || !profile) {
     setStatus('signin-status', 'Pseudo introuvable.', true);
@@ -761,7 +772,7 @@ $('signup-form').addEventListener('submit', async (e) => {
   const email    = $('signup-email').value.trim();
   const password = $('signup-password').value;
 
-  const { data: existing } = await _sb.from('profiles').select('id').eq('pseudo', pseudo).single();
+  const { profile: existing } = await findProfileByPseudo(pseudo, 'id');
   if (existing) {
     setStatus('signup-status', 'Ce pseudo est déjà pris.', true);
     btn.disabled = false;
@@ -810,11 +821,7 @@ $('forgot-form').addEventListener('submit', async (e) => {
   const identifier = $('forgot-identifier').value.trim();
   let email = identifier;
   if (!identifier.includes('@')) {
-    const { data: profile } = await _sb
-      .from('profiles')
-      .select('email')
-      .eq('pseudo', identifier.toLowerCase())
-      .single();
+    const { profile } = await findProfileByPseudo(identifier, 'email');
     email = profile?.email || '';
   }
 
