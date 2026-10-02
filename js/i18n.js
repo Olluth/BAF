@@ -70,8 +70,6 @@ const translations = {
     'contact.instagram.label': 'Instagram :',
     'contact.discord.label': 'Discord :',
     'contact.email.label': 'Email :',
-    'contact.venue.label': 'Lieu :',
-    'contact.venue.value': 'Central Game Club, Centre-ville',
 
     // Resources
     'resources.eyebrow': 'Liens utiles',
@@ -87,8 +85,6 @@ const translations = {
     'resources.events.desc': 'Tournois officiels, Armories et événements organisés par la communauté.',
 
     // Footer
-    'footer.index': '© 2026 BAF TCG Association. Construit pour la communauté.',
-    'footer.tournament': '© 2026 BAF TCG Association. Suivi en direct pour les membres.',
 
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Suivi',
@@ -261,8 +257,6 @@ const translations = {
     'contact.instagram.label': 'Instagram:',
     'contact.discord.label': 'Discord:',
     'contact.email.label': 'Email:',
-    'contact.venue.label': 'Venue:',
-    'contact.venue.value': 'Central Game Club, Downtown',
 
     // Resources
     'resources.eyebrow': 'Useful links',
@@ -278,8 +272,6 @@ const translations = {
     'resources.events.desc': 'Official tournaments, Armories, and community-run events.',
 
     // Footer
-    'footer.index': '© 2026 BAF TCG Association. Built for the community.',
-    'footer.tournament': '© 2026 BAF TCG Association. Live tracker for members.',
 
     // Tournament tracker — static HTML
     'tracker.eyebrow': 'Tracker',

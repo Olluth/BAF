@@ -1384,14 +1384,6 @@ textarea::placeholder {
   font-style: italic;
 }
 
-/* ---- Footer ---- */
-
-.site-footer {
-  padding: 2rem 0;
-  color: #c9a0aa;
-  font-size: 0.95rem;
-}
-
 .hidden {
   display: none !important;
 }
