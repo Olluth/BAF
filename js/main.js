@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadNewsFromStorage();
 });
 
-// Contact form: shows a confirmation message and clears the form.
-// Note: nothing is actually sent anywhere (no backend endpoint yet).
+// Contact form: opens the visitor's mail app with a message to the association
+// address prefilled (no backend endpoint), then clears the form.
+const CONTACT_EMAIL = 'bafleshandblood@gmail.com';
+
 const initContactForm = () => {
   const contactForm = document.getElementById('contact-form');
   const formNote = document.getElementById('form-note');
@@ -18,6 +20,14 @@ const initContactForm = () => {
 
   contactForm.addEventListener('submit', (event) => {
     event.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const message = document.getElementById('message').value.trim();
+    const subject = `Contact site BAF - ${name}`;
+    const body = `${message}
+
+${name} (${email})`;
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     formNote.textContent = t('contact.form.success');
     formNote.style.color = '#047857';
     contactForm.reset();
