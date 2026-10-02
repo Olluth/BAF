@@ -66,20 +66,12 @@ const translations = {
     // Contact
     'contact.eyebrow': 'Contact',
     'contact.title': 'Nous contacter',
-    'contact.desc': "Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, envoyez-nous un message ou contactez-nous sur les réseaux sociaux.",
+    'contact.desc': "Pour rejoindre BAF, organiser un événement ou poser vos questions sur l'adhésion, écrivez-nous par email ou contactez-nous sur Discord et Instagram.",
     'contact.instagram.label': 'Instagram :',
     'contact.discord.label': 'Discord :',
     'contact.email.label': 'Email :',
     'contact.venue.label': 'Lieu :',
     'contact.venue.value': 'Central Game Club, Centre-ville',
-    'contact.form.name.label': 'Nom',
-    'contact.form.name.placeholder': 'Votre nom',
-    'contact.form.email.label': 'Email',
-    'contact.form.email.placeholder': 'vous@exemple.com',
-    'contact.form.message.label': 'Message',
-    'contact.form.message.placeholder': 'Comment pouvons-nous vous aider ?',
-    'contact.form.submit': 'Envoyer',
-    'contact.form.success': "Votre messagerie s'ouvre avec le message prêt à envoyer à bafleshandblood@gmail.com.",
 
     // Resources
     'resources.eyebrow': 'Liens utiles',
@@ -265,20 +257,12 @@ const translations = {
     // Contact
     'contact.eyebrow': 'Contact',
     'contact.title': 'Get in Touch',
-    'contact.desc': 'If you want to join BAF, organize an event, or ask about membership, send us a message or connect on social channels.',
+    'contact.desc': 'If you want to join BAF, organize an event, or ask about membership, email us or reach us on Discord and Instagram.',
     'contact.instagram.label': 'Instagram:',
     'contact.discord.label': 'Discord:',
     'contact.email.label': 'Email:',
     'contact.venue.label': 'Venue:',
     'contact.venue.value': 'Central Game Club, Downtown',
-    'contact.form.name.label': 'Name',
-    'contact.form.name.placeholder': 'Your name',
-    'contact.form.email.label': 'Email',
-    'contact.form.email.placeholder': 'you@example.com',
-    'contact.form.message.label': 'Message',
-    'contact.form.message.placeholder': 'How can we help?',
-    'contact.form.submit': 'Send Message',
-    'contact.form.success': 'Your email app is opening with the message ready to send to bafleshandblood@gmail.com.',
 
     // Resources
     'resources.eyebrow': 'Useful links',

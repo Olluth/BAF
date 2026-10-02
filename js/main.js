@@ -1,38 +1,10 @@
 /*
- * Shared helpers for index.html, news.html and contact.html:
- * the contact form and the news list.
+ * Shared helpers for index.html, news.html and contact.html: the news list.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initContactForm();
   loadNewsFromStorage();
 });
-
-// Contact form: opens the visitor's mail app with a message to the association
-// address prefilled (no backend endpoint), then clears the form.
-const CONTACT_EMAIL = 'bafleshandblood@gmail.com';
-
-const initContactForm = () => {
-  const contactForm = document.getElementById('contact-form');
-  const formNote = document.getElementById('form-note');
-
-  if (!contactForm || !formNote) return;
-
-  contactForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const message = document.getElementById('message').value.trim();
-    const subject = `Contact site BAF - ${name}`;
-    const body = `${message}
-
-${name} (${email})`;
-    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    formNote.textContent = t('contact.form.success');
-    formNote.style.color = '#047857';
-    contactForm.reset();
-  });
-};
 
 // Replaces the static news list with articles saved from the admin page.
 // Reads the browser's localStorage, so it only shows them in the admin's own browser;
