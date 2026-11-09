@@ -27,7 +27,9 @@ const AGENDA_FILE    = path.join(DATA_DIR, 'agenda.json');
 const LIVE_JOB_FILE  = path.join(DATA_DIR, 'live-job.json');
 fs.mkdirSync(STANDINGS_DIR, { recursive: true });
 
-app.use(express.json({ limit: '2mb' }));
+// Standings of a big event reach ~2 MB by the last rounds; the bookmarklet sends them
+// gzipped (express.json inflates them, and the limit applies to the inflated size).
+app.use(express.json({ limit: '20mb' }));
 
 // Guards admin-only routes with the shared API key.
 const requireAuth = (req, res, next) => {

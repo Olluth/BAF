@@ -252,14 +252,22 @@
       });
 
       setStatus('Envoi vers bafbordeaux.fr…');
-      const res = await fetch('https://bafbordeaux.fr/api/standings', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
-        body:    JSON.stringify({ slug, lastUpdated: new Date().toISOString(), standings, liveMatches, liveRoundName, droppedPlayers }),
-      });
+      // Big events (1000+ players) pass 1 MB of JSON after ~5 rounds, the default nginx
+      // upload limit, so the body is gzipped (~10x smaller); the API inflates it.
+      const json = JSON.stringify({ slug, lastUpdated: new Date().toISOString(), standings, liveMatches, liveRoundName, droppedPlayers });
+      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` };
+      let body = json;
+      if (typeof CompressionStream === 'function') {
+        try {
+          body = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
+          headers['Content-Encoding'] = 'gzip';
+        } catch { body = json; }
+      }
+      const res = await fetch('https://bafbordeaux.fr/api/standings', { method: 'POST', headers, body });
       if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(`API ${res.status}${body?.error ? ` : ${body.error}` : ''}`);
+        const resBody = await res.json().catch(() => null);
+        if (res.status === 413) throw new Error('API 413 : données trop volumineuses pour le serveur');
+        throw new Error(`API ${res.status}${resBody?.error ? ` : ${resBody.error}` : ''}`);
       }
 
       const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
