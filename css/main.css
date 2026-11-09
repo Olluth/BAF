@@ -2203,6 +2203,11 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   opacity: 0.45;
 }
 
+/* Event finished: dropped players are shown normally (badge only) */
+.event-over .dropped-row {
+  opacity: 1;
+}
+
 .dropped-badge {
   display: inline-flex;
   align-items: center;

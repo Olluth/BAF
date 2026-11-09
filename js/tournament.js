@@ -10,6 +10,7 @@
 const STORAGE_KEY    = 'baf-tracked-players';
 const EVENTS_KEY     = 'baf-events';
 const STANDINGS_BASE = '/api/standings/';
+const EVENT_OVER_MS  = 18 * 60 * 60 * 1000; // no standings update for this long = event finished
 
 /* ---- Storage ---- */
 
@@ -334,7 +335,9 @@ const buildStandingsTable = (players, trackedSet, tagMap, liveMatches, liveRound
 
 // Renders the header, tag legend and table, then wires click/keyboard expand on each row.
 // Rank shown is the overall tournament rank, even when only tracked players are listed.
-const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false) => {
+// Once the event is over (eventOver), dropped players are no longer greyed out or sent
+// to the bottom: they keep their final rank, with just the "Drop" badge.
+const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, liveRoundName = '', droppedSet = new Set(), isDraft = false, eventOver = false) => {
   const container = document.getElementById('standings-container');
   if (!container) return;
   renderVisitorPlayerList(true);
@@ -360,7 +363,7 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
   const sorted = [...filtered].sort((a, b) => {
     const aD = droppedSet.has(a.name);
     const bD = droppedSet.has(b.name);
-    if (aD !== bD) return aD ? 1 : -1;
+    if (!eventOver && aD !== bD) return aD ? 1 : -1;
     if (b.wins !== a.wins) return b.wins - a.wins;
     return a.losses - b.losses;
   });
@@ -377,7 +380,7 @@ const renderStandings = (standings, slug, trackedPlayers, liveMatches = {}, live
     : `${sorted.length} ${t('tracker.col.player').toLowerCase()}s${liveBadge}`;
 
   container.innerHTML = `
-    <div class="standings-container">
+    <div class="standings-container${eventOver ? ' event-over' : ''}">
       <div class="standings-header">
         <span>${headerLabel}</span>
         <a href="${esc(coverageUrl)}" target="_blank" rel="noopener noreferrer" class="button" style="font-size:.85rem;padding:.45rem 1rem;">${t('tracker.openCoverage')}</a>
@@ -436,9 +439,12 @@ const loadEvent = async (slug) => {
     const droppedSet   = new Set(data.droppedPlayers || []);
     const newStandings = data.standings || [];
     const isDraft      = /draft|booster/i.test(data.liveRoundName || '');
-    renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet, isDraft);
+    // No "event finished" flag exists: the tracker just stops pushing. 18 h without an
+    // update means it's over (longer than the overnight gap of a two-day event).
+    const eventOver    = Date.now() - new Date(data.lastUpdated).getTime() > EVENT_OVER_MS;
+    renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet, isDraft, eventOver);
 
-    if (data.liveRoundName) {
+    if (data.liveRoundName && !eventOver) {
       const ageMin = Math.round((Date.now() - new Date(data.lastUpdated).getTime()) / 60000);
       const liveEl = document.getElementById('tracker-live-status');
       if (liveEl) liveEl.textContent = `● ${data.liveRoundName} — ${t('tracker.updated', { min: ageMin })}`;
