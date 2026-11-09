@@ -149,7 +149,7 @@ app.get('/api/stats', requireAuth, (req, res) => {
 const openCors = cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Encoding'], // gzipped uploads
   maxAge: 86400,
 });
 

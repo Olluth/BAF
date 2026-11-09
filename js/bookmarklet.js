@@ -263,7 +263,16 @@
           headers['Content-Encoding'] = 'gzip';
         } catch { body = json; }
       }
-      const res = await fetch('https://bafbordeaux.fr/api/standings', { method: 'POST', headers, body });
+      const post = (h, b) => fetch('https://bafbordeaux.fr/api/standings', { method: 'POST', headers: h, body: b });
+      let res;
+      try {
+        res = await post(headers, body);
+      } catch (e) {
+        // Network/CORS error (e.g. an API that doesn't allow Content-Encoding yet): send it plain.
+        if (!headers['Content-Encoding']) throw e;
+        delete headers['Content-Encoding'];
+        res = await post(headers, json);
+      }
       if (!res.ok) {
         const resBody = await res.json().catch(() => null);
         if (res.status === 413) throw new Error('API 413 : données trop volumineuses pour le serveur');
