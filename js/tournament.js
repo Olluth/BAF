@@ -294,7 +294,7 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
       </td>
       ${isDraft ? '' : `<td class="hero-col">${esc(p.hero)}</td>`}
       ${isDraft ? '' : matchupCell}
-      <td class="record-cell${recordClass}">${record}</td>
+      <td class="record-cell${recordClass}">${record}${dropped ? `<span class="record-dropped">${t('tracker.dropped')}</span>` : ''}</td>
       ${liveCell}
     </tr>
     <tr class="history-panel-row hidden" id="${hid}">

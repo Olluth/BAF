@@ -2203,6 +2203,17 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   opacity: 0.45;
 }
 
+/* Small "dropped" note under the W–L record */
+.record-dropped {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: lowercase;
+  letter-spacing: 0.04em;
+  color: rgba(245, 208, 216, 0.55);
+}
+
 /* Event finished: dropped players are shown normally (badge only) */
 .event-over .dropped-row {
   opacity: 1;
