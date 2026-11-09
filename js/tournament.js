@@ -439,9 +439,14 @@ const loadEvent = async (slug) => {
     const droppedSet   = new Set(data.droppedPlayers || []);
     const newStandings = data.standings || [];
     const isDraft      = /draft|booster/i.test(data.liveRoundName || '');
-    // No "event finished" flag exists: the tracker just stops pushing. 18 h without an
-    // update means it's over (longer than the overnight gap of a two-day event).
-    const eventOver    = Date.now() - new Date(data.lastUpdated).getTime() > EVENT_OVER_MS;
+    // No "event finished" flag exists, so the event counts as over when either:
+    // - the last round is a single decided match (the final), or
+    // - the standings haven't changed for 18 h (longer than a two-day event's overnight
+    //   gap). lastChangedAt ignores the tracker re-sending identical data.
+    const lastRound    = newStandings.flatMap(p => p.history || []).filter(h => h.round === data.liveRoundName);
+    const finalPlayed  = lastRound.length === 2 && lastRound.every(h => h.result === 'win' || h.result === 'loss');
+    const changedAt    = new Date(data.lastChangedAt || data.lastUpdated).getTime();
+    const eventOver    = finalPlayed || Date.now() - changedAt > EVENT_OVER_MS;
     renderStandings(newStandings, slug, loadTrackedPlayers(), data.liveMatches || {}, data.liveRoundName || '', droppedSet, isDraft, eventOver);
 
     if (data.liveRoundName && !eventOver) {

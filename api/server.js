@@ -174,11 +174,20 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
     return res.status(409).json({ error: `${newRounds} rounds reçus, ${oldRounds} déjà enregistrés` });
   }
 
+  // lastChangedAt only moves when the standings really change: a tracker left running
+  // after the event re-sends the same data, which mustn't make the event look live.
+  const now = new Date().toISOString();
+  const unchanged = oldData
+    && JSON.stringify(oldData.standings) === JSON.stringify(standings)
+    && (oldData.liveRoundName || '') === (liveRoundName || '');
+  const lastChangedAt = unchanged ? (oldData.lastChangedAt || oldData.lastUpdated || now) : now;
+
   // Write to a temp file then rename, so visitors never read a half-written file.
   const tmp = `${file}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify({
     slug,
-    lastUpdated:    lastUpdated || new Date().toISOString(),
+    lastUpdated:    lastUpdated || now,
+    lastChangedAt,
     standings,
     liveMatches:    liveMatches    || {},
     liveRoundName:  liveRoundName  || '',
