@@ -285,11 +285,13 @@ const savePlayers = (players) => {
   localStorage.setItem(PLAYERS_KEY, JSON.stringify(deduped));
 };
 
+// Returns false when the name is empty or already listed.
 const addPlayer = (name, tag) => {
   const players = loadPlayers();
   const cleaned = name.trim();
-  if (!cleaned || players.some((p) => p.name.toLowerCase() === cleaned.toLowerCase())) return;
+  if (!cleaned || players.some((p) => p.name.toLowerCase() === cleaned.toLowerCase())) return false;
   savePlayers([...players, { name: cleaned, tag: tag || '' }]);
+  return true;
 };
 
 const removePlayer = (name) => {
@@ -343,16 +345,39 @@ const syncArticlesToServer = async () => {
   } catch {}
 };
 
+const setPlayersStatus = (msg, isError = false) => {
+  const el = $('players-status');
+  if (!el) return;
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '') + (msg ? '' : ' hidden');
+  el.textContent = msg || '';
+};
+
+// Unlike the other syncs this one reports: a player saved only on this device would
+// silently vanish at the next reload from the server (e.g. a phone with no API key).
 const syncPlayersToServer = async () => {
   const key = getAnalyticsKey();
-  if (!key) return;
+  if (!key) {
+    setPlayersStatus("Non enregistré sur le serveur : clé API manquante sur cet appareil (onglet Analytics). Le joueur disparaîtra au prochain rechargement.", true);
+    return false;
+  }
   try {
-    await fetch('/api/players', {
+    const r = await fetch('/api/players', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
       body: JSON.stringify({ players: loadPlayers() }),
     });
-  } catch {}
+    if (!r.ok) {
+      setPlayersStatus(r.status === 401
+        ? "Non enregistré : clé API refusée par le serveur (vérifie-la dans l'onglet Analytics)."
+        : `Non enregistré : erreur serveur ${r.status}.`, true);
+      return false;
+    }
+    setPlayersStatus('✅ Enregistré');
+    return true;
+  } catch {
+    setPlayersStatus('Non enregistré : pas de connexion au serveur.', true);
+    return false;
+  }
 };
 
 let _playersReady = null; // Promise that resolves once server data is in localStorage
@@ -1244,7 +1269,11 @@ const wireEvents = () => {
     if (_playersReady) await _playersReady;
     const input = $('player-input');
     const tagSel = $('player-tag-select');
-    addPlayer(input.value, tagSel ? tagSel.value : '');
+    if (!input.value.trim()) return;
+    if (!addPlayer(input.value, tagSel ? tagSel.value : '')) {
+      setPlayersStatus(`${input.value.trim()} est déjà dans la liste.`, true);
+      return;
+    }
     input.value = '';
     renderPlayerList();
     await syncPlayersToServer();
