@@ -288,7 +288,8 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const authorized = apiKey(env) && request.headers.get('Authorization') === `Bearer ${apiKey(env)}`;
-    if (url.pathname === '/') return new Response('BAF coverage relay. Status: ' + state.status);
+    // Live status is in the admin "Suivi live" tab (this isolate may not be the cron's).
+    if (url.pathname === '/') return new Response('BAF coverage relay.');
     if (!authorized) return new Response('unauthorized', { status: 401 });
 
     try {
