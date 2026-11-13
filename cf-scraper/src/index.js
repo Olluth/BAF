@@ -217,10 +217,13 @@ const scrape = async (env, slug) => {
 
 /* ---- bafbordeaux.fr ---- */
 
+// The secret is pasted in a terminal: ignore stray spaces / line breaks around it.
+const apiKey = (env) => (env.API_KEY || '').trim();
+
 const api = async (env, method, route, body, extraHeaders = {}) => {
   const res = await fetch(env.SITE + route, {
     method,
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.API_KEY}`, ...extraHeaders },
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey(env)}`, ...extraHeaders },
     body,
   });
   if (!res.ok) {
@@ -249,7 +252,7 @@ const time = () => new Date().toLocaleTimeString('fr-FR', { timeZone: 'Europe/Pa
 
 // One cron cycle: heartbeat (gets the job), scrape + push if running, report the outcome.
 const cycle = async (env) => {
-  if (!env.API_KEY) throw new Error('API_KEY secret missing (npx wrangler secret put API_KEY)');
+  if (!apiKey(env)) throw new Error('API_KEY secret missing (npx wrangler secret put API_KEY)');
   const job = await report(env, '');
   if (!job.running || !job.slug) {
     state.status = 'En attente';
@@ -284,7 +287,7 @@ export default {
 
   async fetch(request, env) {
     const url = new URL(request.url);
-    const authorized = env.API_KEY && request.headers.get('Authorization') === `Bearer ${env.API_KEY}`;
+    const authorized = apiKey(env) && request.headers.get('Authorization') === `Bearer ${apiKey(env)}`;
     if (url.pathname === '/') return new Response('BAF coverage relay. Status: ' + state.status);
     if (!authorized) return new Response('unauthorized', { status: 401 });
 
