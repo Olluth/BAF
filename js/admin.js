@@ -1069,9 +1069,11 @@ const loadAgendaFromServer = async () => {
   } catch {}
 };
 
-// --- Suivi live (home PC relay) ---
-// The admin sets the job (tournament + running) on the server; scripts/live-agent.js
-// on the home PC polls it every 10 s and reports back its status, shown here.
+// --- Suivi live (relay) ---
+// The admin sets the job (tournament + running) on the server; the relay polls it and
+// reports back its status, shown here. The relay is the Cloudflare Worker (cf-scraper/,
+// cron every minute, status starts with ☁️) or, as a fallback, scripts/live-agent.js on
+// the home PC (every 10 s).
 
 let _livePollTimer = null; // refreshes the status every 5 s while the tab is open
 
@@ -1093,10 +1095,11 @@ const setLiveStatus = (html, isError = false) => {
 };
 
 const renderLiveStatus = ({ job, agent }) => {
-  const online = agent.lastSeenAt && Date.now() - new Date(agent.lastSeenAt).getTime() < 45000;
+  // The Worker checks in once a minute (cron), so allow a missed beat before going red.
+  const online = agent.lastSeenAt && Date.now() - new Date(agent.lastSeenAt).getTime() < 150000;
   const relay = online
-    ? `<strong style="color:#8fbfa0">● PC relais connecté</strong>`
-    : `<strong style="color:#d47f7f">● PC relais hors ligne</strong>${agent.lastSeenAt ? ` <span style="opacity:.6">(vu il y a ${timeAgo(agent.lastSeenAt)})</span>` : ''}`;
+    ? `<strong style="color:#8fbfa0">● Relais connecté</strong>`
+    : `<strong style="color:#d47f7f">● Relais hors ligne</strong>${agent.lastSeenAt ? ` <span style="opacity:.6">(vu il y a ${timeAgo(agent.lastSeenAt)})</span>` : ''}`;
   const jobLine = job.running
     ? `<br>Suivi demandé : <strong>${escapeHtml(job.slug)}</strong>`
     : `<br><span style="opacity:.7">Aucun suivi en cours</span>`;
@@ -1105,7 +1108,7 @@ const renderLiveStatus = ({ job, agent }) => {
       (agent.lastSuccessAt ? `<br><span style="opacity:.7">Dernière mise à jour du site il y a ${timeAgo(agent.lastSuccessAt)}</span>` : '')
     : '';
   const warn = job.running && !online
-    ? `<br><span style="color:#d47f7f">Lance scripts/live-agent.bat sur ton PC (ou utilise le bookmarklet téléphone ci-dessous).</span>`
+    ? `<br><span style="color:#d47f7f">Le relais Cloudflare ne répond pas : lance scripts/live-agent.bat sur ton PC ou le bookmarklet téléphone (plans B et C ci-dessous).</span>`
     : '';
   setLiveStatus(relay + jobLine + details + warn, (job.running && !online) || agent.consecutiveErrors > 0);
   if (job.running && document.activeElement !== $('live-slug')) $('live-slug').value = job.slug;

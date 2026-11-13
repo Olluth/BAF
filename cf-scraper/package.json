@@ -1,0 +1,12 @@
+{
+  "name": "baf-coverage-worker",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.161.0"
+  }
+}

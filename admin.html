@@ -162,7 +162,7 @@
                 <h2>Suivi live</h2>
                 <button type="button" class="button pwa-install-btn hidden">📲 Installer l'app admin</button>
               </div>
-              <p class="admin-panel-desc">Choisis le tournoi et appuie sur Démarrer : ton PC (relais) met les classements à jour toutes les 90 s, même téléphone verrouillé.</p>
+              <p class="admin-panel-desc">Choisis le tournoi et appuie sur Démarrer : le relais Cloudflare met les classements à jour chaque minute, sans PC ni téléphone allumé.</p>
 
               <div id="live-status" class="tracker-status" style="margin:0 0 1rem">Chargement…</div>
 
@@ -177,7 +177,7 @@
               </form>
 
               <details class="admin-form-container admin-help" style="margin-top:1.5rem">
-                <summary>Installer le relais sur ton PC (une seule fois)</summary>
+                <summary>Plan B : relais sur ton PC (si le relais Cloudflare est bloqué)</summary>
                 <ol>
                   <li>Installe <a href="https://nodejs.org" target="_blank" rel="noopener">Node.js</a> (version LTS) si ce n'est pas déjà fait.</li>
                   <li>Dans le dossier du site, double-clique sur <code>scripts/live-agent.bat</code>.</li>
@@ -187,7 +187,7 @@
               </details>
 
               <details class="admin-form-container admin-help">
-                <summary>Plan B : bookmarklet sur le téléphone (sans PC)</summary>
+                <summary>Plan C : bookmarklet sur le téléphone</summary>
                 <p class="admin-panel-desc">Le suivi tourne dans le navigateur du téléphone. L'écran reste allumé automatiquement, mais la page doit rester ouverte au premier plan.</p>
                 <div id="phone-bookmarklet-wrap"></div>
                 <p><strong>Android (Chrome)</strong></p>

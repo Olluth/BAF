@@ -1,3 +1,21 @@
-name = "baf-coverage-probe"
+name = "baf-coverage"
 main = "src/index.js"
 compatibility_date = "2026-10-01"
+
+# Every minute: report to bafbordeaux.fr, and scrape fabtcg.com if a job is running.
+[triggers]
+crons = ["* * * * *"]
+
+# Results of finished rounds (they never change), so each run only re-reads the last two.
+[[kv_namespaces]]
+binding = "ROUNDS"
+id = "ad448a6e71074864a77ef8498fe87826"
+
+[vars]
+SITE = "https://bafbordeaux.fr"
+
+[observability]
+enabled = true
+
+# Secret (not in this file): API_KEY = the admin API key.
+#   npx wrangler secret put API_KEY
