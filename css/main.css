@@ -2559,6 +2559,27 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   .history-table th.hist-result {
     text-align: right;
   }
+
+  /* "Ronde en cours" ("Round 15 - Classic Constructed") pushed the table past the
+     screen on 401-600px phones (most Androids are 412px, big iPhones 430px). The
+     round is in each player's history anyway. */
+  .standings-table .live-round-cell,
+  .standings-table th.live-round-col {
+    display: none;
+  }
+}
+
+/* Very small phones: the "dropped" note under the record is enough, drop the badge. */
+@media (max-width: 359px) {
+  .standings-table .dropped-badge {
+    display: none;
+  }
+}
+
+/* Safety net: a long name or badge can never make the whole page scroll sideways. */
+.standings-container {
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* Result badges */
