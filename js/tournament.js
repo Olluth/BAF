@@ -269,13 +269,22 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
   const roundResult = liveRoundName && lastH && lastH.round === liveRoundName ? lastH.result : null;
   const recordClass = roundResult === 'win' ? ' score-highlight-win' : (roundResult === 'loss' || roundResult === 'draw') ? ' score-highlight-loss' : '';
 
-  const histRows = p.history.map(h => `
+  // Phones show "R1" instead of "Round 1 - Classic Constructed" and put the opponent's
+  // hero under their name (the hero column is hidden), see .hist-* in main.css.
+  const shortRound = (r) => {
+    const n = (r || '').match(/round\s*(\d+)/i)?.[1];
+    return n ? `R${n}${roundIsDraft(r) ? ' · Draft' : ''}` : (r || '');
+  };
+  const histRows = p.history.map(h => {
+    const oppHero = roundIsDraft(h.round) ? '' : (h.opponentHero || '');
+    return `
     <tr>
-      <td>${esc(h.round)}</td>
-      <td>${esc(h.opponent)}</td>
-      <td>${roundIsDraft(h.round) ? '—' : esc(h.opponentHero)}</td>
-      <td>${resultBadge(h.result)}</td>
-    </tr>`).join('');
+      <td class="hist-round"><span class="hist-round-long">${esc(h.round)}</span><span class="hist-round-short" title="${esc(h.round)}">${esc(shortRound(h.round))}</span></td>
+      <td class="hist-opp">${esc(h.opponent)}${oppHero ? `<span class="hist-opp-hero">${esc(oppHero)}</span>` : ''}</td>
+      <td class="hist-hero">${oppHero ? esc(oppHero) : '—'}</td>
+      <td class="hist-result">${resultBadge(h.result)}</td>
+    </tr>`;
+  }).join('');
 
   const liveNote = liveMatch
     ? `<div class="live-pairing-note">● ${esc(liveRoundName)} — ${t('tracker.vs')} ${esc(liveMatch.opponent)} (${esc(liveMatch.opponentHero)})</div>`
@@ -283,7 +292,7 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
 
   return `
     <tr class="standings-row${tracked ? ' highlighted' : ''}${liveMatch ? ' live-row' : ''}${dropped ? ' dropped-row' : ''}${tagClass ? ' ' + tagClass : ''}" data-hid="${hid}" tabindex="0" role="button" aria-expanded="false">
-      <td class="rank-cell">${rank}${total ? '/' + total : ''}</td>
+      <td class="rank-cell">${rank}${total ? `<span class="rank-total">/${total}</span>` : ''}</td>
       <td class="player-cell">
         <span class="player-cell-inner">
           ${tracked ? `<span class="tracked-indicator${tagClass ? ' ' + tagClass : ''}" aria-hidden="true"></span>` : ''}
@@ -303,10 +312,10 @@ const buildStandingRow = (p, i, trackedSet, tagMap, liveMatches, liveRoundName, 
           ${liveNote}
           <table class="history-table">
             <thead><tr>
-              <th>${t('tracker.card.round')}</th>
-              <th>${t('tracker.col.opponent')}</th>
-              <th>${t('tracker.col.hero')}</th>
-              <th>${t('tracker.col.result')}</th>
+              <th class="hist-round">${t('tracker.card.round')}</th>
+              <th class="hist-opp">${t('tracker.col.opponent')}</th>
+              <th class="hist-hero">${t('tracker.col.hero')}</th>
+              <th class="hist-result">${t('tracker.col.result')}</th>
             </tr></thead>
             <tbody>${histRows}</tbody>
           </table>
