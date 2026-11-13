@@ -16,8 +16,6 @@
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
 const ROUND_TTL = 60 * 60 * 24 * 30; // finished rounds are kept 30 days in KV
 
-// Best-effort memory between runs (an isolate can be recycled at any time).
-const state = { status: 'Démarrage…', lastSuccessAt: null, consecutiveErrors: 0 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const clean = (s) => decodeEntities(s).replace(/\s+/g, ' ').trim();
@@ -241,36 +239,31 @@ const pushStandings = async (env, data) => {
   return api(env, 'POST', '/api/standings', gz, { 'Content-Encoding': 'gzip' });
 };
 
-const report = (env, slug) => api(env, 'POST', '/api/live/agent', JSON.stringify({
-  slug,
-  status: state.status,
-  lastSuccessAt: state.lastSuccessAt,
-  consecutiveErrors: state.consecutiveErrors,
-}));
+const report = (env, slug, status, lastSuccessAt, consecutiveErrors) =>
+  api(env, 'POST', '/api/live/agent', JSON.stringify({ slug, status, lastSuccessAt, consecutiveErrors }));
 
 const time = () => new Date().toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' });
 
-// One cron cycle: heartbeat (gets the job), scrape + push if running, report the outcome.
+// One cron cycle: read the job, scrape + push if running, then report the outcome once.
+// Each run may be a fresh isolate, so the previous report (kept by the API) is the memory:
+// the status shown in the admin stays the last real outcome until this run finishes.
 const cycle = async (env) => {
   if (!apiKey(env)) throw new Error('API_KEY secret missing (npx wrangler secret put API_KEY)');
-  const job = await report(env, '');
+  const { job, agent: prev } = await api(env, 'GET', '/api/live');
   if (!job.running || !job.slug) {
-    state.status = 'En attente';
-    state.consecutiveErrors = 0;
+    await report(env, '', '☁️ En attente', null, 0);
     return { running: false };
   }
+  const sameJob = prev?.slug === job.slug;
   try {
     const { data, info } = await scrape(env, job.slug);
     await pushStandings(env, data);
-    state.lastSuccessAt = new Date().toISOString();
-    state.consecutiveErrors = 0;
-    state.status = `☁️ ${data.standings.length} joueurs — ${data.liveRoundName || 'Terminé'} (màj ${time()})`;
-    await report(env, job.slug);
+    await report(env, job.slug, `☁️ ${data.standings.length} joueurs — ${data.liveRoundName || 'Terminé'} (màj ${time()})`, new Date().toISOString(), 0);
     return { running: true, slug: job.slug, players: data.standings.length, ...info };
   } catch (e) {
-    state.consecutiveErrors++;
-    state.status = `☁️ ❌ ${e.message}`;
-    await report(env, job.slug).catch(() => {});
+    await report(env, job.slug, `☁️ ❌ ${e.message}`,
+      sameJob ? prev.lastSuccessAt : null,
+      (sameJob ? prev.consecutiveErrors || 0 : 0) + 1).catch(() => {});
     throw e;
   }
 };
