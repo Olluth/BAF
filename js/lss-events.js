@@ -19,7 +19,9 @@
   const $ = (id) => document.getElementById(id);
   const featuredEl = $('lss-featured');
   const listEl = $('lss-list');
-  if (!featuredEl || !listEl) return;
+  // The loader is shared (window.bafLss, used by the home page's featured event in
+  // agenda.js); the list and filters only exist on events.html.
+  const onEventsPage = !!(featuredEl && listEl);
 
   // Kind -> badge class (reuses the agenda badges) and the filter it belongs to
   const KIND_BADGE = {
@@ -125,7 +127,7 @@
   };
 
   const render = () => {
-    if (!events) return;
+    if (!events || !onEventsPage) return;
     renderFeatured();
     renderList();
     const src = $('lss-source');
@@ -263,11 +265,12 @@
     render();
   };
 
-  // Cached list if fresh, else fabtcg.com (falling back to an older cached list).
-  (async () => {
+  // { fetchedAt, events } — the cached list if fresh, else fabtcg.com (falling back to an
+  // older cached list), or null. Fetched once per page.
+  let loading = null;
+  const load = () => loading || (loading = (async () => {
     const cached = readCache();
-    if (cached && Date.now() - Date.parse(cached.fetchedAt) < CACHE_MS) { show(cached); return; }
-    if (cached) show(cached); // show something right away while refreshing
+    if (cached && Date.now() - Date.parse(cached.fetchedAt) < CACHE_MS) return cached;
     try {
       const r = await fetch(SOURCE);
       if (!r.ok) throw new Error(r.status);
@@ -277,12 +280,22 @@
         .sort((a, b) => a.start.localeCompare(b.start));
       const fresh = { fetchedAt: new Date().toISOString(), events: list };
       try { localStorage.setItem(CACHE_KEY, JSON.stringify(fresh)); } catch {}
-      show(fresh);
+      return fresh;
     } catch {
-      if (!cached) {
-        featuredEl.innerHTML = '';
-        listEl.innerHTML = `<p class="lss-empty">${esc(t('lss.unavailable'))}</p>`;
-      }
+      return cached;
     }
+  })());
+
+  // For agenda.js (home page featured event)
+  window.bafLss = { load, fmtRange, place, kindLabel };
+
+  if (!onEventsPage) return;
+  (async () => {
+    const cached = readCache();
+    if (cached) show(cached); // something right away, even if a refresh follows
+    const data = await load();
+    if (data) { if (data !== cached) show(data); return; }
+    featuredEl.innerHTML = '';
+    listEl.innerHTML = `<p class="lss-empty">${esc(t('lss.unavailable'))}</p>`;
   })();
 })();

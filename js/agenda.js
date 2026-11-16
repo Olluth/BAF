@@ -9,7 +9,12 @@
   const CACHE_KEY = 'baf-agenda-cache';
 
   // Tiers eligible for the featured "major event" card vs the "local events" strip.
-  const BIG_TIERS = new Set(['Calling', 'World Championship', 'Battleground', 'WCQ']);
+  // Pro Quests and Road to Nationals never go in the featured card.
+  const BIG_TIERS = new Set(['Calling', 'Pro Tour', 'World Championship', 'National Championship', 'Battleground', 'WCQ']);
+  // Official events (fabtcg.com, js/lss-events.js) that can be featured: in Europe, these kinds,
+  // and National Championships only for France.
+  const BIG_OFFICIAL = new Set(['calling', 'protour', 'world', 'premiere']);
+  const isBigOfficial = e => e.europe && (BIG_OFFICIAL.has(e.kind) || (e.kind === 'nationals' && e.country === 'FR'));
   const MID_TIERS = new Set(['Skirmish', 'Pro Quest', 'Road to National']);
 
   const esc     = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -82,16 +87,25 @@
       </div>
     </div>`;
 
-  /* Featured big-event card on index.html */
+  /* Featured big-event card on index.html: the next major event, from the club agenda
+     (big tiers) or the official circuit in Europe (fabtcg.com). Never a PQ / RTN. */
   const renderNextEvent = async () => {
     const el = document.getElementById('next-event-card');
     if (!el) return;
-    const agenda = await fetchAgenda();
     const t = today();
-    const upcoming = agenda.filter(e => e.date >= t).sort((a, b) => a.date.localeCompare(b.date));
-    if (!upcoming.length) { el.innerHTML = '<p style="opacity:.4;font-style:italic">Aucun événement à venir.</p>'; return; }
-    const big = upcoming.filter(e => BIG_TIERS.has(e.tier));
-    const e = big.length ? big[0] : upcoming[0];
+    const [agenda, official] = await Promise.all([
+      fetchAgenda(),
+      window.bafLss ? window.bafLss.load().catch(() => null) : null,
+    ]);
+    const fromAgenda = agenda.filter(e => e.date >= t && BIG_TIERS.has(e.tier))
+      .map(e => ({ name: e.name, start: e.date, end: e.date, image: e.image, link: e.link, place: '' }));
+    const fromOfficial = (official?.events || []).filter(e => e.end >= t && isBigOfficial(e))
+      // Already in the club agenda (same dates): the club's entry wins
+      .filter(o => !fromAgenda.some(a => a.start >= o.start && a.start <= o.end))
+      .map(e => ({ name: e.title, start: e.start, end: e.end, image: e.image, link: e.link, place: window.bafLss.place(e) }));
+    const e = [...fromAgenda, ...fromOfficial].sort((a, b) => a.start.localeCompare(b.start))[0];
+    if (!e) { el.innerHTML = '<p style="opacity:.4;font-style:italic">Aucun grand événement annoncé.</p>'; return; }
+    const when = window.bafLss && e.end !== e.start ? window.bafLss.fmtRange(e.start, e.end) : fmtDate(e.start);
     el.innerHTML = `
       ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener noreferrer">` : '<div>'}
         ${e.image ? `<img src="${esc(e.image)}" alt="${esc(e.name)}" class="event-featured-img" />` : ''}
@@ -99,7 +113,7 @@
       <div class="event-featured-body">
         <span class="event-label">Prochain événement majeur</span>
         <h2>${esc(e.name)}</h2>
-        <p>${fmtDate(e.date)}</p>
+        <p>${esc(when)}${e.place ? ` · ${esc(e.place)}` : ''}</p>
       </div>`;
   };
 
