@@ -2,7 +2,8 @@
 /*
  * BAF API (Express), run on the VPS by systemd (see vps-setup/baf-api.service) and
  * reached through nginx at /api/*. Stores site data as JSON files in DATA_DIR,
- * page views in SQLite (db.js), and proxies member admin calls to Supabase.
+ * page views in SQLite (db.js), proxies member admin calls to Supabase, and serves
+ * the Pimp My Deck lookup (pimp.js).
  * Routes marked requireAuth need "Authorization: Bearer <API_KEY>" (the admin key).
  */
 const express = require('express');
@@ -404,5 +405,8 @@ app.delete('/api/events/:slug', requireAuth, (req, res) => {
   saveEventsData(loadEventsData().filter(e => e.slug !== slug));
   res.json({ ok: true });
 });
+
+/* ---- Pimp My Deck (public): card versions + Cardmarket prices for a decklist ---- */
+require('./pimp')(app, { dataDir: DATA_DIR });
 
 app.listen(PORT, '127.0.0.1', () => console.log(`BAF API running on :${PORT}`));

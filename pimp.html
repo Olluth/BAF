@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="page.title.pimp">Pimp My Deck | BAF TCG</title>
+  <meta name="description" content="Collez votre decklist Flesh and Blood : toutes les versions de chaque carte et leur prix moyen Cardmarket sur 7 jours." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="icon" href="images/baf_logo_mini.png" type="image/png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f0009" />
+  <link rel="apple-touch-icon" href="images/icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="La BAF" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+</head>
+<body>
+  <!-- Site header: same markup on every public page, update them all together -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand"><img src="images/baf_logo.png" alt="LA BAF" /></a>
+      <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="site-nav">
+        <a href="about.html" data-i18n="nav.about">L'Asso</a>
+        <a href="events.html" data-i18n="nav.events">Événements</a>
+        <a href="news.html" data-i18n="nav.news">Actualités</a>
+        <a href="resources.html" data-i18n="nav.resources">Ressources</a>
+        <a href="pimp.html" data-i18n="nav.pimp">Pimp My Deck</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="tournament.html" class="button" data-i18n="nav.tracker">Suivi de tournoi</a>
+        <a href="members.html" id="nav-signin-link" class="button">Se connecter</a>
+        <button type="button" id="nav-signout-btn" class="button hidden">Déconnexion</button>
+        <button type="button" id="pwa-install-btn" class="button hidden" data-i18n="nav.install">Installer l'app</button>
+      </nav>
+      <button type="button" class="button lang-toggle lang-toggle-btn">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="section" id="pimp">
+      <div class="container">
+        <div class="section-header">
+          <span class="eyebrow" data-i18n="pimp.eyebrow">Outil</span>
+          <h1 data-i18n="pimp.title">Pimp My Deck</h1>
+        </div>
+        <p data-i18n="pimp.desc">Collez votre decklist : on vous montre toutes les versions de chaque carte (foils, alt arts, extended arts…) et leur prix moyen Cardmarket sur 7 jours.</p>
+
+        <form id="pimp-form" class="pimp-form">
+          <label for="pimp-input" class="pimp-label" data-i18n="pimp.inputLabel">Decklist (texte brut)</label>
+          <textarea id="pimp-input" rows="12" spellcheck="false" autocomplete="off"
+            data-i18n-placeholder="pimp.placeholder"
+            placeholder="Hero: Dorinthea Ironsong&#10;Weapons: Dawnblade&#10;Equipment: Fyendal's Spring Tunic&#10;(3) Snatch (red)&#10;3x Sink Below (yellow)"></textarea>
+          <p class="pimp-hint" data-i18n="pimp.hint">Formats acceptés : export texte Fabrary, « 3x Carte », « (3) Carte (red) »… Couleur obligatoire si la carte existe en plusieurs couleurs.</p>
+          <div class="pimp-actions">
+            <label class="button pimp-file-btn">
+              <input type="file" id="pimp-file" accept=".txt,text/plain" hidden />
+              <span data-i18n="pimp.upload">Importer un fichier .txt</span>
+            </label>
+            <button type="button" class="button" id="pimp-example" data-i18n="pimp.example">Exemple</button>
+            <button type="submit" class="button button-primary" id="pimp-submit" data-i18n="pimp.submit">Pimper mon deck</button>
+          </div>
+        </form>
+
+        <div id="pimp-status" class="pimp-status hidden" role="status" aria-live="polite"></div>
+        <div id="pimp-output" class="hidden">
+          <div id="pimp-summary" class="pimp-summary"></div>
+          <div id="pimp-problems" class="pimp-problems hidden"></div>
+          <div class="pimp-toolbar">
+            <label for="pimp-sort" data-i18n="pimp.sort">Trier</label>
+            <select id="pimp-sort">
+              <option value="deck" data-i18n="pimp.sort.deck">Ordre de la liste</option>
+              <option value="bling" data-i18n="pimp.sort.bling">Version la plus chère</option>
+              <option value="cheap" data-i18n="pimp.sort.cheap">Version la moins chère</option>
+              <option value="versions" data-i18n="pimp.sort.versions">Nombre de versions</option>
+            </select>
+          </div>
+          <div id="pimp-results" class="pimp-results"></div>
+          <p class="pimp-sources" data-i18n="pimp.sources">Versions : base de cartes ouverte the-fab-cube (celle de Fabrary). Prix : guide des prix public Cardmarket, toutes langues et états confondus, mis à jour une fois par jour.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="pimp-lightbox" class="pimp-lightbox">
+    <form method="dialog"><button class="pimp-lightbox-close" aria-label="Fermer">×</button></form>
+    <img id="pimp-lightbox-img" alt="" />
+    <p id="pimp-lightbox-caption"></p>
+  </dialog>
+
+  <!-- i18n.js loads first: the other scripts use its t() helper -->
+  <script src="js/i18n.js"></script>
+  <script src="js/tracker.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/nav-auth.js"></script>
+  <script src="js/pwa.js"></script>
+  <script src="js/pimp.js"></script>
+</body>
+</html>

@@ -2619,14 +2619,37 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   border: 1px solid rgba(251, 191, 36, 0.25);
 }
 
-/* ---- Responsive: tablets & phones ---- */
-@media (max-width: 768px) {
-  /* Mobile hamburger */
-  .nav-toggle {
-    display: flex;
+/* Just above the hamburger breakpoint, tighten the nav so it still fits when the
+   "Installer l'app" button shows up. */
+@media (min-width: 1200px) and (max-width: 1499px) {
+  .header-inner {
+    gap: 0.75rem;
   }
 
-  /* Hide nav items behind toggle on mobile */
+  .site-nav a {
+    padding: 0.45rem 0.45rem;
+    font-size: 0.86rem;
+  }
+
+  .site-nav a.button,
+  .site-header .site-nav button.button {
+    margin-left: 0.25rem;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.86rem;
+  }
+}
+
+/* ---- Header hamburger menu ----
+   The full nav needs ~1200px, so below that it folds into the toggle's dropdown. */
+@media (max-width: 1199px) {
+  .nav-toggle {
+    display: flex;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+  }
+
+  /* Dropdown menu: opaque panel, full-width links, big tap targets */
   .site-header .site-nav {
     display: none;
     position: absolute;
@@ -2635,29 +2658,41 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     right: 0;
     flex-direction: column;
     align-items: stretch;
-    background: rgba(15, 0, 9, 0.98);
+    background: #0f0009;
     border-bottom: 1px solid rgba(245, 208, 216, 0.12);
-    padding: 0.75rem;
-    gap: 0.25rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    padding: 0.5rem 1rem 1rem;
+    gap: 0;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
   }
 
   .site-header .site-nav.open {
     display: flex;
   }
 
-  .site-header .site-nav a {
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
-    border-radius: 12px;
+  .site-header .site-nav a:not(.button) {
+    padding: 0.9rem 0.25rem;
+    font-size: 1.05rem;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(245, 208, 216, 0.08);
   }
 
-  .site-header .site-nav a.button {
-    margin-left: 0;
-    margin-top: 0.25rem;
+  .site-header .site-nav a.button,
+  .site-header .site-nav button.button,
+  #nav-signin-link,
+  #nav-signout-btn,
+  #pwa-install-btn {
+    margin: 0.75rem 0 0;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 0.95rem;
     justify-content: center;
   }
+}
+
+/* ---- Responsive: tablets & phones ---- */
+@media (max-width: 768px) {
 
   /* Admin sidebar: horizontal scrolling tab bar */
   .site-layout {
@@ -3050,45 +3085,13 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     height: 2.9rem;
   }
 
-  .nav-toggle {
-    width: 44px;
-    height: 44px;
-    align-items: center;
-  }
-
   .site-header .lang-toggle-btn {
     padding: 0.35rem 0.7rem;
   }
 
-  /* Dropdown menu: opaque panel, full-width links, big tap targets */
+  /* Dropdown menu (rules in the hamburger block above): the header is shorter here */
   .site-header .site-nav {
-    background: #0f0009;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    padding: 0.5rem 1rem 1rem;
-    gap: 0;
     max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
-  }
-
-  .site-header .site-nav a:not(.button) {
-    padding: 0.9rem 0.25rem;
-    font-size: 1.05rem;
-    border-radius: 0;
-    border-bottom: 1px solid rgba(245, 208, 216, 0.08);
-  }
-
-  .site-header .site-nav a.button,
-  .site-header .site-nav button.button,
-  #nav-signin-link,
-  #nav-signout-btn,
-  #pwa-install-btn {
-    margin: 0.75rem 0 0;
-    width: 100%;
-    padding: 0.8rem 1rem;
-    font-size: 0.95rem;
-    justify-content: center;
   }
 
   /* Page titles: less shouting on narrow screens */
@@ -3309,4 +3312,454 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   background: rgba(245, 208, 216, 0.1);
   padding: 0.05rem 0.35rem;
   border-radius: 6px;
+}
+
+/* ---- Pimp My Deck (pimp.html, js/pimp.js) ---- */
+
+.pimp-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 208, 216, 0.12);
+  border-radius: 24px;
+  padding: 1.5rem;
+}
+
+.pimp-label {
+  font-weight: 600;
+  color: #f5d0d8;
+}
+
+.pimp-form textarea {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 12rem;
+}
+
+.section .pimp-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(245, 208, 216, 0.6);
+}
+
+.pimp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.pimp-actions .button[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.pimp-file-btn {
+  margin-right: auto;
+}
+
+.pimp-status {
+  margin-top: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 14px;
+  background: rgba(245, 208, 216, 0.06);
+  border: 1px solid rgba(245, 208, 216, 0.14);
+}
+
+.pimp-status-error {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fecaca;
+}
+
+#pimp-output {
+  margin-top: 2rem;
+  scroll-margin-top: 7rem;
+}
+
+.pimp-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+}
+
+.pimp-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1rem 1.15rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 208, 216, 0.12);
+}
+
+.pimp-tile-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(245, 208, 216, 0.6);
+}
+
+.pimp-tile-value {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pimp-tile-sub {
+  font-size: 0.82rem;
+  color: rgba(245, 208, 216, 0.55);
+}
+
+.pimp-tile-bling {
+  border-color: rgba(240, 200, 120, 0.4);
+  background: linear-gradient(135deg, rgba(240, 200, 120, 0.1), rgba(255, 255, 255, 0.03));
+}
+
+.pimp-tile-bling .pimp-tile-value {
+  color: #f6d98f;
+}
+
+.pimp-problems {
+  margin-top: 1rem;
+  padding: 0.9rem 1.15rem;
+  border-radius: 14px;
+  background: rgba(245, 180, 80, 0.08);
+  border: 1px solid rgba(245, 180, 80, 0.3);
+  color: #f8deb0;
+}
+
+.pimp-problems ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.pimp-problems code {
+  font-size: 0.88rem;
+  color: #ffffff;
+  overflow-wrap: anywhere;
+}
+
+.pimp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0.75rem;
+  font-size: 0.9rem;
+}
+
+.pimp-toolbar select {
+  font: inherit;
+  max-width: 100%;
+  padding: 0.45rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 208, 216, 0.25);
+  background: #1c0a14;
+  color: #f5d0d8;
+}
+
+.pimp-results {
+  display: grid;
+  gap: 1rem;
+}
+
+.pimp-card {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(245, 208, 216, 0.12);
+}
+
+.pimp-card-thumb {
+  width: 100px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: rgba(245, 208, 216, 0.06);
+}
+
+.pimp-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+}
+
+.pimp-card-head h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+.pimp-qty {
+  font-weight: 700;
+  color: rgba(245, 208, 216, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.pimp-pitch {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pimp-pitch-1 { background: #e5484d; }
+.pimp-pitch-2 { background: #f5c542; }
+.pimp-pitch-3 { background: #4a90e2; }
+
+.pimp-price-range {
+  margin-left: auto;
+  font-weight: 600;
+  color: #f6d98f;
+  font-variant-numeric: tabular-nums;
+}
+
+.pimp-links {
+  display: flex;
+  gap: 0.9rem;
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+.pimp-links a,
+.pimp-table a {
+  color: #f5d0d8;
+  text-decoration-color: rgba(245, 208, 216, 0.35);
+  text-underline-offset: 3px;
+}
+
+.pimp-links a:hover,
+.pimp-table a:hover {
+  color: #ffffff;
+}
+
+.pimp-versions h4 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(245, 208, 216, 0.6);
+}
+
+/* Horizontal strip of printings, scrolls sideways when a staple has many */
+.pimp-strip {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding: 3px 0 0.4rem;
+  scrollbar-width: thin;
+}
+
+.pimp-version {
+  flex: 0 0 auto;
+  width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 5px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 208, 216, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f5d0d8;
+  cursor: zoom-in;
+  text-align: left;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.pimp-version:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 208, 216, 0.4);
+}
+
+.pimp-version[disabled] {
+  cursor: default;
+}
+
+.pimp-version img {
+  width: 72px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.pimp-version-noimg {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 100px;
+  border-radius: 4px;
+  background: rgba(245, 208, 216, 0.06);
+}
+
+/* Cold foils, gold foils and alt/extended arts: the "pimp" options */
+.pimp-version-special {
+  border-color: rgba(240, 200, 120, 0.45);
+  background: linear-gradient(160deg, rgba(240, 200, 120, 0.14), rgba(255, 255, 255, 0.02));
+}
+
+.pimp-foil-G {
+  border-color: rgba(246, 205, 90, 0.85);
+}
+
+.pimp-version-set {
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pimp-version-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 0.66rem;
+  line-height: 1.2;
+  color: #f6d98f;
+}
+
+.pimp-listings {
+  margin-top: 0.9rem;
+}
+
+.pimp-listings summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(245, 208, 216, 0.6);
+}
+
+.pimp-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.pimp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.pimp-table th,
+.pimp-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.08);
+  text-align: left;
+}
+
+.pimp-table th {
+  font-weight: 600;
+  color: rgba(245, 208, 216, 0.55);
+}
+
+.pimp-table .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.pimp-table .pimp-avg7 {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pimp-v {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  background: rgba(245, 208, 216, 0.1);
+  color: rgba(245, 208, 216, 0.8);
+}
+
+.section .pimp-muted {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(245, 208, 216, 0.5);
+}
+
+.section .pimp-sources {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: rgba(245, 208, 216, 0.45);
+}
+
+.pimp-lightbox {
+  max-width: min(92vw, 460px);
+  padding: 1rem;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 208, 216, 0.2);
+  background: #1a0811;
+  color: #f5d0d8;
+}
+
+.pimp-lightbox::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.pimp-lightbox img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.pimp-lightbox p {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+}
+
+.pimp-lightbox form {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pimp-lightbox-close {
+  border: 0;
+  background: none;
+  color: #f5d0d8;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem 0.4rem;
+}
+
+@media (max-width: 600px) {
+  .pimp-form {
+    padding: 1rem;
+  }
+
+  .pimp-file-btn {
+    margin-right: 0;
+  }
+
+  .pimp-actions .button {
+    flex: 1 1 auto;
+  }
+
+  .pimp-card {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 1rem;
+  }
+
+  .pimp-card-thumb {
+    display: none;
+  }
+
+  .pimp-tile-value {
+    font-size: 1.3rem;
+  }
+
+  .pimp-col-extra {
+    display: none;
+  }
 }
