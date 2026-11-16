@@ -6,7 +6,10 @@
  *
  * Data sources, refreshed every REFRESH_MS and cached in DATA_DIR/pimp/ so a restart
  * doesn't download them again:
- *  - the-fab-cube card database (open data Fabrary is built on): cards and printings.
+ *  - the-fab-cube card database (open data Fabrary is built on): card names / colors for
+ *    reading decklists, set codes for naming Cardmarket expansions, fallback printings.
+ *  - the official card vault (cardvault.fabtcg.com), per card on demand, cached 24 h:
+ *    the printings and images actually shown (newer and more complete than the-fab-cube).
  *  - Cardmarket's public daily catalog files for Flesh and Blood (game id 16):
  *    singles, sealed products (only used to name expansions) and the price guide.
  *
@@ -209,6 +212,7 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
         idProduct: p.idProduct,
         name: p.name,
         idExpansion: p.idExpansion,
+        added: p.dateAdded || null, // when Cardmarket listed it: pairs new promos with new prints
         expansion: expansionNames.get(p.idExpansion) || null,
         set: es?.set || null,          // card-DB set id and edition code (A/F/U/N, null = any)
         edition: es?.edition || null,
@@ -223,6 +227,77 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
   }
 
   return { byKey, pitchesByName, commaNames, listings, pricesDate: null, builtAt: Date.now() };
+};
+
+/* ---- Official card vault (cardvault.fabtcg.com): printings + images ----
+   Fetched per card on demand (cached VAULT_TTL in DATA_DIR/pimp/vault), more complete and up to date
+   than the open card database: new promos, newest set, Marvels. English prints only, since
+   a Cardmarket product covers every language. */
+
+const VAULT = 'https://api.cardvault.fabtcg.com/carddb/api/v1';
+const VAULT_TTL = 24 * 60 * 60 * 1000;
+// Sets printed in several editions: no prefix = Alpha / 1st edition, "U-" / "R-" = Unlimited (/ Revised)
+const FIRST_EDITION = { WTR: 'A', ARC: 'F', CRU: 'F', MON: 'F', ELE: 'F', EVR: 'F' };
+const FINISHES = { regular: 'S', 'rainbow-foil': 'R', 'cold-foil': 'C', 'gold-foil': 'G' };
+const ART_TYPES = { 'extended-art': 'Extended Art', 'full-art': 'Full Art', 'alternate-art': 'Alternate Art' };
+const titleCase = (s) => String(s).split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+const mapVaultPrint = (p) => {
+  const face = p.faces?.[0] || {};
+  const set = p.print_set?.set_code || '';
+  const foilCode = FINISHES[face.finish_type] || 'S';
+  const editionCode = /^([A-Z]{2}_)?[UR]-/.test(p.print_id) ? 'U' : (FIRST_EDITION[set] || 'N');
+  return {
+    id: p.print_id,
+    set,
+    setName: p.print_set?.set_name || set,
+    group: p.product?.product_group?.group_name || p.product?.product_name || '', // e.g. "Monarch - Unlimited"
+    edition: EDITIONS[editionCode] || '',
+    editionCode,
+    foiling: FOILINGS[foilCode],
+    foilCode,
+    artType: face.art_type || 'regular',
+    arts: [],
+    rarity: p.rarity,
+    marvel: /marvel/.test(p.rarity || ''),
+    image: face.image?.normal || face.image?.large || null,
+    imageLarge: face.image?.large || face.image?.normal || null,
+    release: p.product?.release_date || p.product?.product_group?.release_date || null,
+  };
+};
+
+// Card JSON -> our printings: English, art type only when it differs between prints
+// (every Levia, Redeemed is extended art: not worth a tag), and Revised folded into
+// Unlimited like Cardmarket does.
+const vaultPrintings = (json) => {
+  const all = (json?.results?.[0]?.card_prints || []).filter((p) => p.is_published !== false);
+  // English prints, plus prints of sets that only exist in other languages
+  // (History Pack 2 - Black Label: DE/FR/ES/IT), French first for this French site.
+  const enSets = new Set(all.filter((p) => p.print_language === 'en').map((p) => p.print_set?.set_code));
+  const langRank = (p) => (p.print_language === 'en' ? 0 : p.print_language === 'fr' ? 1 : 2);
+  const prints = all
+    .filter((p) => p.print_language === 'en' || !enSets.has(p.print_set?.set_code))
+    .sort((a, b) => langRank(a) - langRank(b) || /^R-/.test(a.print_id) - /^R-/.test(b.print_id))
+    .map(mapVaultPrint);
+  const artTypes = new Set(prints.map((p) => p.artType));
+  const seen = new Set();
+  const out = [];
+  for (const p of prints) {
+    if (artTypes.size > 1 && p.artType !== 'regular') p.arts = [ART_TYPES[p.artType] || titleCase(p.artType)];
+    delete p.artType;
+    const key = `${p.set}|${p.editionCode}|${p.foilCode}|${p.marvel}|${p.arts.join('+')}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out;
+};
+
+// Runs fn over items, at most `limit` at a time.
+const mapLimit = async (items, limit, fn) => {
+  let i = 0;
+  const worker = async () => { while (i < items.length) { const idx = i++; await fn(items[idx], idx); } };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
 };
 
 /* ---- Decklist parsing ---- */
@@ -347,6 +422,36 @@ module.exports = function mountPimp(app, { dataDir }) {
     return loading;
   };
 
+  // Vault printings of one card, from memory / disk if younger than VAULT_TTL, else fetched.
+  // Card id is "name-slug[-pitch]"; double-faced cards ("front--back") are found by search.
+  // On failure: the older copy if any, else null (the open card database is used instead).
+  const vaultDir = path.join(cacheDir, 'vault');
+  fs.mkdirSync(vaultDir, { recursive: true });
+  const vaultMem = new Map();
+  const vaultGet = async (q) => JSON.parse(await getText(`${VAULT}/${q}`));
+  const getVaultPrintings = async (name, pitch) => {
+    const key = `${norm(name).replace(/ /g, '-')}${pitch ? `-${pitch}` : ''}`;
+    const file = path.join(vaultDir, `${key}.json`);
+    let cached = vaultMem.get(key);
+    if (!cached) { try { cached = JSON.parse(fs.readFileSync(file, 'utf8')); vaultMem.set(key, cached); } catch {} }
+    if (cached && Date.now() - cached.at < VAULT_TTL) return cached.prints;
+    try {
+      let json = await vaultGet(`card_id/${encodeURIComponent(key)}/`);
+      if (!json.results?.length) {
+        const found = await vaultGet(`advanced-search/?q=${encodeURIComponent(name)}`);
+        const hit = (found.results || []).find((r) => norm(r.printed_name) === norm(name) && (!pitch || Number(r.printed_pitch) === pitch));
+        json = hit ? await vaultGet(`card_id/${encodeURIComponent(hit.card_id)}/`) : null;
+      }
+      const entry = { at: Date.now(), prints: json ? vaultPrintings(json) : [] };
+      vaultMem.set(key, entry);
+      fs.writeFileSync(file, JSON.stringify(entry));
+      return entry.prints;
+    } catch (err) {
+      console.warn(`[pimp] vault ${key}: ${err.message}`);
+      return cached ? cached.prints : null;
+    }
+  };
+
   // Warm up at start (disk copies if fresh), then refresh in the background.
   load(REFRESH_MS);
   setInterval(() => load(REFRESH_MS), 60 * 60 * 1000).unref();
@@ -377,6 +482,12 @@ module.exports = function mountPimp(app, { dataDir }) {
         priciest: priced.length ? Math.max(...priced) : null,
       };
     });
+    // Printings and images from the official card vault (6 cards at a time); the open
+    // card database's printings stay when the vault has nothing or can't be reached.
+    await mapLimit(cards, 6, async (card) => {
+      const prints = await getVaultPrintings(card.name, card.pitch);
+      if (prints && prints.length) { card.printings = prints; card.printingsSource = 'vault'; }
+    });
     res.json({ pricesDate: index.pricesDate, builtAt: index.builtAt, cards, problems });
   });
 };
@@ -384,3 +495,4 @@ module.exports = function mountPimp(app, { dataDir }) {
 // Exposed for local testing.
 module.exports.buildIndex = buildIndex;
 module.exports.parseDecklist = parseDecklist;
+module.exports.vaultPrintings = vaultPrintings;

@@ -197,8 +197,41 @@
 
   // The versions shown are the ones sold on Cardmarket: one per Cardmarket product, each
   // paired with a printing of its set for the image and finish. Cardmarket doesn't say
-  // which of its products in a set is the foil / Marvel..., so when a set has several,
-  // the priciest product gets the rarest printing (guessed: true).
+  // which of its products in a set is the foil / Marvel..., so:
+  //  - as many products as printings: paired by price, priciest = rarest (guessed when > 1);
+  //  - otherwise (new promo not in the card database yet, promos grouped differently...):
+  //    no pairing, the tile says the version is unidentified rather than show a wrong image.
+  const CM_IMPORT_DAY = '2022-01-07'; // Cardmarket's Flesh and Blood products before this all show its import date
+  const day = (d) => (d ? String(d).slice(0, 10) : '');
+  const plusDays = (d, n) => new Date(Date.parse(d) + n * 864e5).toISOString().slice(0, 10);
+
+  // Pairs a set's Cardmarket products with its prints (same count). Dates split them into
+  // periods: a print released after Cardmarket's import is its own period; a product goes
+  // to the latest print released at most 45 days after it was listed (Cardmarket lists
+  // ahead of release). Within a period, priciest product = rarest print. If the periods
+  // don't hold the same number on both sides, price alone decides over the whole set.
+  const pairByPrice = (prints, products) => {
+    const p = prints.slice().sort((a, b) => blingScore(b) - blingScore(a));
+    return products.slice().sort((a, b) => (b.avg7 ?? -1) - (a.avg7 ?? -1)).map((l, i) => [l, p[i]]);
+  };
+  const pairByPeriod = (prints, products) => {
+    const printPeriod = (p) => (day(p.release) > CM_IMPORT_DAY ? day(p.release) : '0');
+    const periods = [...new Set(prints.map(printPeriod))].sort();
+    const productPeriod = (l) => {
+      if (!(day(l.added) > CM_IMPORT_DAY)) return '0';
+      const limit = plusDays(day(l.added), 45);
+      return periods.filter((d) => d <= limit).pop() || periods[0];
+    };
+    const pairs = [];
+    for (const period of periods) {
+      const ps = prints.filter((p) => printPeriod(p) === period);
+      const ls = products.filter((l) => productPeriod(l) === period);
+      if (ps.length !== ls.length) return pairByPrice(prints, products);
+      pairs.push(...pairByPrice(ps, ls));
+    }
+    return pairs.length === products.length ? pairs : pairByPrice(prints, products);
+  };
+
   const cmVersions = (card) => {
     if (card._versions) return card._versions;
     const byExp = new Map();
@@ -206,20 +239,25 @@
       if (!byExp.has(l.idExpansion)) byExp.set(l.idExpansion, []);
       byExp.get(l.idExpansion).push(l);
     }
+    const simple = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
     const out = [];
     for (const ls of byExp.values()) {
       const first = ls[0];
-      const inSet = first.set
+      // Prints of this Cardmarket expansion: same set code (+ edition), else same name
+      // ("Usurp the Shadow Throne" on both sides for a set the open database lacks).
+      let inSet = first.set
         ? card.printings.filter((p) => p.set === first.set && (!first.edition || p.editionCode === first.edition))
         : [];
-      const byBling = inSet.slice().sort((a, b) => blingScore(b) - blingScore(a));
-      if (ls.length === 1) {
-        // A single product: the set's only printing, or its plainest one
-        out.push({ listing: first, printing: byBling[byBling.length - 1] || null, guessed: inSet.length > 1 });
-      } else {
-        const byPrice = ls.slice().sort((a, b) => (b.avg7 ?? -1) - (a.avg7 ?? -1));
-        byPrice.forEach((l, i) => out.push({ listing: l, printing: byBling[i] || null, guessed: true }));
+      if (!inSet.length && first.expansion) {
+        const exp = simple(first.expansion);
+        inSet = card.printings.filter((p) => simple(p.group) === exp || simple(p.setName) === exp);
       }
+      if (inSet.length !== ls.length) {
+        ls.forEach((l) => out.push({ listing: l, printing: null, guessed: false }));
+        continue;
+      }
+      const guessed = ls.length > 1;
+      pairByPeriod(inSet, ls).forEach(([l, p]) => out.push({ listing: l, printing: p, guessed }));
     }
     // Bling first, then price
     out.sort((a, b) => (b.printing ? blingScore(b.printing) : -1) - (a.printing ? blingScore(a.printing) : -1)
@@ -286,7 +324,7 @@
           el('h4', {}, t('pimp.versions', { n: versions.length })),
           el('div', { class: 'pimp-strip' }, versions.map((v) => renderCmVersion(card, v))),
           versions.some((v) => v.guessed && v.printing) ? el('p', { class: 'pimp-muted' }, t('pimp.guessHint')) : null,
-          card.cardmarketOnly ? el('p', { class: 'pimp-muted' }, t('pimp.noVersions')) : null)
+          !card.printings.length ? el('p', { class: 'pimp-muted' }, t('pimp.noVersions')) : null)
         : el('p', { class: 'pimp-muted' }, t('pimp.noListing')),
       versions.length ? renderListings(card) : null,
     ];
@@ -324,17 +362,18 @@
     const tags = p ? versionTags(p) : [];
     const caption = [where, p?.id, versionLabel(v)].filter(Boolean).join(' · ') + (v.guessed && p ? ' (≈)' : '');
     const setLabel = p ? `${p.set}${p.edition ? ' ' + p.edition.replace('1st Edition', '1st') : ''}` : where;
-    // Set not in the card database: show the card's regular art, dimmed, without finish
+    // Not identified: the card's regular art, dimmed, no preview; the tile opens Cardmarket,
+    // where the listing's own photo shows which version it is.
     const image = p?.image || card.printings.find((x) => x.image && x.foilCode === 'S' && !x.arts.length && !x.marvel)?.image || null;
     return el('button', {
       type: 'button',
       class: `pimp-version ${p && isSpecial(p) ? 'pimp-version-special' : ''} ${p?.marvel ? 'pimp-version-marvel' : ''} ${p ? `pimp-foil-${p.foilCode}` : 'pimp-version-fallback'}`,
       'aria-label': caption,
-      'data-preview': image,
+      'data-preview': p?.image || null,
       'data-caption': caption,
-      // Without any image (card too recent), the tile opens the Cardmarket search instead
-      onclick: () => (image
-        ? openLightbox(image, `${card.name} — ${caption}`)
+      title: p ? null : t('pimp.unknownTitle'),
+      onclick: () => (p?.image
+        ? openLightbox(p.imageLarge || p.image, `${card.name} — ${caption}`)
         : window.open(cmUrl(l.name, l.idExpansion), '_blank', 'noopener')),
     },
     image ? el('img', { src: image, alt: '', loading: 'lazy', width: 72, height: 100 }) : el('span', { class: 'pimp-version-noimg' }, '?'),
@@ -343,7 +382,7 @@
     tags.length
       ? el('span', { class: 'pimp-version-tags', title: v.guessed ? t('pimp.guessTitle') : null },
         tags.map((x, i) => el('span', { class: x === 'Marvel' ? 'pimp-tag-marvel' : null }, i === 0 && v.guessed ? `≈ ${x}` : x)))
-      : null);
+      : p ? null : el('span', { class: 'pimp-version-tags' }, el('span', {}, t('pimp.unknownVersion'))));
   };
 
   // Price detail (collapsed): every Cardmarket product with 7-day avg, trend and 30-day avg.
