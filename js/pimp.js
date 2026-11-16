@@ -229,8 +229,8 @@
     // Owned progress, for members: cards ticked, and what the unticked ones would cost in bling
     let ownedTile = null;
     if (user) {
-      const have = cards.filter((c) => owned.has(c.key)).length;
-      const left = cards.reduce((n, c) => n + (owned.has(c.key) || c.priciest == null ? 0 : c.priciest * c.qty), 0);
+      const have = cards.filter(isOwned).length;
+      const left = cards.reduce((n, c) => n + (isOwned(c) || c.priciest == null ? 0 : c.priciest * c.qty), 0);
       ownedTile = tile(t('pimp.sum.owned'), `${have} / ${cards.length}`, t('pimp.sum.ownedLeft', { amount: money(left) }), 'pimp-tile-owned');
     }
 
@@ -391,8 +391,8 @@
       if (open) { expanded.add(card.key); fillBody(); } else expanded.delete(card.key);
     });
 
-    return el('article', { class: `pimp-card ${user && owned.has(card.key) ? 'pimp-card-owned' : ''}` },
-      el('div', { class: 'pimp-row' }, toggle, user ? renderOwnedToggle(card) : null),
+    return el('article', { class: `pimp-card ${user && isOwned(card) ? 'pimp-card-owned' : ''}` },
+      el('div', { class: 'pimp-row' }, toggle, user ? ownedBadge(card) : null),
       body);
   };
 
@@ -425,16 +425,26 @@
   $('pimp-expand-all').addEventListener('click', () => setAllExpanded(true));
   $('pimp-collapse-all').addEventListener('click', () => setAllExpanded(false));
 
-  // "I have the pimp version" checkbox (members only). Saved with the deck if it is saved.
-  const renderOwnedToggle = (card) => {
-    const box = el('input', { type: 'checkbox', checked: owned.has(card.key) ? '' : null });
-    box.addEventListener('change', () => {
-      if (box.checked) owned.add(card.key); else owned.delete(card.key);
-      box.closest('.pimp-card').classList.toggle('pimp-card-owned', box.checked);
-      renderSummary();
-      saveOwnedSoon();
-    });
-    return el('label', { class: 'pimp-owned', title: t('pimp.owned') }, box, el('span', {}, t('pimp.owned')));
+  /* Owned versions (members): one tick per Cardmarket version, key "cardKey#idProduct".
+     Decks saved before kept the bare card key: that still counts as "card owned". */
+  const versionKey = (card, l) => `${card.key}#${l.idProduct}`;
+  const ownedVersions = (card) => cmVersions(card).filter((v) => owned.has(versionKey(card, v.listing)));
+  const isOwned = (card) => owned.has(card.key) || ownedVersions(card).length > 0;
+
+  // Row badge: "✓ Marvel · Cold Foil" for the version(s) owned (empty placeholder otherwise)
+  const ownedBadge = (card) => {
+    const mine = ownedVersions(card);
+    if (!mine.length && !owned.has(card.key)) return el('span', { class: 'pimp-row-owned' });
+    const names = mine.map(versionLabel).join(', ') || t('pimp.owned');
+    return el('span', { class: 'pimp-row-owned is-owned', title: names }, `✓ ${names}`);
+  };
+
+  // After a tick: row badge, card highlight, summary, autosave
+  const ownedChanged = (card, article) => {
+    article.classList.toggle('pimp-card-owned', isOwned(card));
+    article.querySelector('.pimp-row-owned')?.replaceWith(ownedBadge(card));
+    renderSummary();
+    saveOwnedSoon();
   };
 
   // Name of a version: "Marvel · Cold Foil", "Rainbow Foil", "Standard"; "Version non identifiée"
@@ -453,7 +463,7 @@
     // Not identified: the card's regular art, dimmed, no preview; the tile opens Cardmarket,
     // where the listing's own photo shows which version it is.
     const image = p?.image || card.printings.find((x) => x.image && x.foilCode === 'S' && !x.arts.length && !x.marvel)?.image || null;
-    return el('button', {
+    const tile = el('button', {
       type: 'button',
       class: `pimp-version ${p && isSpecial(p) ? 'pimp-version-special' : ''} ${p?.marvel ? 'pimp-version-marvel' : ''} ${p ? `pimp-foil-${p.foilCode}` : 'pimp-version-fallback'}`,
       'aria-label': caption,
@@ -472,6 +482,21 @@
       (tags.length ? tags : [versionLabel(v)]).map((x, i) => el('span', {
         class: x === 'Marvel' ? 'pimp-tag-marvel' : (!tags.length ? 'pimp-tag-plain' : null),
       }, i === 0 && v.guessed && p ? `≈ ${x}` : x))));
+    if (!user) return tile;
+
+    // Members: "I have it" tick under the tile
+    const key = versionKey(card, l);
+    const box = el('input', { type: 'checkbox', checked: owned.has(key) ? '' : null, 'aria-label': t('pimp.ownVersion', { name: `${where} · ${versionLabel(v)}` }) });
+    const wrap = el('div', { class: `pimp-version-wrap ${owned.has(key) ? 'is-owned' : ''}` },
+      tile,
+      el('label', { class: 'pimp-version-own', title: t('pimp.ownVersionTitle') }, box, el('span', {}, t('pimp.ownShort'))));
+    box.addEventListener('change', () => {
+      if (box.checked) owned.add(key); else owned.delete(key);
+      owned.delete(card.key); // an old card-level tick gives way to per-version ticks
+      wrap.classList.toggle('is-owned', box.checked);
+      ownedChanged(card, wrap.closest('.pimp-card'));
+    });
+    return wrap;
   };
 
   // Price detail (collapsed): every Cardmarket product with 7-day avg, trend and 30-day avg.
@@ -534,7 +559,13 @@
   };
 
   // Only the cards of the current result are kept, so removed cards don't linger.
-  const ownedForSave = () => [...owned].filter((k) => !data || data.cards.some((c) => c.key === k));
+  const ownedForSave = () => [...owned].filter((k) => !data || data.cards.some((c) => c.key === k.split('#')[0]));
+
+  // Save / load errors: say so plainly when the Supabase table was never created
+  const deckError = (error, fallbackKey) => {
+    console.error('[pimp] Supabase:', error);
+    deckMsg(error?.code === 'PGRST205' || /pimp_decks/.test(error?.message || '') ? 'pimp.decks.errNoTable' : fallbackKey, {}, true);
+  };
 
   const fillDeckSelect = () => {
     const first = deckSelect.options[0];
@@ -547,7 +578,7 @@
     const { data: rows, error } = await sb.from('pimp_decks')
       .select('id, name, decklist, owned, updated_at')
       .order('updated_at', { ascending: false });
-    if (error) { deckMsg('pimp.decks.errLoad', {}, true); return; }
+    if (error) { deckError(error, 'pimp.decks.errLoad'); return; }
     decks = rows || [];
     if (currentDeck) currentDeck = decks.find((d) => d.id === currentDeck.id) || null;
     fillDeckSelect();
@@ -593,7 +624,7 @@
       : sb.from('pimp_decks').insert({ ...row, user_id: user.id });
     const { data: saved, error } = await query.select('id, name, decklist, owned, updated_at').single();
     btn.disabled = false;
-    if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+    if (error) { deckError(error, 'pimp.decks.errSave'); return; }
     currentDeck = saved;
     await loadDecks();
     deckMsg('pimp.decks.saved', { name });
@@ -602,7 +633,7 @@
   $('pimp-deck-delete').addEventListener('click', async () => {
     if (!currentDeck || !confirm(t('pimp.decks.confirmDelete', { name: currentDeck.name }))) return;
     const { error } = await sb.from('pimp_decks').delete().eq('id', currentDeck.id);
-    if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+    if (error) { deckError(error, 'pimp.decks.errSave'); return; }
     const name = currentDeck.name;
     currentDeck = null;
     owned = new Set();
@@ -620,7 +651,7 @@
     ownedTimer = setTimeout(async () => {
       const list = ownedForSave();
       const { error } = await sb.from('pimp_decks').update({ owned: list }).eq('id', currentDeck.id);
-      if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+      if (error) { deckError(error, 'pimp.decks.errSave'); return; }
       currentDeck.owned = list;
       deckMsg('pimp.decks.ownedSaved');
     }, 800);

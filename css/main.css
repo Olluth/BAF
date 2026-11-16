@@ -3407,31 +3407,66 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   color: #fca5a5;
 }
 
-/* "I have the pimp version" checkbox + owned card */
-.pimp-owned {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  cursor: pointer;
-  color: rgba(245, 208, 216, 0.85);
+/* Owned versions: "I have it" tick under each version tile, badge on the card row */
+.pimp-version-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
-.pimp-owned input {
-  width: 1.05rem;
-  height: 1.05rem;
+.pimp-version-own {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: rgba(245, 208, 216, 0.7);
+  cursor: pointer;
+}
+
+.pimp-version-own:hover {
+  background: rgba(245, 208, 216, 0.06);
+}
+
+.pimp-version-own input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
   accent-color: #7ddc9a;
   cursor: pointer;
+}
+
+.pimp-version-wrap.is-owned .pimp-version {
+  border-color: rgba(125, 220, 154, 0.8);
+  box-shadow: 0 0 0 1px rgba(125, 220, 154, 0.5);
+}
+
+.pimp-version-wrap.is-owned .pimp-version-own {
+  color: #a7efbd;
+  font-weight: 600;
+}
+
+.pimp-row-owned {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a7efbd;
+}
+
+.pimp-row-owned:empty {
+  display: none;
 }
 
 .pimp-card-owned {
   border-color: rgba(125, 220, 154, 0.5);
   background: linear-gradient(135deg, rgba(125, 220, 154, 0.07), rgba(255, 255, 255, 0.03));
-}
-
-.pimp-card-owned .pimp-owned {
-  color: #a7efbd;
 }
 
 .pimp-tile-owned {
@@ -4021,18 +4056,16 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     font-size: 0.82rem;
   }
 
-  /* Phones: the tick box alone, its text stays as a tooltip / for screen readers */
-  .pimp-owned span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
+  /* Phones: the owned badge is just a check mark, the names stay in its tooltip */
+  .pimp-row-owned.is-owned {
+    max-width: 1.6rem;
     overflow: hidden;
-    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
-  .pimp-owned input {
-    width: 1.25rem;
-    height: 1.25rem;
+  .pimp-version-own input {
+    width: 1.15rem;
+    height: 1.15rem;
   }
 
   .pimp-card-body {
