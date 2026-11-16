@@ -187,39 +187,84 @@
     if (!cards.length) results.replaceChildren(el('p', { class: 'tracker-empty' }, t('pimp.noCards')));
   };
 
-  // Rarer finishes first so the bling is what you see: gold > cold > alt arts > rainbow > plain.
-  const blingScore = (p) => ({ G: 40, C: 30, R: 10, S: 0 }[p.foilCode] || 0) + p.arts.length * 12;
+  // Marvels first, then rarer finishes: gold > cold > alt arts > rainbow > plain.
+  const blingScore = (p) => (p.marvel ? 100 : 0) + ({ G: 40, C: 30, R: 10, S: 0 }[p.foilCode] || 0) + p.arts.length * 12;
+  const isSpecial = (p) => p.marvel || p.foilCode === 'C' || p.foilCode === 'G' || p.arts.length > 0;
+  // Finish / art labels of a version, Marvel first
+  const versionTags = (p) => [p.marvel ? 'Marvel' : null, p.foilCode !== 'S' ? p.foiling : null, ...p.arts].filter(Boolean);
 
   const pitchLabel = (p) => ({ 1: t('pimp.pitch.red'), 2: t('pimp.pitch.yellow'), 3: t('pimp.pitch.blue') }[p]);
 
-  const renderCard = (card) => {
-    const printings = card.printings.slice().sort((a, b) => blingScore(b) - blingScore(a));
-    const base = card.printings.find((p) => p.image && p.foilCode === 'S' && !p.arts.length) || card.printings.find((p) => p.image);
+  // Cards opened by the user, kept across re-renders (sort, language, ticks)
+  const expanded = new Set();
 
-    const head = el('div', { class: 'pimp-card-head' },
+  // One line per card (qty, name, alts, price range, owned tick); clicking it opens the
+  // versions and Cardmarket prices underneath. The detail is built on first open.
+  const renderCard = (card) => {
+    const base = card.printings.find((p) => p.image && p.foilCode === 'S' && !p.arts.length && !p.marvel) || card.printings.find((p) => p.image);
+    const alts = card.printings.filter(isSpecial).length;
+    const marvels = card.printings.filter((p) => p.marvel).length;
+    const isOpen = expanded.has(card.key);
+
+    const body = el('div', { class: 'pimp-card-body', hidden: isOpen ? null : '' });
+    const fillBody = () => { if (!body.childElementCount) body.append(...renderCardDetail(card)); };
+    if (isOpen) fillBody();
+
+    const toggle = el('button', { type: 'button', class: 'pimp-row-toggle', 'aria-expanded': String(isOpen) },
+      base?.image
+        ? el('img', { class: 'pimp-row-thumb', src: base.image, alt: '', loading: 'lazy', width: 36, height: 50, 'data-preview': base.image, 'data-caption': card.name })
+        : el('span', { class: 'pimp-row-thumb' }),
       el('span', { class: 'pimp-qty' }, `${card.qty}×`),
       card.pitch ? el('span', { class: `pimp-pitch pimp-pitch-${card.pitch}`, title: pitchLabel(card.pitch), 'aria-label': pitchLabel(card.pitch) }) : null,
-      el('h3', {}, card.name),
+      el('span', { class: 'pimp-row-main' },
+        el('span', { class: 'pimp-row-name' }, card.name),
+        el('span', { class: 'pimp-row-meta' },
+          card.printings.length ? t('pimp.row.versions', { n: card.printings.length }) : t('pimp.row.new'),
+          alts ? el('span', { class: 'pimp-row-alts' }, t('pimp.row.alts', { n: alts })) : null,
+          marvels ? el('span', { class: 'pimp-row-marvel' }, 'Marvel') : null)),
       el('span', { class: 'pimp-price-range' },
         card.cheapest == null ? t('pimp.noPrice')
           : card.cheapest === card.priciest ? money(card.cheapest)
           : `${money(card.cheapest)} → ${money(card.priciest)}`),
-      el('div', { class: 'pimp-links' },
-        el('a', { href: card.fabrary, target: '_blank', rel: 'noopener noreferrer' }, 'Fabrary ↗'),
-        el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗'),
-        user ? renderOwnedToggle(card) : null),
-    );
+      el('span', { class: 'pimp-chevron', 'aria-hidden': 'true' }, '▾'));
 
-    const versions = printings.length
-      ? el('div', { class: 'pimp-versions' },
-        el('h4', {}, t('pimp.versions', { n: printings.length })),
-        el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))))
-      : el('p', { class: 'pimp-muted' }, t('pimp.noVersions'));
+    toggle.addEventListener('click', () => {
+      const open = body.hidden;
+      body.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      if (open) { expanded.add(card.key); fillBody(); } else expanded.delete(card.key);
+    });
 
     return el('article', { class: `pimp-card ${user && owned.has(card.key) ? 'pimp-card-owned' : ''}` },
-      base?.image ? el('img', { class: 'pimp-card-thumb', src: base.image, alt: card.name, loading: 'lazy', width: 100, height: 140 }) : el('div', { class: 'pimp-card-thumb' }),
-      el('div', { class: 'pimp-card-body' }, head, versions, renderListings(card)));
+      el('div', { class: 'pimp-row' }, toggle, user ? renderOwnedToggle(card) : null),
+      body);
   };
+
+  // Opened card: links, every version, Cardmarket prices.
+  const renderCardDetail = (card) => {
+    const printings = card.printings.slice().sort((a, b) => blingScore(b) - blingScore(a));
+    return [
+      el('div', { class: 'pimp-links' },
+        el('a', { href: card.fabrary, target: '_blank', rel: 'noopener noreferrer' }, 'Fabrary ↗'),
+        el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗')),
+      printings.length
+        ? el('div', { class: 'pimp-versions' },
+          el('h4', {}, t('pimp.versions', { n: printings.length })),
+          el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))))
+        : el('p', { class: 'pimp-muted' }, t('pimp.noVersions')),
+      renderListings(card),
+    ];
+  };
+
+  // Open / close every card at once (toolbar buttons)
+  const setAllExpanded = (open) => {
+    if (!data) return;
+    expanded.clear();
+    if (open) data.cards.forEach((c) => expanded.add(c.key));
+    renderCards();
+  };
+  $('pimp-expand-all').addEventListener('click', () => setAllExpanded(true));
+  $('pimp-collapse-all').addEventListener('click', () => setAllExpanded(false));
 
   // "I have the pimp version" checkbox (members only). Saved with the deck if it is saved.
   const renderOwnedToggle = (card) => {
@@ -230,16 +275,16 @@
       renderSummary();
       saveOwnedSoon();
     });
-    return el('label', { class: 'pimp-owned' }, box, el('span', {}, t('pimp.owned')));
+    return el('label', { class: 'pimp-owned', title: t('pimp.owned') }, box, el('span', {}, t('pimp.owned')));
   };
 
   const renderPrinting = (card, p) => {
-    const special = p.foilCode === 'C' || p.foilCode === 'G' || p.arts.length > 0;
-    const caption = [p.setName, p.edition, p.foiling, ...p.arts].filter(Boolean).join(' · ');
-    const tags = [p.foilCode !== 'S' ? p.foiling : null, ...p.arts].filter(Boolean);
+    const special = isSpecial(p);
+    const caption = [p.setName, p.edition, p.marvel ? 'Marvel' : null, p.foiling, ...p.arts].filter(Boolean).join(' · ');
+    const tags = versionTags(p);
     return el('button', {
       type: 'button',
-      class: `pimp-version ${special ? 'pimp-version-special' : ''} pimp-foil-${p.foilCode}`,
+      class: `pimp-version ${special ? 'pimp-version-special' : ''} ${p.marvel ? 'pimp-version-marvel' : ''} pimp-foil-${p.foilCode}`,
       'aria-label': caption,
       'data-preview': p.image,
       'data-caption': `${p.id} · ${caption}`,
@@ -248,7 +293,7 @@
     },
     p.image ? el('img', { src: p.image, alt: caption, loading: 'lazy', width: 72, height: 100 }) : el('span', { class: 'pimp-version-noimg' }, '?'),
     el('span', { class: 'pimp-version-set' }, `${p.set}${p.edition ? ' ' + p.edition.replace('1st Edition', '1st') : ''}`),
-    tags.length ? el('span', { class: 'pimp-version-tags' }, tags.map((x) => el('span', {}, x))) : null);
+    tags.length ? el('span', { class: 'pimp-version-tags' }, tags.map((x) => el('span', { class: x === 'Marvel' ? 'pimp-tag-marvel' : null }, x))) : null);
   };
 
   const renderListings = (card) => {
@@ -305,8 +350,8 @@
 
   // One line of a set's version list: small image (opens the lightbox) + finish / art labels.
   const renderSetVersion = (card, p) => {
-    const label = [p.foiling, ...p.arts].join(' · ');
-    const special = p.foilCode === 'C' || p.foilCode === 'G' || p.arts.length > 0;
+    const label = [p.marvel ? 'Marvel' : null, p.foiling, ...p.arts].filter(Boolean).join(' · ');
+    const special = isSpecial(p);
     return el('li', { class: special ? 'pimp-setversion-special' : null },
       el('button', {
         type: 'button',

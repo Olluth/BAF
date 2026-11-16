@@ -3410,9 +3410,10 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 /* "I have the pimp version" checkbox + owned card */
 .pimp-owned {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
+  font-size: 0.82rem;
   cursor: pointer;
   color: rgba(245, 208, 216, 0.85);
 }
@@ -3543,40 +3544,121 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   color: #f5d0d8;
 }
 
+.pimp-toolbar .pimp-sort-label {
+  margin-left: auto;
+}
+
+.pimp-toolbar .pimp-small-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+/* Card list: one row per card, opens to show versions + prices */
 .pimp-results {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr); /* rows never grow wider than the page */
+  gap: 0.4rem;
 }
 
 .pimp-card {
-  display: grid;
-  grid-template-columns: 100px minmax(0, 1fr);
-  gap: 1.25rem;
-  padding: 1.25rem;
-  border-radius: 22px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(245, 208, 216, 0.12);
 }
 
-.pimp-card-thumb {
-  width: 100px;
-  height: 140px;
+.pimp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 0.9rem;
+}
+
+.pimp-row-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.4rem 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pimp-row-toggle:hover {
+  background: rgba(245, 208, 216, 0.05);
+}
+
+.pimp-row-thumb {
+  flex-shrink: 0;
+  width: 36px;
+  height: 50px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 3px;
   background: rgba(245, 208, 216, 0.06);
 }
 
-.pimp-card-head {
+.pimp-row-main {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 0.6rem;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.pimp-card-head h3 {
-  margin: 0;
-  font-size: 1.15rem;
+.pimp-row-name {
+  font-weight: 600;
   color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pimp-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.5rem;
+  font-size: 0.78rem;
+  color: rgba(245, 208, 216, 0.55);
+}
+
+.pimp-row-alts {
+  color: #f6d98f;
+}
+
+.pimp-row-marvel,
+.pimp-tag-marvel {
+  padding: 0 0.35rem;
+  border-radius: 5px;
+  font-weight: 700;
+  color: #1a0811;
+  background: linear-gradient(135deg, #f6d98f, #e9a6ff);
+}
+
+.pimp-chevron {
+  flex-shrink: 0;
+  color: rgba(245, 208, 216, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.pimp-row-toggle[aria-expanded="true"] .pimp-chevron {
+  transform: rotate(180deg);
+}
+
+.pimp-card-body {
+  padding: 0.25rem 1rem 1rem;
+  border-top: 1px solid rgba(245, 208, 216, 0.08);
+}
+
+.pimp-card-body .pimp-links {
+  margin-top: 0.6rem;
+}
+
+.pimp-version-marvel {
+  border-color: rgba(233, 166, 255, 0.7);
+  background: linear-gradient(160deg, rgba(233, 166, 255, 0.16), rgba(240, 200, 120, 0.1));
 }
 
 .pimp-qty {
@@ -3598,6 +3680,8 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 
 .pimp-price-range {
   margin-left: auto;
+  flex-shrink: 0;
+  white-space: nowrap;
   font-weight: 600;
   color: #f6d98f;
   font-variant-numeric: tabular-nums;
@@ -3950,13 +4034,44 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
     flex: 1 1 auto;
   }
 
-  .pimp-card {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 1rem;
+  .pimp-row {
+    gap: 0.4rem;
+    padding-right: 0.6rem;
   }
 
-  .pimp-card-thumb {
+  .pimp-row-toggle {
+    gap: 0.45rem;
+  }
+
+  .pimp-row-thumb,
+  .pimp-chevron {
     display: none;
+  }
+
+  .pimp-price-range {
+    font-size: 0.82rem;
+  }
+
+  /* Phones: the tick box alone, its text stays as a tooltip / for screen readers */
+  .pimp-owned span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .pimp-owned input {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .pimp-card-body {
+    padding: 0.25rem 0.75rem 0.85rem;
+  }
+
+  .pimp-toolbar {
+    flex-wrap: wrap;
   }
 
   .pimp-tile-value {

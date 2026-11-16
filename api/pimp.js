@@ -90,7 +90,7 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
       fabSetNames.get(fk).add(key);
       const arts = (p.art_variations || []).slice().sort();
       // One entry per distinct version (the same version can be listed twice, e.g. reprint promos)
-      const dedupe = `${p.id}|${p.edition}|${p.foiling}|${arts.join('+')}`;
+      const dedupe = `${p.id}|${p.edition}|${p.foiling}|${p.rarity}|${arts.join('+')}`;
       if (entry.seen.has(dedupe)) continue;
       entry.seen.add(dedupe);
       entry.printings.push({
@@ -103,6 +103,7 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
         foilCode: p.foiling,
         arts: arts.map((a) => ARTS[a] || a),
         rarity: p.rarity,
+        marvel: p.rarity === 'V', // Marvel: special cold foil art, rarest pull of a set
         image: p.image_url || null,
       });
     }
