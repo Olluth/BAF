@@ -14,7 +14,8 @@
  *  - an expansion's name comes from its matching card set (by card-name overlap) or,
  *    failing that, from its sealed products ("Monarch - First Booster" -> "Monarch - First");
  *  - several listings of the same card in one expansion are labeled V.1, V.2... like
- *    Cardmarket does; which one is the foil / cold foil / alt art can't be told from the data.
+ *    Cardmarket does; which one is the foil / cold foil / alt art can't be told from the data,
+ *    so each listing also carries its card set + edition and the page lists that set's printings.
  */
 const fs   = require('fs');
 const path = require('path');
@@ -97,6 +98,7 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
         set: p.set_id,
         setName: setNames[p.set_id] || p.set_id,
         edition: EDITIONS[p.edition] || '',
+        editionCode: p.edition,
         foiling: FOILINGS[p.foiling] || p.foiling,
         foilCode: p.foiling,
         arts: arts.map((a) => ARTS[a] || a),
@@ -129,6 +131,9 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
   // Kept only when clear-cut: most of the expansion's cards are in the set, the set
   // is mostly covered, and no other set scores the same (Alpha vs Unlimited tie).
   const expansionNames = new Map();
+  // Card set (+ edition) of each expansion, looser than naming (a blitz deck maps to the
+  // set its cards are numbered in). Used to list the versions behind V.1 / V.2.
+  const expansionSets = new Map();
   for (const [idExp, keys] of cmByExpansion) {
     const scores = [];
     for (const [fk, fabKeys] of fabSetNames) {
@@ -138,6 +143,12 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
     }
     scores.sort((a, b) => b.score - a.score || b.cover - a.cover);
     const [best, second] = scores;
+    if (best && best.score >= 0.5) {
+      const [set, edition] = best.fk.split('|');
+      // Alpha vs Unlimited score the same: the edition is read from the name further down
+      const tied = second && second.score === best.score && second.fk.split('|')[0] === set;
+      expansionSets.set(idExp, { set, edition: tied ? null : edition });
+    }
     if (best && best.score >= 0.5 && best.cover >= 0.3 && !(second && second.score === best.score && second.cover === best.cover)) {
       expansionNames.set(idExp, setNames[best.fk.split('|')[0]] || best.fk);
     }
@@ -159,6 +170,11 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
       .sort((a, b) => a.length - b.length);
     if (cleaned[0]) expansionNames.set(idExp, cleaned[0]);
   }
+  for (const [idExp, s] of expansionSets) {
+    if (s.edition) continue;
+    const n = expansionNames.get(idExp) || '';
+    s.edition = /alpha/i.test(n) ? 'A' : /first/i.test(n) ? 'F' : /unlimited/i.test(n) ? 'U' : null;
+  }
 
   // Cardmarket listings per card, with prices, V.1/V.2 numbering per expansion.
   const listings = new Map();
@@ -171,11 +187,14 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
       const n = (counter.get(p.idExpansion) || 0) + 1;
       counter.set(p.idExpansion, n);
       const pr = priceById.get(p.idProduct) || {};
+      const es = expansionSets.get(p.idExpansion);
       return {
         idProduct: p.idProduct,
         name: p.name,
         idExpansion: p.idExpansion,
         expansion: expansionNames.get(p.idExpansion) || null,
+        set: es?.set || null,          // card-DB set id and edition code (A/F/U/N, null = any)
+        edition: es?.edition || null,
         version: perExp.get(p.idExpansion) > 1 ? `V.${n}` : null,
         avg7: pr.avg7 ?? null,
         avg1: pr.avg1 ?? null,

@@ -3683,6 +3683,85 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   color: rgba(245, 208, 216, 0.8);
 }
 
+/* Expansion with several Cardmarket listings: header row, V.x rows, then its versions */
+.pimp-group-head td {
+  padding-top: 0.7rem;
+  border-bottom: 0;
+}
+
+.pimp-group-count {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(245, 208, 216, 0.5);
+}
+
+.pimp-table .pimp-group-row td {
+  border-bottom: 0;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+
+.pimp-table .pimp-group-row td:first-child {
+  padding-left: 1.4rem;
+}
+
+.pimp-group-row .pimp-v {
+  margin-left: 0;
+}
+
+.pimp-table .pimp-group-versions td {
+  padding: 0.35rem 0.6rem 0.7rem 1.4rem;
+}
+
+.pimp-group-label {
+  font-size: 0.78rem;
+  color: rgba(245, 208, 216, 0.55);
+}
+
+.pimp-setversions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pimp-setversion {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.6rem 0.2rem 0.2rem;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 208, 216, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f5d0d8;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: zoom-in;
+}
+
+.pimp-setversion:hover {
+  border-color: rgba(245, 208, 216, 0.4);
+}
+
+.pimp-setversion[disabled] {
+  cursor: default;
+}
+
+.pimp-setversion img {
+  width: 30px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.pimp-setversion-special .pimp-setversion {
+  border-color: rgba(240, 200, 120, 0.45);
+  color: #f6d98f;
+}
+
 .section .pimp-muted {
   margin: 0.5rem 0 0;
   font-size: 0.82rem;

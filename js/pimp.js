@@ -215,27 +215,69 @@
 
   const renderListings = (card) => {
     if (!card.listings.length) return el('p', { class: 'pimp-muted' }, t('pimp.noListing'));
-    // Cheapest first, unpriced listings last
-    const rows = card.listings.slice().sort((a, b) => (a.avg7 ?? Infinity) - (b.avg7 ?? Infinity));
+    // One group per expansion, cheapest first (by its cheapest listing), unpriced last
+    const byExp = new Map();
+    for (const l of card.listings) {
+      if (!byExp.has(l.idExpansion)) byExp.set(l.idExpansion, []);
+      byExp.get(l.idExpansion).push(l);
+    }
+    const minAvg = (ls) => Math.min(...ls.map((l) => l.avg7 ?? Infinity));
+    const groups = [...byExp.values()].sort((a, b) => minAvg(a) - minAvg(b));
+
+    const priceCells = (l) => [
+      el('td', { class: 'num pimp-avg7' }, money(l.avg7)),
+      el('td', { class: 'num pimp-col-extra' }, money(l.trend)),
+      el('td', { class: 'num pimp-col-extra' }, money(l.avg30)),
+    ];
+    const expLink = (l) => el('a', { href: cmUrl(l.name, l.idExpansion), target: '_blank', rel: 'noopener noreferrer' },
+      l.expansion || t('pimp.otherExpansion'));
+
     const table = el('table', { class: 'pimp-table' },
       el('thead', {}, el('tr', {},
         el('th', {}, t('pimp.col.expansion')),
         el('th', { class: 'num' }, t('pimp.col.avg7')),
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.trend')),
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.avg30')))),
-      el('tbody', {}, rows.map((l) => el('tr', {},
-        el('td', {},
-          el('a', { href: cmUrl(l.name, l.idExpansion), target: '_blank', rel: 'noopener noreferrer' },
-            l.expansion || t('pimp.otherExpansion')),
-          l.version ? el('span', { class: 'pimp-v' }, l.version) : null),
-        el('td', { class: 'num pimp-avg7' }, money(l.avg7)),
-        el('td', { class: 'num pimp-col-extra' }, money(l.trend)),
-        el('td', { class: 'num pimp-col-extra' }, money(l.avg30))))));
+      groups.map((ls) => {
+        if (ls.length === 1) return el('tbody', {}, el('tr', {}, el('td', {}, expLink(ls[0])), priceCells(ls[0])));
+        // Several Cardmarket products in one set: their V.1/V.2 rows, then the versions
+        // printed in that set, so you can tell what each one may be.
+        const first = ls[0];
+        const inSet = first.set
+          ? card.printings.filter((p) => p.set === first.set && (!first.edition || p.editionCode === first.edition))
+          : [];
+        return el('tbody', { class: 'pimp-group' },
+          el('tr', { class: 'pimp-group-head' }, el('td', { colspan: 4 }, expLink(first),
+            el('span', { class: 'pimp-group-count' }, t('pimp.group.count', { n: ls.length })))),
+          ls.map((l) => el('tr', { class: 'pimp-group-row' },
+            el('td', {}, el('span', { class: 'pimp-v' }, l.version)), priceCells(l))),
+          el('tr', { class: 'pimp-group-versions' }, el('td', { colspan: 4 },
+            inSet.length
+              ? el('div', {},
+                el('span', { class: 'pimp-group-label' }, t('pimp.group.inSet')),
+                el('ul', { class: 'pimp-setversions' }, inSet.map((p) => renderSetVersion(card, p))))
+              : el('span', { class: 'pimp-muted' }, t('pimp.group.unknown')))));
+      }));
 
-    return el('details', { class: 'pimp-listings', open: rows.length <= 6 ? '' : null },
-      el('summary', {}, t('pimp.listings', { n: rows.length })),
+    return el('details', { class: 'pimp-listings', open: groups.length <= 6 ? '' : null },
+      el('summary', {}, t('pimp.listings', { n: card.listings.length })),
       el('div', { class: 'pimp-table-wrap' }, table),
-      rows.some((l) => l.version) ? el('p', { class: 'pimp-muted pimp-v-hint' }, t('pimp.versionHint')) : null);
+      groups.some((g) => g.length > 1) ? el('p', { class: 'pimp-muted pimp-v-hint' }, t('pimp.versionHint')) : null);
+  };
+
+  // One line of a set's version list: small image (opens the lightbox) + finish / art labels.
+  const renderSetVersion = (card, p) => {
+    const label = [p.foiling, ...p.arts].join(' · ');
+    const special = p.foilCode === 'C' || p.foilCode === 'G' || p.arts.length > 0;
+    return el('li', { class: special ? 'pimp-setversion-special' : null },
+      el('button', {
+        type: 'button',
+        class: 'pimp-setversion',
+        disabled: !p.image,
+        onclick: () => openLightbox(p.image, `${card.name} — ${p.id} · ${[p.setName, p.edition, label].filter(Boolean).join(' · ')}`),
+      },
+      p.image ? el('img', { src: p.image, alt: '', loading: 'lazy', width: 30, height: 42 }) : null,
+      el('span', {}, el('strong', {}, p.id), ` ${label}`)));
   };
 
   /* ---- Lightbox ---- */
