@@ -119,8 +119,24 @@ const buildIndex = ({ cards, sets, singles, sealed, prices }) => {
   const cmByExpansion = new Map();
   const cmByKey = new Map();
   for (const p of singles) {
-    const m = p.name.match(/^(.*?)\s*\((Red|Yellow|Blue)\)$/i);
-    const key = m ? `${norm(m[1])}|${PITCH_WORDS[m[2].toLowerCase()]}` : `${norm(p.name)}|0`;
+    // Double-faced cards are listed as "Front // Back"
+    const cmName = p.name.split(' // ')[0].trim();
+    const m = cmName.match(/^(.*?)\s*\((Red|Yellow|Blue)\)$/i);
+    const baseName = m ? m[1] : cmName;
+    const n = norm(baseName);
+    let key = m ? `${n}|${PITCH_WORDS[m[2].toLowerCase()]}` : `${n}|0`;
+    // Cardmarket leaves the color out when a card exists in one color only ("Swing Big")
+    const known = pitchesByName.get(n);
+    if (!m && !byKey.has(key) && known && known.size === 1) key = `${n}|${[...known][0]}`;
+    // Card not in the card database yet (newest set): known from Cardmarket only,
+    // so it can still be looked up and priced, just without versions / images.
+    if (!byKey.has(key)) {
+      const pitch = Number(key.split('|')[1]);
+      byKey.set(key, { name: baseName, pitch, types: [], printings: [], cardmarketOnly: true });
+      if (!pitchesByName.has(n)) pitchesByName.set(n, new Set());
+      pitchesByName.get(n).add(pitch);
+      if (baseName.includes(',')) commaNames.add(n);
+    }
     if (!cmByExpansion.has(p.idExpansion)) cmByExpansion.set(p.idExpansion, new Set());
     cmByExpansion.get(p.idExpansion).add(key);
     if (!cmByKey.has(key)) cmByKey.set(key, []);
@@ -236,7 +252,12 @@ const resolve = (idx, text) => {
   const n = norm(name);
   const pitches = idx.pitchesByName.get(n);
   if (!pitches) return { error: 'unknown' };
-  if (pitch != null) return pitches.has(pitch) ? { key: `${n}|${pitch}` } : { error: 'pitch' };
+  if (pitch != null) {
+    if (pitches.has(pitch)) return { key: `${n}|${pitch}` };
+    // Only known without a color (new card Cardmarket lists as "Fallen Herald"): take it
+    if (pitches.size === 1 && pitches.has(0)) return { key: `${n}|0` };
+    return { error: 'pitch' };
+  }
   if (pitches.size === 1) return { key: `${n}|${[...pitches][0]}` };
   return { error: 'ambiguous', options: [...pitches].sort().map((p) => PITCH_NAME[p]).filter(Boolean) };
 };
@@ -346,6 +367,7 @@ module.exports = function mountPimp(app, { dataDir }) {
         name: c.name,
         pitch: c.pitch || null,
         types: c.types,
+        cardmarketOnly: !!c.cardmarketOnly,
         fabrary: `https://fabrary.net/cards/${fabraryId(c.name, c.pitch)}`,
         printings: c.printings,
         listings,

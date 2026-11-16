@@ -188,9 +188,11 @@
         el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗')),
     );
 
-    const versions = el('div', { class: 'pimp-versions' },
-      el('h4', {}, t('pimp.versions', { n: printings.length })),
-      el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))));
+    const versions = printings.length
+      ? el('div', { class: 'pimp-versions' },
+        el('h4', {}, t('pimp.versions', { n: printings.length })),
+        el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))))
+      : el('p', { class: 'pimp-muted' }, t('pimp.noVersions'));
 
     return el('article', { class: 'pimp-card' },
       base?.image ? el('img', { class: 'pimp-card-thumb', src: base.image, alt: card.name, loading: 'lazy', width: 100, height: 140 }) : el('div', { class: 'pimp-card-thumb' }),
