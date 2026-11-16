@@ -552,10 +552,12 @@
   const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   const deckSelect = $('pimp-deck-select');
   const deckName = $('pimp-deck-name');
+  // Status of saving, shown both under the deck name and next to the bottom save button
   const deckMsg = (key, vars, isError) => {
-    const msg = $('pimp-deck-msg');
-    msg.textContent = key ? t(key, vars) : '';
-    msg.classList.toggle('pimp-deck-error', !!isError);
+    for (const msg of [$('pimp-deck-msg'), $('pimp-save-msg')]) {
+      msg.textContent = key ? t(key, vars) : '';
+      msg.classList.toggle('pimp-deck-error', !!isError);
+    }
   };
 
   // Only the cards of the current result are kept, so removed cards don't linger.
@@ -588,6 +590,7 @@
     const changed = (u?.id || null) !== (user?.id || null);
     user = u;
     $('pimp-decks').classList.toggle('hidden', !user);
+    $('pimp-save-bar').classList.toggle('hidden', !user);
     $('pimp-login-hint').classList.toggle('hidden', !!user);
     if (!changed) return;
     decks = [];
@@ -609,26 +612,30 @@
     form.requestSubmit();
   });
 
-  // Saves the current list: updates the selected deck, or creates a new one.
-  $('pimp-deck-save').addEventListener('click', async () => {
+  // Saves the current list and its ticks: updates the selected deck, or creates a new one.
+  // Used by "Enregistrer" (top) and "Enregistrer mon pimp" (bottom of the list).
+  const saveDeck = async () => {
     const decklist = input.value.trim();
     if (!decklist) { deckMsg('pimp.err.empty', {}, true); return; }
     const exportName = decklist.match(/^name:\s*(.+)$/im);
     const name = (deckName.value.trim() || exportName?.[1].trim() || t('pimp.decks.untitled')).slice(0, 80);
     deckName.value = name;
     const row = { name, decklist, owned: ownedForSave() };
-    const btn = $('pimp-deck-save');
-    btn.disabled = true;
+    const buttons = [$('pimp-deck-save'), $('pimp-save-bottom')];
+    buttons.forEach((b) => { b.disabled = true; });
+    clearTimeout(ownedTimer); // this save includes the ticks
     const query = currentDeck
       ? sb.from('pimp_decks').update(row).eq('id', currentDeck.id)
       : sb.from('pimp_decks').insert({ ...row, user_id: user.id });
     const { data: saved, error } = await query.select('id, name, decklist, owned, updated_at').single();
-    btn.disabled = false;
+    buttons.forEach((b) => { b.disabled = false; });
     if (error) { deckError(error, 'pimp.decks.errSave'); return; }
     currentDeck = saved;
     await loadDecks();
     deckMsg('pimp.decks.saved', { name });
-  });
+  };
+  $('pimp-deck-save').addEventListener('click', saveDeck);
+  $('pimp-save-bottom').addEventListener('click', saveDeck);
 
   $('pimp-deck-delete').addEventListener('click', async () => {
     if (!currentDeck || !confirm(t('pimp.decks.confirmDelete', { name: currentDeck.name }))) return;

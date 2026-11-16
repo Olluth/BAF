@@ -3071,8 +3071,11 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 /* ---- Mobile refinements (phones, portrait) ----
    Kept last so it overrides the earlier responsive blocks. */
 @media (max-width: 768px) {
+  /* clip (not hidden): hidden turns body into a scroll box and breaks position: sticky
+     (header, Pimp My Deck save bar); old browsers without clip keep hidden */
   html, body {
     overflow-x: hidden;
+    overflow-x: clip;
   }
 
   /* Header: slimmer bar, logo left, menu + language right */
@@ -3934,6 +3937,38 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   margin: 0.5rem 0 0;
   font-size: 0.82rem;
   color: rgba(245, 208, 216, 0.5);
+}
+
+/* Bottom save bar: message + "Enregistrer mon pimp", stays visible at the bottom while scrolling the list */
+.pimp-save-bar {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 16px;
+  background: rgba(26, 8, 17, 0.95);
+  border: 1px solid rgba(245, 208, 216, 0.18);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.pimp-save-msg {
+  font-size: 0.85rem;
+  color: #a7efbd;
+}
+
+.pimp-save-msg.pimp-deck-error {
+  color: #fca5a5;
+}
+
+.pimp-save-bar .button[disabled] {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .section .pimp-sources {
