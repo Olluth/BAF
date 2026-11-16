@@ -52,6 +52,27 @@
         <p data-i18n="pimp.desc">Collez votre decklist : on vous montre toutes les versions de chaque carte (foils, alt arts, extended arts…) et leur prix moyen Cardmarket sur 7 jours.</p>
 
         <form id="pimp-form" class="pimp-form">
+          <!-- Saved decks (signed-in members only, filled by js/pimp.js) -->
+          <div id="pimp-decks" class="pimp-decks hidden">
+            <div class="pimp-decks-row">
+              <label for="pimp-deck-select" class="pimp-label" data-i18n="pimp.decks.mine">Mes decks</label>
+              <select id="pimp-deck-select">
+                <option value="" data-i18n="pimp.decks.new">— Nouveau deck —</option>
+              </select>
+              <button type="button" class="button pimp-small-btn hidden" id="pimp-deck-delete" data-i18n="pimp.decks.delete">Supprimer</button>
+            </div>
+            <div class="pimp-decks-row">
+              <input type="text" id="pimp-deck-name" maxlength="80" autocomplete="off"
+                data-i18n-placeholder="pimp.decks.namePlaceholder" placeholder="Nom du deck" />
+              <button type="button" class="button pimp-small-btn" id="pimp-deck-save" data-i18n="pimp.decks.save">Enregistrer</button>
+            </div>
+            <p id="pimp-deck-msg" class="pimp-hint" role="status" aria-live="polite"></p>
+          </div>
+          <p id="pimp-login-hint" class="pimp-hint hidden">
+            <a href="members.html" data-i18n="pimp.decks.loginLink">Connectez-vous</a>
+            <span data-i18n="pimp.decks.loginText">pour enregistrer vos decks et cocher les cartes que vous avez déjà en version pimp.</span>
+          </p>
+
           <label for="pimp-input" class="pimp-label" data-i18n="pimp.inputLabel">Decklist (texte brut)</label>
           <textarea id="pimp-input" rows="12" spellcheck="false" autocomplete="off"
             data-i18n-placeholder="pimp.placeholder"

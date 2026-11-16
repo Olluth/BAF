@@ -3361,6 +3361,86 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   margin-right: auto;
 }
 
+/* Saved decks panel (members) */
+.pimp-decks {
+  display: grid;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.1);
+}
+
+.pimp-decks-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pimp-decks select,
+.pimp-decks input {
+  flex: 1 1 200px;
+  min-width: 0;
+  font: inherit;
+  padding: 0.55rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 208, 216, 0.25);
+  background: #1c0a14;
+  color: #f5d0d8;
+}
+
+.pimp-small-btn {
+  padding: 0.55rem 1.1rem;
+}
+
+.pimp-small-btn[disabled] {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.section .pimp-hint a {
+  color: #f5d0d8;
+  font-weight: 600;
+}
+
+.section .pimp-deck-error {
+  color: #fca5a5;
+}
+
+/* "I have the pimp version" checkbox + owned card */
+.pimp-owned {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  cursor: pointer;
+  color: rgba(245, 208, 216, 0.85);
+}
+
+.pimp-owned input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #7ddc9a;
+  cursor: pointer;
+}
+
+.pimp-card-owned {
+  border-color: rgba(125, 220, 154, 0.5);
+  background: linear-gradient(135deg, rgba(125, 220, 154, 0.07), rgba(255, 255, 255, 0.03));
+}
+
+.pimp-card-owned .pimp-owned {
+  color: #a7efbd;
+}
+
+.pimp-tile-owned {
+  border-color: rgba(125, 220, 154, 0.4);
+}
+
+.pimp-tile-owned .pimp-tile-value {
+  color: #a7efbd;
+}
+
 .pimp-status {
   margin-top: 1rem;
   padding: 0.85rem 1.1rem;

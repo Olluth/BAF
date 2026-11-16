@@ -363,6 +363,7 @@ module.exports = function mountPimp(app, { dataDir }) {
       const listings = index.listings.get(key) || [];
       const priced = listings.filter((l) => l.avg7 != null && l.avg7 > 0).map((l) => l.avg7);
       return {
+        key, // stable id ("snatch|1"), used by the page to remember owned cards
         qty,
         name: c.name,
         pitch: c.pitch || null,

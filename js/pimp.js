@@ -4,9 +4,13 @@
  * (api/pimp.js) and shows, per card, every printing (image, set, foiling, art) and
  * every Cardmarket listing with its 7-day average price, plus deck totals.
  * The last decklist is kept in localStorage so a reload doesn't lose it.
+ * Signed-in members can also save decklists in Supabase (table pimp_decks, see
+ * vps-setup/supabase-pimp-decks.sql) and tick the cards they already own in a pimp version.
  */
 (function () {
   const STORE_KEY = 'baf-pimp-decklist';
+  const SUPABASE_URL = 'https://jpxmqrrmpeobrnrvvwsr.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_fWVirSqQi5Zcm5mybNzbOg_SakIPpgl';
   const EXAMPLE = [
     'Hero: Dorinthea Ironsong',
     'Weapons: Dawnblade',
@@ -28,7 +32,11 @@
   const output = $('pimp-output');
   const results = $('pimp-results');
   const sortSel = $('pimp-sort');
-  let data = null;
+  let data = null;            // last /api/pimp response
+  let user = null;            // signed-in Supabase user, or null
+  let decks = [];             // the member's saved decks
+  let currentDeck = null;     // saved deck being viewed (null = unsaved list)
+  let owned = new Set();      // card keys ticked "I have the pimp version"
 
   const lang = () => (window.getLang ? getLang() : 'fr');
   const money = (v) => (v == null ? '—' : new Intl.NumberFormat(lang() === 'fr' ? 'fr-FR' : 'en-GB', { style: 'currency', currency: 'EUR' }).format(v));
@@ -97,6 +105,10 @@
         return;
       }
       data = body;
+      // A Fabrary export starts with "Name: ...": use it as the default deck name
+      const nameInput = $('pimp-deck-name');
+      const exportName = decklist.match(/^name:\s*(.+)$/im);
+      if (!nameInput.value.trim() && exportName) nameInput.value = exportName[1].trim().slice(0, 80);
       setStatus('');
       render();
       output.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -130,10 +142,19 @@
       el('strong', { class: 'pimp-tile-value' }, value),
       sub ? el('span', { class: 'pimp-tile-sub' }, sub) : null);
 
+    // Owned progress, for members: cards ticked, and what the unticked ones would cost in bling
+    let ownedTile = null;
+    if (user) {
+      const have = cards.filter((c) => owned.has(c.key)).length;
+      const left = cards.reduce((n, c) => n + (owned.has(c.key) || c.priciest == null ? 0 : c.priciest * c.qty), 0);
+      ownedTile = tile(t('pimp.sum.owned'), `${have} / ${cards.length}`, t('pimp.sum.ownedLeft', { amount: money(left) }), 'pimp-tile-owned');
+    }
+
     $('pimp-summary').replaceChildren(
       tile(t('pimp.sum.cards'), String(count), t('pimp.sum.distinct', { n: cards.length })),
       tile(t('pimp.sum.budget'), money(sum('cheapest')), t('pimp.sum.budgetSub')),
       tile(t('pimp.sum.bling'), money(sum('priciest')), t('pimp.sum.blingSub'), 'pimp-tile-bling'),
+      ownedTile,
       tile(t('pimp.sum.date'), date, unpriced ? t('pimp.sum.unpriced', { n: unpriced }) : t('pimp.sum.avg7')),
     );
   };
@@ -185,7 +206,8 @@
           : `${money(card.cheapest)} → ${money(card.priciest)}`),
       el('div', { class: 'pimp-links' },
         el('a', { href: card.fabrary, target: '_blank', rel: 'noopener noreferrer' }, 'Fabrary ↗'),
-        el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗')),
+        el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗'),
+        user ? renderOwnedToggle(card) : null),
     );
 
     const versions = printings.length
@@ -194,9 +216,21 @@
         el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))))
       : el('p', { class: 'pimp-muted' }, t('pimp.noVersions'));
 
-    return el('article', { class: 'pimp-card' },
+    return el('article', { class: `pimp-card ${user && owned.has(card.key) ? 'pimp-card-owned' : ''}` },
       base?.image ? el('img', { class: 'pimp-card-thumb', src: base.image, alt: card.name, loading: 'lazy', width: 100, height: 140 }) : el('div', { class: 'pimp-card-thumb' }),
       el('div', { class: 'pimp-card-body' }, head, versions, renderListings(card)));
+  };
+
+  // "I have the pimp version" checkbox (members only). Saved with the deck if it is saved.
+  const renderOwnedToggle = (card) => {
+    const box = el('input', { type: 'checkbox', checked: owned.has(card.key) ? '' : null });
+    box.addEventListener('change', () => {
+      if (box.checked) owned.add(card.key); else owned.delete(card.key);
+      box.closest('.pimp-card').classList.toggle('pimp-card-owned', box.checked);
+      renderSummary();
+      saveOwnedSoon();
+    });
+    return el('label', { class: 'pimp-owned' }, box, el('span', {}, t('pimp.owned')));
   };
 
   const renderPrinting = (card, p) => {
@@ -285,6 +319,117 @@
       p.image ? el('img', { src: p.image, alt: '', loading: 'lazy', width: 30, height: 42 }) : null,
       el('span', {}, el('strong', {}, p.id), ` ${label}`)));
   };
+
+  /* ---- Saved decks (Supabase table pimp_decks, row level security: own rows only) ---- */
+
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  const deckSelect = $('pimp-deck-select');
+  const deckName = $('pimp-deck-name');
+  const deckMsg = (key, vars, isError) => {
+    const msg = $('pimp-deck-msg');
+    msg.textContent = key ? t(key, vars) : '';
+    msg.classList.toggle('pimp-deck-error', !!isError);
+  };
+
+  // Only the cards of the current result are kept, so removed cards don't linger.
+  const ownedForSave = () => [...owned].filter((k) => !data || data.cards.some((c) => c.key === k));
+
+  const fillDeckSelect = () => {
+    const first = deckSelect.options[0];
+    deckSelect.replaceChildren(first, ...decks.map((d) => el('option', { value: d.id }, d.name)));
+    deckSelect.value = currentDeck ? currentDeck.id : '';
+    $('pimp-deck-delete').classList.toggle('hidden', !currentDeck);
+  };
+
+  const loadDecks = async () => {
+    const { data: rows, error } = await sb.from('pimp_decks')
+      .select('id, name, decklist, owned, updated_at')
+      .order('updated_at', { ascending: false });
+    if (error) { deckMsg('pimp.decks.errLoad', {}, true); return; }
+    decks = rows || [];
+    if (currentDeck) currentDeck = decks.find((d) => d.id === currentDeck.id) || null;
+    fillDeckSelect();
+  };
+
+  const setUser = async (u) => {
+    const changed = (u?.id || null) !== (user?.id || null);
+    user = u;
+    $('pimp-decks').classList.toggle('hidden', !user);
+    $('pimp-login-hint').classList.toggle('hidden', !!user);
+    if (!changed) return;
+    decks = [];
+    currentDeck = null;
+    owned = new Set();
+    if (user) await loadDecks(); else fillDeckSelect();
+    if (data) render(); // show / hide the checkboxes and the owned tile
+  };
+
+  // Picking a saved deck loads its list and ticks, then analyzes it.
+  deckSelect.addEventListener('change', () => {
+    currentDeck = decks.find((d) => d.id === deckSelect.value) || null;
+    deckMsg('');
+    $('pimp-deck-delete').classList.toggle('hidden', !currentDeck);
+    if (!currentDeck) { owned = new Set(); deckName.value = ''; if (data) render(); return; }
+    owned = new Set(Array.isArray(currentDeck.owned) ? currentDeck.owned : []);
+    deckName.value = currentDeck.name;
+    input.value = currentDeck.decklist;
+    form.requestSubmit();
+  });
+
+  // Saves the current list: updates the selected deck, or creates a new one.
+  $('pimp-deck-save').addEventListener('click', async () => {
+    const decklist = input.value.trim();
+    if (!decklist) { deckMsg('pimp.err.empty', {}, true); return; }
+    const exportName = decklist.match(/^name:\s*(.+)$/im);
+    const name = (deckName.value.trim() || exportName?.[1].trim() || t('pimp.decks.untitled')).slice(0, 80);
+    deckName.value = name;
+    const row = { name, decklist, owned: ownedForSave() };
+    const btn = $('pimp-deck-save');
+    btn.disabled = true;
+    const query = currentDeck
+      ? sb.from('pimp_decks').update(row).eq('id', currentDeck.id)
+      : sb.from('pimp_decks').insert({ ...row, user_id: user.id });
+    const { data: saved, error } = await query.select('id, name, decklist, owned, updated_at').single();
+    btn.disabled = false;
+    if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+    currentDeck = saved;
+    await loadDecks();
+    deckMsg('pimp.decks.saved', { name });
+  });
+
+  $('pimp-deck-delete').addEventListener('click', async () => {
+    if (!currentDeck || !confirm(t('pimp.decks.confirmDelete', { name: currentDeck.name }))) return;
+    const { error } = await sb.from('pimp_decks').delete().eq('id', currentDeck.id);
+    if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+    const name = currentDeck.name;
+    currentDeck = null;
+    owned = new Set();
+    deckName.value = '';
+    await loadDecks();
+    deckMsg('pimp.decks.deleted', { name });
+    if (data) render();
+  });
+
+  // Ticks are saved by themselves on a saved deck (grouped, 0.8 s after the last click).
+  let ownedTimer = null;
+  const saveOwnedSoon = () => {
+    if (!currentDeck) { deckMsg('pimp.decks.saveToKeep'); return; }
+    clearTimeout(ownedTimer);
+    ownedTimer = setTimeout(async () => {
+      const list = ownedForSave();
+      const { error } = await sb.from('pimp_decks').update({ owned: list }).eq('id', currentDeck.id);
+      if (error) { deckMsg('pimp.decks.errSave', {}, true); return; }
+      currentDeck.owned = list;
+      deckMsg('pimp.decks.ownedSaved');
+    }, 800);
+  };
+
+  if (sb) {
+    sb.auth.getSession().then(({ data: s }) => setUser(s.session?.user || null));
+    sb.auth.onAuthStateChange((_event, session) => setUser(session?.user || null));
+  } else {
+    $('pimp-login-hint').classList.remove('hidden');
+  }
 
   /* ---- Hover preview (mouse only; touch keeps tap-to-enlarge) ----
      The image is loaded straight from the card image CDN, nothing is stored by the site. */
