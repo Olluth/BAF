@@ -3664,6 +3664,10 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   font-variant-numeric: tabular-nums;
 }
 
+.pimp-version-tags .pimp-tag-plain {
+  color: rgba(245, 208, 216, 0.6);
+}
+
 .pimp-version-fallback img {
   opacity: 0.55;
 }

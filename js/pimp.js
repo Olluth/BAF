@@ -324,6 +324,7 @@
           el('h4', {}, t('pimp.versions', { n: versions.length })),
           el('div', { class: 'pimp-strip' }, versions.map((v) => renderCmVersion(card, v))),
           versions.some((v) => v.guessed && v.printing) ? el('p', { class: 'pimp-muted' }, t('pimp.guessHint')) : null,
+          card.printingsSource !== 'vault' ? el('p', { class: 'pimp-muted pimp-deck-error' }, t('pimp.noVault')) : null,
           !card.printings.length ? el('p', { class: 'pimp-muted' }, t('pimp.noVersions')) : null)
         : el('p', { class: 'pimp-muted' }, t('pimp.noListing')),
       versions.length ? renderListings(card) : null,
@@ -352,8 +353,11 @@
     return el('label', { class: 'pimp-owned', title: t('pimp.owned') }, box, el('span', {}, t('pimp.owned')));
   };
 
-  // Short label of a version: "V.2 · Marvel · Cold Foil", "≈" when the finish is guessed
-  const versionLabel = (v) => [v.listing.version, ...(v.printing ? versionTags(v.printing) : [])].filter(Boolean).join(' · ');
+  // Name of a version: "Marvel · Cold Foil", "Rainbow Foil", "Standard"; "Version non identifiée"
+  // when it couldn't be matched to a print. Cardmarket's V.1 / V.2 numbers are not shown.
+  const versionLabel = (v) => (v.printing
+    ? (versionTags(v.printing).join(' · ') || t('pimp.standard'))
+    : t('pimp.unknownVersion'));
 
   // One Cardmarket version: image (hover preview, click to enlarge), 7-day price, set, finish.
   const renderCmVersion = (card, v) => {
@@ -379,10 +383,11 @@
     image ? el('img', { src: image, alt: '', loading: 'lazy', width: 72, height: 100 }) : el('span', { class: 'pimp-version-noimg' }, '?'),
     el('span', { class: 'pimp-version-price' }, money(l.avg7)),
     el('span', { class: 'pimp-version-set', title: where }, setLabel),
-    tags.length
-      ? el('span', { class: 'pimp-version-tags', title: v.guessed ? t('pimp.guessTitle') : null },
-        tags.map((x, i) => el('span', { class: x === 'Marvel' ? 'pimp-tag-marvel' : null }, i === 0 && v.guessed ? `≈ ${x}` : x)))
-      : p ? null : el('span', { class: 'pimp-version-tags' }, el('span', {}, t('pimp.unknownVersion'))));
+    // Version name on every tile: finish / art tags, "Standard" for a plain print
+    el('span', { class: 'pimp-version-tags', title: v.guessed && p ? t('pimp.guessTitle') : null },
+      (tags.length ? tags : [versionLabel(v)]).map((x, i) => el('span', {
+        class: x === 'Marvel' ? 'pimp-tag-marvel' : (!tags.length ? 'pimp-tag-plain' : null),
+      }, i === 0 && v.guessed && p ? `≈ ${x}` : x))));
   };
 
   // Price detail (collapsed): every Cardmarket product with 7-day avg, trend and 30-day avg.
@@ -411,14 +416,20 @@
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.trend')),
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.avg30')))),
       groups.map((vs) => {
-        if (vs.length === 1) return el('tbody', {}, el('tr', {}, el('td', {}, expLink(vs[0].listing)), priceCells(vs[0].listing)));
-        // Several products in one set: one row each, labeled with the (guessed) finish
-        const sorted = vs.slice().sort((a, b) => a.listing.idProduct - b.listing.idProduct);
+        // One product in the set: expansion + its finish on one row
+        if (vs.length === 1) {
+          return el('tbody', {}, el('tr', {},
+            el('td', {}, expLink(vs[0].listing), el('span', { class: 'pimp-v' }, versionLabel(vs[0]))),
+            priceCells(vs[0].listing)));
+        }
+        // Several products in one set: one row each, named by its (deduced, ≈) finish, rarest first
+        const sorted = vs.slice().sort((a, b) => (b.printing ? blingScore(b.printing) : -1) - (a.printing ? blingScore(a.printing) : -1));
         return el('tbody', { class: 'pimp-group' },
           el('tr', { class: 'pimp-group-head' }, el('td', { colspan: 4 }, expLink(vs[0].listing),
             el('span', { class: 'pimp-group-count' }, t('pimp.group.count', { n: vs.length })))),
           sorted.map((v) => el('tr', { class: 'pimp-group-row' },
-            el('td', {}, el('span', { class: 'pimp-v' }, versionLabel(v) + (v.guessed && v.printing ? ' ≈' : ''))),
+            el('td', {}, el('span', { class: `pimp-v ${v.printing?.marvel ? 'pimp-tag-marvel' : ''}` },
+              (v.guessed && v.printing ? '≈ ' : '') + versionLabel(v))),
             priceCells(v.listing))));
       }));
 
