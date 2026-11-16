@@ -112,6 +112,7 @@
       setStatus('');
       render();
       output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      completeFromVault(body);
     } catch {
       setStatus(t('pimp.err.generic'), true);
     } finally {
@@ -121,6 +122,89 @@
 
   sortSel.addEventListener('change', () => data && renderCards());
   document.addEventListener('langchange', () => data && render());
+
+  /* ---- Official card vault from the browser ----
+     When the server couldn't give a card's printings from the official vault (old API
+     running, vault unreachable from the VPS), the page asks the vault itself: its API
+     allows any website. Same mapping as api/pimp.js (vaultPrintings). Images are
+     displayed from the official image server, nothing is stored. */
+
+  const VAULT = 'https://api.cardvault.fabtcg.com/carddb/api/v1';
+  const FIRST_EDITION = { WTR: 'A', ARC: 'F', CRU: 'F', MON: 'F', ELE: 'F', EVR: 'F' };
+  const EDITION_NAMES = { A: 'Alpha', F: '1st Edition', U: 'Unlimited' };
+  const FINISHES = { regular: ['S', 'Standard'], 'rainbow-foil': ['R', 'Rainbow Foil'], 'cold-foil': ['C', 'Cold Foil'], 'gold-foil': ['G', 'Gold Cold Foil'] };
+  const ART_TYPES = { 'extended-art': 'Extended Art', 'full-art': 'Full Art', 'alternate-art': 'Alternate Art' };
+  const slug = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/['’`]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+  const mapVaultPrint = (p) => {
+    const face = p.faces?.[0] || {};
+    const set = p.print_set?.set_code || '';
+    const [foilCode, foiling] = FINISHES[face.finish_type] || FINISHES.regular;
+    const editionCode = /^([A-Z]{2}_)?[UR]-/.test(p.print_id) ? 'U' : (FIRST_EDITION[set] || 'N');
+    return {
+      id: p.print_id, set, setName: p.print_set?.set_name || set,
+      group: p.product?.product_group?.group_name || p.product?.product_name || '',
+      edition: EDITION_NAMES[editionCode] || '', editionCode, foiling, foilCode,
+      artType: face.art_type || 'regular', arts: [], rarity: p.rarity, marvel: /marvel/.test(p.rarity || ''),
+      image: face.image?.normal || face.image?.large || null,
+      imageLarge: face.image?.large || face.image?.normal || null,
+      release: p.product?.release_date || p.product?.product_group?.release_date || null,
+    };
+  };
+
+  const vaultPrintings = (json) => {
+    const all = (json?.results?.[0]?.card_prints || []).filter((p) => p.is_published !== false);
+    const enSets = new Set(all.filter((p) => p.print_language === 'en').map((p) => p.print_set?.set_code));
+    const langRank = (p) => (p.print_language === 'en' ? 0 : p.print_language === 'fr' ? 1 : 2);
+    const prints = all
+      .filter((p) => p.print_language === 'en' || !enSets.has(p.print_set?.set_code))
+      .sort((a, b) => langRank(a) - langRank(b) || /^R-/.test(a.print_id) - /^R-/.test(b.print_id))
+      .map(mapVaultPrint);
+    const artTypes = new Set(prints.map((p) => p.artType));
+    const seen = new Set();
+    const out = [];
+    for (const p of prints) {
+      if (artTypes.size > 1 && p.artType !== 'regular') p.arts = [ART_TYPES[p.artType] || p.artType];
+      delete p.artType;
+      const key = `${p.set}|${p.editionCode}|${p.foilCode}|${p.marvel}|${p.arts.join('+')}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(p);
+    }
+    return out;
+  };
+
+  const vaultGet = async (q) => { const r = await fetch(`${VAULT}/${q}`); if (!r.ok) throw new Error(r.status); return r.json(); };
+  const fetchVaultPrintings = async (name, pitch) => {
+    let json = await vaultGet(`card_id/${slug(name)}${pitch ? `-${pitch}` : ''}/`);
+    if (!json.results?.length) {
+      const found = await vaultGet(`advanced-search/?q=${encodeURIComponent(name)}`);
+      const hit = (found.results || []).find((r) => slug(r.printed_name) === slug(name) && (!pitch || Number(r.printed_pitch) === pitch));
+      json = hit ? await vaultGet(`card_id/${encodeURIComponent(hit.card_id)}/`) : null;
+    }
+    return json ? vaultPrintings(json) : [];
+  };
+
+  // Fills in, 4 cards at a time, the printings the server didn't get from the vault,
+  // then redraws. `result` is the response being shown (ignored if another one replaced it).
+  const completeFromVault = async (result) => {
+    const todo = result.cards.filter((c) => c.printingsSource !== 'vault');
+    if (!todo.length) return;
+    let i = 0;
+    const worker = async () => {
+      while (i < todo.length) {
+        const card = todo[i++];
+        try {
+          const prints = await fetchVaultPrintings(card.name, card.pitch);
+          if (prints.length) { card.printings = prints; card.printingsSource = 'vault'; delete card._versions; }
+        } catch { /* keep the server's printings */ }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(4, todo.length) }, worker));
+    result._vaultTried = true;
+    if (data === result) render();
+  };
 
   /* ---- Rendering ---- */
 
@@ -324,7 +408,7 @@
           el('h4', {}, t('pimp.versions', { n: versions.length })),
           el('div', { class: 'pimp-strip' }, versions.map((v) => renderCmVersion(card, v))),
           versions.some((v) => v.guessed && v.printing) ? el('p', { class: 'pimp-muted' }, t('pimp.guessHint')) : null,
-          card.printingsSource !== 'vault' ? el('p', { class: 'pimp-muted pimp-deck-error' }, t('pimp.noVault')) : null,
+          card.printingsSource !== 'vault' && data._vaultTried ? el('p', { class: 'pimp-muted pimp-deck-error' }, t('pimp.noVault')) : null,
           !card.printings.length ? el('p', { class: 'pimp-muted' }, t('pimp.noVersions')) : null)
         : el('p', { class: 'pimp-muted' }, t('pimp.noListing')),
       versions.length ? renderListings(card) : null,
