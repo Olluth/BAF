@@ -159,7 +159,8 @@ app.options('/api/standings', openCors);
 // Receives standings from the bookmarklet and saves them
 // to standings/<slug>.json; also auto-registers the event and notifies Discord.
 app.post('/api/standings', openCors, requireAuth, (req, res) => {
-  const { slug, standings, liveMatches, liveRoundName, droppedPlayers, lastUpdated } = req.body || {};
+  // notify: false = importing a finished event (scripts/import-coverage.js): no Discord posts
+  const { slug, standings, liveMatches, liveRoundName, droppedPlayers, lastUpdated, notify } = req.body || {};
   if (!validSlug(slug) || !Array.isArray(standings)) return res.status(400).json({ error: 'invalid data' });
   const file = path.join(STANDINGS_DIR, `${slug}.json`);
 
@@ -206,7 +207,7 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
     console.log(`Auto-registered event: ${slug}`);
   }
 
-  notifyDiscord(slug, standings, oldData, loadPlayersData(), liveRoundName).catch(() => {});
+  if (notify !== false) notifyDiscord(slug, standings, oldData, loadPlayersData(), liveRoundName).catch(() => {});
   if (!unchanged) achievements.afterUpload(); // achievements from the new results (in 5 min)
 
   res.json({ ok: true, players: standings.length });

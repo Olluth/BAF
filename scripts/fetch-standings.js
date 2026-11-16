@@ -251,4 +251,9 @@ async function main() {
   console.log('Saved to data/standings.json');
 }
 
-main().catch(err => { console.error('Fatal:', err.message); process.exit(1); });
+// Run as a script; when required (scripts/import-coverage.js), only expose the helpers.
+if (require.main === module) {
+  main().catch(err => { console.error('Fatal:', err.message); process.exit(1); });
+}
+
+module.exports = { fetchUrl, parseRoundsIndex, parseResultsPage, buildStandings };
