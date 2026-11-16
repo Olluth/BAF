@@ -61,10 +61,38 @@
     <section class="event-banner" id="events">
       <div class="container">
         <div class="section-header">
-          <span class="eyebrow" data-i18n="events.eyebrow">À venir</span>
           <h1 data-i18n="events.title">Événements à venir</h1>
         </div>
 
+        <!-- Official LSS events from fabtcg.com (js/lss-events.js, api/lss.js) -->
+        <div class="lss-block">
+          <div class="event-more-heading">
+            <span class="event-label" data-i18n="lss.heading">Circuit officiel Flesh and Blood</span>
+          </div>
+          <div id="lss-featured"></div>
+          <div class="lss-filters">
+            <div class="lss-chips" role="group" aria-label="Région / Region">
+              <button type="button" class="lss-chip" data-lss-region="europe" data-i18n="lss.europe">Europe</button>
+              <button type="button" class="lss-chip" data-lss-region="world" data-i18n="lss.world">Monde entier</button>
+            </div>
+            <div class="lss-chips" role="group" aria-label="Type">
+              <button type="button" class="lss-chip" data-lss-kind="all" data-i18n="lss.kind.all">Tous</button>
+              <button type="button" class="lss-chip" data-lss-kind="calling" data-i18n="lss.kind.calling">Calling</button>
+              <button type="button" class="lss-chip" data-lss-kind="protour" data-i18n="lss.kind.protour">Pro Tour</button>
+              <button type="button" class="lss-chip" data-lss-kind="premiere" data-i18n="lss.kind.premiere">World Premiere</button>
+              <button type="button" class="lss-chip" data-lss-kind="championship" data-i18n="lss.kind.championship">Championnats</button>
+              <button type="button" class="lss-chip" data-lss-kind="battlehardened" data-i18n="lss.kind.battlehardened">Battle Hardened</button>
+            </div>
+          </div>
+          <div id="lss-list" class="agenda-grid">
+            <p class="lss-empty" data-i18n="lss.loading">Chargement des événements officiels…</p>
+          </div>
+          <p class="lss-source" id="lss-source"></p>
+        </div>
+
+        <div class="event-more-heading">
+          <span class="event-label" data-i18n="events.club">Agenda de la BAF</span>
+        </div>
         <div id="agenda-events-list" style="margin-bottom:2.5rem">
           <p style="opacity:.4;font-style:italic">Chargement…</p>
         </div>
@@ -97,6 +125,7 @@
   <script src="js/i18n.js"></script>
   <script src="js/tracker.js"></script>
   <script src="js/agenda.js"></script>
+  <script src="js/lss-events.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/nav-auth.js"></script>
   <script src="js/member-card.js"></script>
