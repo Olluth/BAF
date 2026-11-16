@@ -845,17 +845,25 @@ const loadPlayerLinks = async () => {
     if (!r.ok) throw new Error(rows.error || `HTTP ${r.status}`);
     setLinksStatus('');
     if (!rows.length) { list.innerHTML = '<li class="admin-list-empty">Aucun membre n\'a encore choisi son joueur.</li>'; return; }
-    list.innerHTML = rows.map(m => `
+    // Pending first; a name not followed yet is a request to be followed
+    list.innerHTML = rows.map(m => {
+      const approved = m.player_status === 'approved';
+      const meta = approved
+        ? '✓ validé'
+        : (m.followed ? '⏳ à vérifier' : '⏳ demande de suivi (pas encore dans les joueurs suivis)');
+      const results = m.events ? `${m.events} tournoi(s) suivi(s) à ce nom` : 'aucun résultat suivi à ce nom';
+      return `
       <li class="admin-list-item">
         <div class="admin-list-item-info">
           <span class="admin-list-item-title">${escapeHtml(m.pseudo || 'Membre sans pseudo')} → ${escapeHtml(m.player_name)}</span>
-          <span class="admin-list-item-meta">${m.player_status === 'approved' ? '✓ lié' : '⏳ joueur déjà lié à un autre compte'}</span>
+          <span class="admin-list-item-meta">${meta} · ${results}</span>
         </div>
         <div class="admin-list-item-actions">
-          ${m.player_status !== 'approved' ? `<button class="button button-primary" data-link-action="approve" data-id="${escapeAttr(m.id)}">Valider</button>` : ''}
-          <button class="button admin-btn-danger" data-link-action="reject" data-id="${escapeAttr(m.id)}">${m.player_status === 'approved' ? 'Délier' : 'Refuser'}</button>
+          ${approved ? '' : `<button class="button button-primary" data-link-action="approve" data-id="${escapeAttr(m.id)}">${m.followed ? 'Valider' : 'Suivre et valider'}</button>`}
+          <button class="button admin-btn-danger" data-link-action="reject" data-id="${escapeAttr(m.id)}">${approved ? 'Délier' : 'Refuser'}</button>
         </div>
-      </li>`).join('');
+      </li>`;
+    }).join('');
   } catch (err) {
     setLinksStatus(`Erreur : ${err.message}. Le script vps-setup/supabase-player-links.sql a-t-il été exécuté dans Supabase ?`, true);
   }
@@ -1514,7 +1522,7 @@ const wireEvents = () => {
       });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-      setLinksStatus(action === 'approve' ? 'Lien validé : ses hauts faits sont calculés dans quelques secondes. Pensez à délier l’autre compte.' : 'Lien retiré.');
+      setLinksStatus(action === 'approve' ? 'Lien validé : ses hauts faits sont calculés dans quelques secondes.' : 'Lien retiré.');
       await loadPlayerLinks();
       if (action === 'approve') setTimeout(loadAchReport, 4000);
     } catch (err) {

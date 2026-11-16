@@ -2,11 +2,12 @@
 /*
  * Automatic achievements from tracked tournament results.
  *
- * Members link their account to a followed player on members.html (profiles.player_name,
- * linked right away unless another account already has that player: then 'pending' until an
- * admin decides, see vps-setup/supabase-player-links.sql). For linked members, the server
- * reads the standings of the tracked "Tier 3" events (Calling, Battle Hardened, Pro Tour,
- * National and World Championships) and grants:
+ * Members link their account to a followed player on members.html (profiles.player_name),
+ * or type the name they play under to ask to be followed. Either way the link is 'pending'
+ * until an admin checks it really is them (vps-setup/supabase-player-links.sql); for a name
+ * not followed yet, approving also adds it to the tracker's players. For approved links,
+ * the server reads the standings of the tracked "Tier 3" events (Calling, Battle Hardened,
+ * Pro Tour, National and World Championships) and grants:
  *   <Class> Master (Silver)  : 10 match wins with that class
  *   <Class> Expert (Gold)    : reached Day 2 with that class
  *   <Class> Legend (Diamond) : Top 8 with that class
@@ -18,8 +19,8 @@
  * Day 2 = rounds after the cut (player count drops by a third or more in one round);
  * Top 8 = the round with exactly 8 players.
  *
- * Runs 5 min after each standings upload, every 6 h, right after a member links their
- * player (POST /api/achievements/sync from members.html) and on demand from the admin page.
+ * Runs 5 min after each standings upload, every 6 h, when an admin approves a link and on
+ * demand from the admin page.
  * What it granted is remembered in DATA_DIR/auto-achievements.json: if an admin removes an
  * achievement, it isn't granted again.
  */
@@ -66,7 +67,7 @@ const analyzeRounds = (standings) => {
   return { cut, top8, final };
 };
 
-module.exports = function mountAchievements(app, { dataDir, standingsDir, eventsFile, requireAuth, supabaseUrl, serviceKey }) {
+module.exports = function mountAchievements(app, { dataDir, standingsDir, eventsFile, requireAuth, supabaseUrl, serviceKey, loadPlayers, savePlayers }) {
   const ledgerFile = path.join(dataDir, 'auto-achievements.json');
   const reportFile = path.join(dataDir, 'auto-achievements-report.json');
   const readJson = (file, fallback) => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; } };
@@ -249,15 +250,21 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
     res.json(summarize(collectResults().get(norm(name)) || []));
   });
 
-  // Admin: members who chose a followed player (pending first).
+  // Is this name among the tracker's followed players?
+  const isFollowed = (name) => (loadPlayers ? loadPlayers() : []).some((p) => norm(typeof p === 'string' ? p : p.name) === norm(name));
+
+  // Admin: members who chose a player (pending first), with whether the name is followed
+  // yet (a typed request) and whether it appears in the tracked results.
   app.get('/api/player-links', requireAuth, async (req, res) => {
     try {
       const rows = await sb('profiles?select=id,pseudo,player_name,player_status&player_name=not.is.null&order=player_status.desc');
-      res.json(rows);
+      const results = collectResults();
+      res.json(rows.map((r) => ({ ...r, followed: isFollowed(r.player_name), events: (results.get(norm(r.player_name)) || []).length })));
     } catch (err) { res.status(502).json({ error: err.message }); }
   });
 
   // Admin: approve or reject a link. { id, action: 'approve' | 'reject' }
+  // Approving a name that isn't followed yet adds it to the tracker's players (tag "Local").
   app.post('/api/player-links', requireAuth, async (req, res) => {
     const { id, action } = req.body || {};
     if (!/^[0-9a-f-]{36}$/i.test(String(id)) || !['approve', 'reject'].includes(action)) return res.status(400).json({ error: 'invalid' });
@@ -267,6 +274,9 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
         if (!row?.player_name) return res.status(404).json({ error: 'no player' });
         const taken = await sb(`profiles?select=id,pseudo&player_status=eq.approved&player_name=ilike.${encodeURIComponent(row.player_name)}&id=neq.${id}`);
         if (taken.length) return res.status(409).json({ error: `déjà lié à ${taken[0].pseudo || 'un autre compte'}` });
+        if (!isFollowed(row.player_name) && loadPlayers && savePlayers) {
+          savePlayers([...loadPlayers(), { name: row.player_name.trim(), tag: 'Local' }]);
+        }
         await sb(`profiles?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ player_status: 'approved' }), headers: { Prefer: 'return=minimal' } });
         // Grant what this player already earned (after any run in progress)
         Promise.resolve(running).catch(() => {}).finally(() => run().catch((err) => console.error('[achievements]', err.message)));
@@ -275,23 +285,6 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
       }
       res.json({ ok: true });
     } catch (err) { res.status(502).json({ error: err.message }); }
-  });
-
-  // Public: called by members.html right after a member links their player, so their
-  // achievements arrive now instead of at the next 6-hourly run. At most one run per 30 s;
-  // returns only a count (the report names other members).
-  let lastSync = 0;
-  let queuedSync = null;
-  app.post('/api/achievements/sync', async (req, res) => {
-    if (!supabaseUrl || !serviceKey) return res.status(503).json({ error: 'not configured' });
-    const wait = 30000 - (Date.now() - lastSync);
-    if (wait > 0) {
-      // Too soon after the last one: one run queued for when the 30 s are up
-      queuedSync ||= setTimeout(() => { queuedSync = null; lastSync = Date.now(); run().catch((err) => console.error('[achievements]', err.message)); }, wait);
-      return res.json({ ok: true, queued: true });
-    }
-    lastSync = Date.now();
-    try { const report = await run(); res.json({ ok: true, granted: report.granted.length }); } catch (err) { res.status(502).json({ error: 'failed' }); }
   });
 
   // Admin: run now / last report.

@@ -184,11 +184,11 @@ const loadProfile = async (userId) => {
 
 const escHtml = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// "Joueur suivi" status badge: linked right away, or pending when another account
-// already has this player (an admin decides).
-const playerStatusBadge = status => status === 'approved'
-  ? '<span class="player-link-badge player-link-ok">✓ Lié</span>'
-  : '<span class="player-link-badge player-link-pending">Déjà lié à un autre compte — vérification par un admin</span>';
+// "Joueur suivi" status badge: pending until an admin checks it really is the member.
+// `followed` false = a request to be followed (name typed, not in the tracker's list yet).
+const playerStatusBadge = (status, followed = true) => status === 'approved'
+  ? '<span class="player-link-badge player-link-ok">✓ Validé</span>'
+  : `<span class="player-link-badge player-link-pending">${followed ? 'En attente de validation par un admin' : 'Demande de suivi envoyée — en attente d’un admin'}</span>`;
 
 // Event kinds of the per-type stats table, in display order
 const KIND_LABELS = {
@@ -240,7 +240,7 @@ const renderPlayerStats = async (name, status) => {
     </tr>`;
   }).join('');
   el.innerHTML = `
-    ${status !== 'approved' ? '<p class="profile-hint">Ce joueur est déjà lié à un autre compte : ces résultats compteront pour vos hauts faits quand un admin aura vérifié.</p>' : ''}
+    ${status !== 'approved' ? '<p class="profile-hint">Ces résultats compteront pour vos hauts faits une fois qu’un admin aura vérifié que c’est bien vous.</p>' : ''}
     ${kinds ? `
     <h4 class="player-stats-title">Mes stats par type d'événement</h4>
     <table class="player-stats-table">
@@ -298,7 +298,7 @@ const renderProfileDisplay = (profile) => {
       <div class="profile-field">
         <span class="profile-label">Joueur suivi en tournoi</span>
         ${profile.player_name
-          ? `<span class="profile-value">${escHtml(profile.player_name)} ${playerStatusBadge(profile.player_status)}</span>
+          ? `<span class="profile-value">${escHtml(profile.player_name)} <span id="player-link-status">${playerStatusBadge(profile.player_status)}</span></span>
              <div id="player-stats" class="player-stats"></div>`
           : '<span class="profile-value"><span style="opacity:.4;font-style:italic">Non lié</span> — liez votre compte via « Modifier » pour obtenir des hauts faits automatiquement.</span>'}
       </div>
@@ -306,6 +306,13 @@ const renderProfileDisplay = (profile) => {
 
   $('profile-edit-btn').addEventListener('click', () => renderProfileEdit(profile));
   if (profile.player_name) renderPlayerStats(profile.player_name, profile.player_status);
+  // A pending name that isn't followed yet is a request to be followed: say so
+  if (profile.player_name && profile.player_status !== 'approved') {
+    fetchFollowedNames().then(names => {
+      const el = $('player-link-status');
+      if (el && names && !names.includes(profile.player_name)) el.innerHTML = playerStatusBadge(profile.player_status, false);
+    });
+  }
 };
 
 // Profile edit form: title select, Discord pseudo and hero picker.
@@ -343,7 +350,12 @@ const renderProfileEdit = (profile) => {
           <option value="">— Aucun —</option>
           ${profile.player_name ? `<option value="${escHtml(profile.player_name)}" selected>${escHtml(profile.player_name)}</option>` : ''}
         </select>
-        <p class="profile-hint">Votre nom tel qu'il apparaît dans le suivi de tournoi : vos résultats aux Callings, Pro Tours, Nationaux et Mondiaux vous donnent des hauts faits automatiquement. Votre nom n'est pas dans la liste ? Demandez à un admin de vous ajouter aux joueurs suivis.</p>
+        <div id="player-request" class="player-request hidden">
+          <label class="profile-label" for="edit-player-request">Votre nom exact en tournoi</label>
+          <input type="text" id="edit-player-request" class="profile-input" maxlength="80" placeholder="Prénom Nom, comme sur GEM / fabtcg.com" />
+          <p class="profile-hint">Un admin vous ajoutera aux joueurs suivis du site après avoir vérifié que c'est bien vous.</p>
+        </div>
+        <p class="profile-hint">Choisissez votre nom tel qu'il apparaît dans le suivi de tournoi. Un admin vérifie que c'est bien vous, puis vos résultats aux Callings, Pro Tours, Nationaux et Mondiaux vous donnent des hauts faits automatiquement. Pas dans la liste ? Choisissez « Je ne suis pas dans la liste » pour demander à être suivi.</p>
       </div>
       <div class="profile-actions">
         <button id="profile-save-btn" class="button button-primary">Enregistrer</button>
@@ -359,20 +371,34 @@ const renderProfileEdit = (profile) => {
   $('profile-cancel-btn').addEventListener('click', () => renderProfileDisplay(profile));
 };
 
-// Fills the "Joueur suivi" select with the tracker's followed players (GET /api/players).
-const fillPlayerSelect = async (current) => {
-  let players = [];
+// Names of the tracker's followed players (GET /api/players), sorted.
+const REQUEST_OPTION = '__request__';
+const fetchFollowedNames = async () => {
   try {
     const r = await fetch('/api/players');
-    if (r.ok) players = await r.json();
+    if (r.ok) {
+      const players = await r.json();
+      return [...new Set(players.map(p => (typeof p === 'string' ? p : p.name)).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+    }
   } catch {}
+  return null;
+};
+
+// Fills the "Joueur suivi" select with the followed players, plus "I'm not in the list",
+// which shows a text field for the name the member plays under (a request to be followed).
+const fillPlayerSelect = async (current) => {
+  const names = (await fetchFollowedNames()) || [];
   const sel = $('edit-player');
   if (!sel) return;
-  const names = [...new Set(players.map(p => (typeof p === 'string' ? p : p.name)).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
-  if (current && !names.includes(current)) names.unshift(current);
-  sel.innerHTML = '<option value="">— Aucun —</option>' + names.map(n =>
-    `<option value="${escHtml(n)}"${n === current ? ' selected' : ''}>${escHtml(n)}</option>`).join('');
+  const requested = !!current && !names.includes(current); // an earlier request, not followed yet
+  sel.innerHTML = '<option value="">— Aucun —</option>'
+    + names.map(n => `<option value="${escHtml(n)}"${n === current ? ' selected' : ''}>${escHtml(n)}</option>`).join('')
+    + `<option value="${REQUEST_OPTION}"${requested ? ' selected' : ''}>➕ Je ne suis pas dans la liste…</option>`;
+  if (requested) $('edit-player-request').value = current;
+  const sync = () => $('player-request').classList.toggle('hidden', sel.value !== REQUEST_OPTION);
+  sel.addEventListener('change', () => { sync(); if (sel.value === REQUEST_OPTION) $('edit-player-request').focus(); });
+  sync();
 };
 
 // Hero grid grouped by class; max 3 selected, others are greyed out once the limit is hit.
@@ -426,9 +452,21 @@ const renderHeroPicker = () => {
 // see vps-setup/supabase-player-links.sql), so a problem there can't block the rest.
 const saveProfile = async (previous = {}) => {
   const btn = $('profile-save-btn');
+  clearStatus('profile-status');
+
+  // Followed player: picked in the list, or typed when asking to be followed
+  const choice = $('edit-player')?.value || '';
+  const player_name = choice === REQUEST_OPTION
+    ? $('edit-player-request').value.trim().replace(/\s+/g, ' ').slice(0, 80)
+    : choice;
+  if (choice === REQUEST_OPTION && player_name.length < 3) {
+    setStatus('profile-status', 'Indiquez votre nom exact en tournoi (prénom et nom).', true);
+    $('edit-player-request').focus();
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = 'Enregistrement…';
-  clearStatus('profile-status');
 
   const discord_pseudo  = $('edit-discord').value.trim();
   const favorite_heroes = _selectedHeroes;
@@ -446,7 +484,6 @@ const saveProfile = async (previous = {}) => {
     return;
   }
 
-  const player_name = $('edit-player')?.value || '';
   if (player_name !== (previous.player_name || '')) {
     const { error: linkError } = await _sb
       .from('profiles')
@@ -457,11 +494,6 @@ const saveProfile = async (previous = {}) => {
       btn.disabled = false;
       btn.textContent = 'Enregistrer';
       return;
-    }
-    // Grant the achievements this player already earned now, not at the next 6-hourly run
-    if (player_name) {
-      btn.textContent = 'Calcul des hauts faits…';
-      try { await fetch('/api/achievements/sync', { method: 'POST' }); } catch {}
     }
   }
 

@@ -414,6 +414,7 @@ require('./pimp')(app, { dataDir: DATA_DIR });
 const achievements = require('./achievements')(app, {
   dataDir: DATA_DIR, standingsDir: STANDINGS_DIR, eventsFile: EVENTS_FILE, requireAuth,
   supabaseUrl: SUPABASE_URL, serviceKey: SUPABASE_SERVICE_KEY,
+  loadPlayers: loadPlayersData, savePlayers: savePlayersData,
 });
 
 app.listen(PORT, '127.0.0.1', () => console.log(`BAF API running on :${PORT}`));

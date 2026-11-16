@@ -1544,6 +1544,20 @@ textarea::placeholder {
   color: #f8deb0;
 }
 
+/* "I'm not in the list" request field in the profile editor */
+.player-request {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.6rem;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(245, 208, 216, 0.25);
+}
+
+.player-request .profile-hint {
+  margin: 0;
+}
+
 .player-stats {
   margin-top: 0.6rem;
   overflow-x: auto;
