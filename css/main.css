@@ -1521,6 +1521,110 @@ textarea::placeholder {
   padding: 0 1.25rem 1.25rem;
 }
 
+/* ---- Followed player link + tracked results (members.html) ---- */
+
+.player-link-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.player-link-ok {
+  background: rgba(125, 220, 154, 0.12);
+  border: 1px solid rgba(125, 220, 154, 0.4);
+  color: #a7efbd;
+}
+
+.player-link-pending {
+  background: rgba(245, 180, 80, 0.1);
+  border: 1px solid rgba(245, 180, 80, 0.35);
+  color: #f8deb0;
+}
+
+.player-stats {
+  margin-top: 0.6rem;
+  overflow-x: auto;
+}
+
+.player-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.player-stats-table th,
+.player-stats-table td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.08);
+  text-align: left;
+}
+
+.player-stats-table th {
+  font-weight: 600;
+  color: rgba(245, 208, 216, 0.55);
+}
+
+.player-stats-table .num {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.player-stat-yes {
+  color: #a7efbd;
+  font-weight: 700;
+}
+
+.player-stat-no {
+  opacity: 0.35;
+}
+
+.player-stats-events {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: #e0b5be;
+}
+
+/* Admin: links + automatic achievements (admin.html, Hauts faits tab) */
+.ach-auto-section {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(245, 208, 216, 0.1);
+}
+
+.ach-auto-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  color: #ffffff;
+}
+
+.ach-auto-subtitle {
+  margin: 0.9rem 0 0.3rem;
+  font-size: 0.9rem;
+  color: #f5d0d8;
+}
+
+.ach-auto-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+}
+
+.ach-auto-actions .admin-panel-desc {
+  margin: 0;
+}
+
+.ach-auto-members {
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  color: #e0b5be;
+}
+
 /* ---- Official LSS events (events.html, js/lss-events.js) ---- */
 
 .lss-block {

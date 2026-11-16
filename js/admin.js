@@ -571,7 +571,7 @@ const switchTab = (tab) => {
   if (tab === 'agenda') loadAgendaFromServer();
   if (tab === 'players') loadPlayersFromServer();
   if (tab === 'members') loadMembers();
-  if (tab === 'achievements') renderAchievementsPanel();
+  if (tab === 'achievements') { renderAchievementsPanel(); loadPlayerLinks(); loadAchReport(); }
   if (tab === 'live') { loadLiveStatus(); loadLiveSlugOptions(); startLivePolling(); } else { stopLivePolling(); }
 };
 
@@ -822,6 +822,73 @@ const loadMembers = async () => {
   } catch (err) {
     setMembersStatus(`Erreur : ${err.message}`, true);
   }
+};
+
+// --- Followed-player links + automatic achievements (API key, api/achievements.js) ---
+
+const setLinksStatus = (msg, isError = false) => {
+  const el = $('player-links-status');
+  if (!el) return;
+  el.className = 'tracker-status' + (isError ? ' tracker-status-error' : '') + (msg ? '' : ' hidden');
+  el.textContent = msg || '';
+};
+
+// Members who chose a followed player: pending ones get Valider / Refuser.
+const loadPlayerLinks = async () => {
+  const list = $('player-links-list');
+  const key = getAnalyticsKey();
+  if (!list) return;
+  if (!key) { setLinksStatus('Clé API requise (onglet Analytics).', true); return; }
+  try {
+    const r = await fetch('/api/player-links', { headers: { Authorization: `Bearer ${key}` } });
+    const rows = await r.json();
+    if (!r.ok) throw new Error(rows.error || `HTTP ${r.status}`);
+    setLinksStatus('');
+    if (!rows.length) { list.innerHTML = '<li class="admin-list-empty">Aucun membre n\'a encore choisi son joueur.</li>'; return; }
+    list.innerHTML = rows.map(m => `
+      <li class="admin-list-item">
+        <div class="admin-list-item-info">
+          <span class="admin-list-item-title">${escapeHtml(m.pseudo || 'Membre sans pseudo')} → ${escapeHtml(m.player_name)}</span>
+          <span class="admin-list-item-meta">${m.player_status === 'approved' ? '✓ validé' : '⏳ en attente de validation'}</span>
+        </div>
+        <div class="admin-list-item-actions">
+          ${m.player_status !== 'approved' ? `<button class="button button-primary" data-link-action="approve" data-id="${escapeAttr(m.id)}">Valider</button>` : ''}
+          <button class="button admin-btn-danger" data-link-action="reject" data-id="${escapeAttr(m.id)}">${m.player_status === 'approved' ? 'Délier' : 'Refuser'}</button>
+        </div>
+      </li>`).join('');
+  } catch (err) {
+    setLinksStatus(`Erreur : ${err.message}. Le script vps-setup/supabase-player-links.sql a-t-il été exécuté dans Supabase ?`, true);
+  }
+};
+
+// Last automatic run: what was granted, and each linked member's tracked results.
+const renderAchReport = (report) => {
+  const el = $('ach-auto-report');
+  if (!el) return;
+  if (!report) { el.innerHTML = ''; return; }
+  const when = new Date(report.ranAt).toLocaleString('fr-FR');
+  const granted = report.granted.length
+    ? `<ul>${report.granted.map(g => `<li>${escapeHtml(g.pseudo || '?')} : <strong>${escapeHtml(g.achievement || g.achievement_id)}</strong></li>`).join('')}</ul>`
+    : '<p class="admin-panel-desc">Aucun nouveau haut fait.</p>';
+  const members = report.members.map(m => {
+    const classes = Object.entries(m.summary.perClass)
+      .map(([c, s]) => `${escapeHtml(c)} ${s.wins} V${s.day2 ? ' · D2' : ''}${s.top8 ? ' · T8' : ''}`).join(' | ');
+    return `<li>${escapeHtml(m.pseudo || '?')} (${escapeHtml(m.player)}) : ${m.summary.events.length} tournoi(s), ${m.summary.callings} Calling(s)${classes ? ` — ${classes}` : ''}</li>`;
+  }).join('');
+  el.innerHTML = `
+    <p class="admin-panel-desc">Dernier calcul : ${when}</p>
+    <h4 class="ach-auto-subtitle">Attribués lors de ce calcul</h4>${granted}
+    <h4 class="ach-auto-subtitle">Résultats suivis des comptes validés</h4>
+    <ul class="ach-auto-members">${members || '<li>Aucun compte validé.</li>'}</ul>`;
+};
+
+const loadAchReport = async () => {
+  const key = getAnalyticsKey();
+  if (!key) return;
+  try {
+    const r = await fetch('/api/achievements/report', { headers: { Authorization: `Bearer ${key}` } });
+    if (r.ok) renderAchReport(await r.json());
+  } catch {}
 };
 
 // --- Achievements Admin ---
@@ -1431,6 +1498,49 @@ const wireEvents = () => {
   });
 
   $('live-stop-btn')?.addEventListener('click', () => liveRequest('POST', { running: false }));
+
+  // Valider / Refuser / Délier a followed-player link
+  $('player-links-list')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-link-action]');
+    if (!btn) return;
+    const action = btn.dataset.linkAction;
+    if (action === 'reject' && !confirm('Retirer ce lien entre le compte et le joueur suivi ?')) return;
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/player-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAnalyticsKey()}` },
+        body: JSON.stringify({ id: btn.dataset.id, action }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+      setLinksStatus(action === 'approve' ? 'Lien validé : ses hauts faits sont calculés dans quelques secondes.' : 'Lien retiré.');
+      await loadPlayerLinks();
+      if (action === 'approve') setTimeout(loadAchReport, 4000);
+    } catch (err) {
+      setLinksStatus(`Erreur : ${err.message}`, true);
+      btn.disabled = false;
+    }
+  });
+
+  // Run the automatic achievements now and show the report
+  $('ach-auto-run')?.addEventListener('click', async () => {
+    const btn = $('ach-auto-run');
+    btn.disabled = true;
+    btn.textContent = 'Calcul en cours…';
+    try {
+      const r = await fetch('/api/achievements/run', { method: 'POST', headers: { Authorization: `Bearer ${getAnalyticsKey()}` } });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
+      renderAchReport(body);
+      setLinksStatus(`${body.granted.length} haut(s) fait(s) attribué(s).`);
+    } catch (err) {
+      setLinksStatus(`Erreur : ${err.message}`, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Calculer les hauts faits maintenant';
+    }
+  });
 
   $('ach-signin-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();

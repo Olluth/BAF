@@ -262,6 +262,19 @@
               </div>
               <div id="achievements-status" class="tracker-status hidden"></div>
 
+              <!-- Liens compte membre <-> joueur suivi + hauts faits automatiques (clé API, api/achievements.js) -->
+              <div class="ach-auto-section">
+                <h3 class="ach-auto-title">Comptes liés aux joueurs suivis</h3>
+                <p class="admin-panel-desc">Les membres choisissent leur joueur dans leur profil. Validez le lien pour que leurs résultats (Calling, Battle Hardened, Pro Tour, Nationaux, Mondiaux) donnent des hauts faits automatiquement.</p>
+                <div id="player-links-status" class="tracker-status hidden"></div>
+                <ul id="player-links-list" class="admin-list"></ul>
+                <div class="ach-auto-actions">
+                  <button type="button" id="ach-auto-run" class="button button-primary">Calculer les hauts faits maintenant</button>
+                  <span class="admin-panel-desc">Sinon : 5 min après chaque mise à jour du suivi, et toutes les 6 h.</span>
+                </div>
+                <div id="ach-auto-report"></div>
+              </div>
+
               <!-- Connexion Supabase requise -->
               <div id="ach-signin-section">
                 <p class="admin-panel-desc">Connectez-vous avec votre compte membre pour gérer les hauts faits.</p>

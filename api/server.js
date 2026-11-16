@@ -207,6 +207,7 @@ app.post('/api/standings', openCors, requireAuth, (req, res) => {
   }
 
   notifyDiscord(slug, standings, oldData, loadPlayersData(), liveRoundName).catch(() => {});
+  if (!unchanged) achievements.afterUpload(); // achievements from the new results (in 5 min)
 
   res.json({ ok: true, players: standings.length });
 });
@@ -408,5 +409,11 @@ app.delete('/api/events/:slug', requireAuth, (req, res) => {
 
 /* ---- Pimp My Deck (public): card versions + Cardmarket prices for a decklist ---- */
 require('./pimp')(app, { dataDir: DATA_DIR });
+
+/* ---- Member <-> followed player links, automatic achievements from tournament results ---- */
+const achievements = require('./achievements')(app, {
+  dataDir: DATA_DIR, standingsDir: STANDINGS_DIR, eventsFile: EVENTS_FILE, requireAuth,
+  supabaseUrl: SUPABASE_URL, serviceKey: SUPABASE_SERVICE_KEY,
+});
 
 app.listen(PORT, '127.0.0.1', () => console.log(`BAF API running on :${PORT}`));
