@@ -204,7 +204,9 @@
     return el('button', {
       type: 'button',
       class: `pimp-version ${special ? 'pimp-version-special' : ''} pimp-foil-${p.foilCode}`,
-      title: caption,
+      'aria-label': caption,
+      'data-preview': p.image,
+      'data-caption': `${p.id} · ${caption}`,
       onclick: () => openLightbox(p.image, `${card.name} — ${p.id} · ${caption}`),
       disabled: !p.image,
     },
@@ -274,11 +276,56 @@
         type: 'button',
         class: 'pimp-setversion',
         disabled: !p.image,
+        'data-preview': p.image,
+        'data-caption': `${p.id} · ${[p.setName, p.edition, label].filter(Boolean).join(' · ')}`,
         onclick: () => openLightbox(p.image, `${card.name} — ${p.id} · ${[p.setName, p.edition, label].filter(Boolean).join(' · ')}`),
       },
       p.image ? el('img', { src: p.image, alt: '', loading: 'lazy', width: 30, height: 42 }) : null,
       el('span', {}, el('strong', {}, p.id), ` ${label}`)));
   };
+
+  /* ---- Hover preview (mouse only; touch keeps tap-to-enlarge) ----
+     The image is loaded straight from the card image CDN, nothing is stored by the site. */
+
+  const preview = el('div', { class: 'pimp-hover', 'aria-hidden': 'true' },
+    el('img', { alt: '' }), el('span', {}));
+  document.body.append(preview);
+  const previewImg = preview.querySelector('img');
+  const previewCap = preview.querySelector('span');
+  let previewFor = null;
+
+  // Next to the cursor, flipped left / up when it would leave the window.
+  const placePreview = (x, y) => {
+    const w = preview.offsetWidth;
+    const h = preview.offsetHeight;
+    const gap = 18;
+    const left = x + gap + w > innerWidth ? Math.max(8, x - gap - w) : x + gap;
+    const top = Math.min(Math.max(8, y - h / 2), innerHeight - h - 8);
+    preview.style.transform = `translate(${left}px, ${top}px)`;
+  };
+
+  results.addEventListener('pointerover', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const target = e.target.closest('[data-preview]');
+    if (!target || target === previewFor) return;
+    previewFor = target;
+    previewImg.src = target.dataset.preview;
+    previewCap.textContent = target.dataset.caption || '';
+    preview.classList.add('show');
+    placePreview(e.clientX, e.clientY);
+  });
+  results.addEventListener('pointermove', (e) => {
+    if (previewFor) placePreview(e.clientX, e.clientY);
+  });
+  results.addEventListener('pointerout', (e) => {
+    if (!previewFor || previewFor.contains(e.relatedTarget)) return;
+    previewFor = null;
+    preview.classList.remove('show');
+  });
+  // Hide while scrolling or when the lightbox opens
+  const hidePreview = () => { previewFor = null; preview.classList.remove('show'); };
+  addEventListener('scroll', hidePreview, { passive: true });
+  results.addEventListener('click', hidePreview);
 
   /* ---- Lightbox ---- */
 
