@@ -3656,6 +3656,24 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
   margin-top: 0.6rem;
 }
 
+/* 7-day average price under each Cardmarket version */
+.pimp-version-price {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.pimp-version-fallback img {
+  opacity: 0.55;
+}
+
+.pimp-version-set {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .pimp-version-marvel {
   border-color: rgba(233, 166, 255, 0.7);
   background: linear-gradient(160deg, rgba(233, 166, 255, 0.16), rgba(240, 200, 120, 0.1));
@@ -3871,59 +3889,6 @@ a.mid-event-link:hover { border-color: rgba(249,230,197,.25); }
 
 .pimp-group-row .pimp-v {
   margin-left: 0;
-}
-
-.pimp-table .pimp-group-versions td {
-  padding: 0.35rem 0.6rem 0.7rem 1.4rem;
-}
-
-.pimp-group-label {
-  font-size: 0.78rem;
-  color: rgba(245, 208, 216, 0.55);
-}
-
-.pimp-setversions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0.35rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pimp-setversion {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.2rem 0.6rem 0.2rem 0.2rem;
-  border-radius: 8px;
-  border: 1px solid rgba(245, 208, 216, 0.14);
-  background: rgba(255, 255, 255, 0.03);
-  color: #f5d0d8;
-  font: inherit;
-  font-size: 0.8rem;
-  text-align: left;
-  cursor: zoom-in;
-}
-
-.pimp-setversion:hover {
-  border-color: rgba(245, 208, 216, 0.4);
-}
-
-.pimp-setversion[disabled] {
-  cursor: default;
-}
-
-.pimp-setversion img {
-  width: 30px;
-  height: 42px;
-  object-fit: cover;
-  border-radius: 3px;
-}
-
-.pimp-setversion-special .pimp-setversion {
-  border-color: rgba(240, 200, 120, 0.45);
-  color: #f6d98f;
 }
 
 .section .pimp-muted {

@@ -178,7 +178,7 @@
     deck: () => 0,
     bling: (a, b) => (b.priciest ?? -1) - (a.priciest ?? -1),
     cheap: (a, b) => (b.cheapest ?? -1) - (a.cheapest ?? -1),
-    versions: (a, b) => b.printings.length - a.printings.length,
+    versions: (a, b) => cmVersions(b).length - cmVersions(a).length,
   };
 
   const renderCards = () => {
@@ -195,15 +195,49 @@
 
   const pitchLabel = (p) => ({ 1: t('pimp.pitch.red'), 2: t('pimp.pitch.yellow'), 3: t('pimp.pitch.blue') }[p]);
 
+  // The versions shown are the ones sold on Cardmarket: one per Cardmarket product, each
+  // paired with a printing of its set for the image and finish. Cardmarket doesn't say
+  // which of its products in a set is the foil / Marvel..., so when a set has several,
+  // the priciest product gets the rarest printing (guessed: true).
+  const cmVersions = (card) => {
+    if (card._versions) return card._versions;
+    const byExp = new Map();
+    for (const l of card.listings) {
+      if (!byExp.has(l.idExpansion)) byExp.set(l.idExpansion, []);
+      byExp.get(l.idExpansion).push(l);
+    }
+    const out = [];
+    for (const ls of byExp.values()) {
+      const first = ls[0];
+      const inSet = first.set
+        ? card.printings.filter((p) => p.set === first.set && (!first.edition || p.editionCode === first.edition))
+        : [];
+      const byBling = inSet.slice().sort((a, b) => blingScore(b) - blingScore(a));
+      if (ls.length === 1) {
+        // A single product: the set's only printing, or its plainest one
+        out.push({ listing: first, printing: byBling[byBling.length - 1] || null, guessed: inSet.length > 1 });
+      } else {
+        const byPrice = ls.slice().sort((a, b) => (b.avg7 ?? -1) - (a.avg7 ?? -1));
+        byPrice.forEach((l, i) => out.push({ listing: l, printing: byBling[i] || null, guessed: true }));
+      }
+    }
+    // Bling first, then price
+    out.sort((a, b) => (b.printing ? blingScore(b.printing) : -1) - (a.printing ? blingScore(a.printing) : -1)
+      || (b.listing.avg7 ?? -1) - (a.listing.avg7 ?? -1));
+    card._versions = out;
+    return out;
+  };
+
   // Cards opened by the user, kept across re-renders (sort, language, ticks)
   const expanded = new Set();
 
-  // One line per card (qty, name, alts, price range, owned tick); clicking it opens the
-  // versions and Cardmarket prices underneath. The detail is built on first open.
+  // One line per card (qty, name, versions / alts on Cardmarket, price range, owned tick);
+  // clicking it opens the versions and prices underneath. The detail is built on first open.
   const renderCard = (card) => {
     const base = card.printings.find((p) => p.image && p.foilCode === 'S' && !p.arts.length && !p.marvel) || card.printings.find((p) => p.image);
-    const alts = card.printings.filter(isSpecial).length;
-    const marvels = card.printings.filter((p) => p.marvel).length;
+    const versions = cmVersions(card);
+    const alts = versions.filter((v) => v.printing && isSpecial(v.printing)).length;
+    const marvel = versions.some((v) => v.printing?.marvel);
     const isOpen = expanded.has(card.key);
 
     const body = el('div', { class: 'pimp-card-body', hidden: isOpen ? null : '' });
@@ -219,9 +253,9 @@
       el('span', { class: 'pimp-row-main' },
         el('span', { class: 'pimp-row-name' }, card.name),
         el('span', { class: 'pimp-row-meta' },
-          card.printings.length ? t('pimp.row.versions', { n: card.printings.length }) : t('pimp.row.new'),
+          versions.length ? t('pimp.row.versions', { n: versions.length }) : t('pimp.row.notOnCm'),
           alts ? el('span', { class: 'pimp-row-alts' }, t('pimp.row.alts', { n: alts })) : null,
-          marvels ? el('span', { class: 'pimp-row-marvel' }, 'Marvel') : null)),
+          marvel ? el('span', { class: 'pimp-row-marvel' }, 'Marvel') : null)),
       el('span', { class: 'pimp-price-range' },
         card.cheapest == null ? t('pimp.noPrice')
           : card.cheapest === card.priciest ? money(card.cheapest)
@@ -240,19 +274,21 @@
       body);
   };
 
-  // Opened card: links, every version, Cardmarket prices.
+  // Opened card: links, the Cardmarket versions as tiles, then the price detail table.
   const renderCardDetail = (card) => {
-    const printings = card.printings.slice().sort((a, b) => blingScore(b) - blingScore(a));
+    const versions = cmVersions(card);
     return [
       el('div', { class: 'pimp-links' },
         el('a', { href: card.fabrary, target: '_blank', rel: 'noopener noreferrer' }, 'Fabrary ↗'),
         el('a', { href: cmUrl(card.listings[0]?.name || card.name), target: '_blank', rel: 'noopener noreferrer' }, 'Cardmarket ↗')),
-      printings.length
+      versions.length
         ? el('div', { class: 'pimp-versions' },
-          el('h4', {}, t('pimp.versions', { n: printings.length })),
-          el('div', { class: 'pimp-strip' }, printings.map((p) => renderPrinting(card, p))))
-        : el('p', { class: 'pimp-muted' }, t('pimp.noVersions')),
-      renderListings(card),
+          el('h4', {}, t('pimp.versions', { n: versions.length })),
+          el('div', { class: 'pimp-strip' }, versions.map((v) => renderCmVersion(card, v))),
+          versions.some((v) => v.guessed && v.printing) ? el('p', { class: 'pimp-muted' }, t('pimp.guessHint')) : null,
+          card.cardmarketOnly ? el('p', { class: 'pimp-muted' }, t('pimp.noVersions')) : null)
+        : el('p', { class: 'pimp-muted' }, t('pimp.noListing')),
+      versions.length ? renderListings(card) : null,
     ];
   };
 
@@ -278,33 +314,47 @@
     return el('label', { class: 'pimp-owned', title: t('pimp.owned') }, box, el('span', {}, t('pimp.owned')));
   };
 
-  const renderPrinting = (card, p) => {
-    const special = isSpecial(p);
-    const caption = [p.setName, p.edition, p.marvel ? 'Marvel' : null, p.foiling, ...p.arts].filter(Boolean).join(' · ');
-    const tags = versionTags(p);
+  // Short label of a version: "V.2 · Marvel · Cold Foil", "≈" when the finish is guessed
+  const versionLabel = (v) => [v.listing.version, ...(v.printing ? versionTags(v.printing) : [])].filter(Boolean).join(' · ');
+
+  // One Cardmarket version: image (hover preview, click to enlarge), 7-day price, set, finish.
+  const renderCmVersion = (card, v) => {
+    const { listing: l, printing: p } = v;
+    const where = l.expansion || t('pimp.otherExpansion');
+    const tags = p ? versionTags(p) : [];
+    const caption = [where, p?.id, versionLabel(v)].filter(Boolean).join(' · ') + (v.guessed && p ? ' (≈)' : '');
+    const setLabel = p ? `${p.set}${p.edition ? ' ' + p.edition.replace('1st Edition', '1st') : ''}` : where;
+    // Set not in the card database: show the card's regular art, dimmed, without finish
+    const image = p?.image || card.printings.find((x) => x.image && x.foilCode === 'S' && !x.arts.length && !x.marvel)?.image || null;
     return el('button', {
       type: 'button',
-      class: `pimp-version ${special ? 'pimp-version-special' : ''} ${p.marvel ? 'pimp-version-marvel' : ''} pimp-foil-${p.foilCode}`,
+      class: `pimp-version ${p && isSpecial(p) ? 'pimp-version-special' : ''} ${p?.marvel ? 'pimp-version-marvel' : ''} ${p ? `pimp-foil-${p.foilCode}` : 'pimp-version-fallback'}`,
       'aria-label': caption,
-      'data-preview': p.image,
-      'data-caption': `${p.id} · ${caption}`,
-      onclick: () => openLightbox(p.image, `${card.name} — ${p.id} · ${caption}`),
-      disabled: !p.image,
+      'data-preview': image,
+      'data-caption': caption,
+      // Without any image (card too recent), the tile opens the Cardmarket search instead
+      onclick: () => (image
+        ? openLightbox(image, `${card.name} — ${caption}`)
+        : window.open(cmUrl(l.name, l.idExpansion), '_blank', 'noopener')),
     },
-    p.image ? el('img', { src: p.image, alt: caption, loading: 'lazy', width: 72, height: 100 }) : el('span', { class: 'pimp-version-noimg' }, '?'),
-    el('span', { class: 'pimp-version-set' }, `${p.set}${p.edition ? ' ' + p.edition.replace('1st Edition', '1st') : ''}`),
-    tags.length ? el('span', { class: 'pimp-version-tags' }, tags.map((x) => el('span', { class: x === 'Marvel' ? 'pimp-tag-marvel' : null }, x))) : null);
+    image ? el('img', { src: image, alt: '', loading: 'lazy', width: 72, height: 100 }) : el('span', { class: 'pimp-version-noimg' }, '?'),
+    el('span', { class: 'pimp-version-price' }, money(l.avg7)),
+    el('span', { class: 'pimp-version-set', title: where }, setLabel),
+    tags.length
+      ? el('span', { class: 'pimp-version-tags', title: v.guessed ? t('pimp.guessTitle') : null },
+        tags.map((x, i) => el('span', { class: x === 'Marvel' ? 'pimp-tag-marvel' : null }, i === 0 && v.guessed ? `≈ ${x}` : x)))
+      : null);
   };
 
+  // Price detail (collapsed): every Cardmarket product with 7-day avg, trend and 30-day avg.
   const renderListings = (card) => {
-    if (!card.listings.length) return el('p', { class: 'pimp-muted' }, t('pimp.noListing'));
-    // One group per expansion, cheapest first (by its cheapest listing), unpriced last
+    const versions = cmVersions(card);
     const byExp = new Map();
-    for (const l of card.listings) {
-      if (!byExp.has(l.idExpansion)) byExp.set(l.idExpansion, []);
-      byExp.get(l.idExpansion).push(l);
+    for (const v of versions) {
+      if (!byExp.has(v.listing.idExpansion)) byExp.set(v.listing.idExpansion, []);
+      byExp.get(v.listing.idExpansion).push(v);
     }
-    const minAvg = (ls) => Math.min(...ls.map((l) => l.avg7 ?? Infinity));
+    const minAvg = (vs) => Math.min(...vs.map((v) => v.listing.avg7 ?? Infinity));
     const groups = [...byExp.values()].sort((a, b) => minAvg(a) - minAvg(b));
 
     const priceCells = (l) => [
@@ -321,48 +371,21 @@
         el('th', { class: 'num' }, t('pimp.col.avg7')),
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.trend')),
         el('th', { class: 'num pimp-col-extra' }, t('pimp.col.avg30')))),
-      groups.map((ls) => {
-        if (ls.length === 1) return el('tbody', {}, el('tr', {}, el('td', {}, expLink(ls[0])), priceCells(ls[0])));
-        // Several Cardmarket products in one set: their V.1/V.2 rows, then the versions
-        // printed in that set, so you can tell what each one may be.
-        const first = ls[0];
-        const inSet = first.set
-          ? card.printings.filter((p) => p.set === first.set && (!first.edition || p.editionCode === first.edition))
-          : [];
+      groups.map((vs) => {
+        if (vs.length === 1) return el('tbody', {}, el('tr', {}, el('td', {}, expLink(vs[0].listing)), priceCells(vs[0].listing)));
+        // Several products in one set: one row each, labeled with the (guessed) finish
+        const sorted = vs.slice().sort((a, b) => a.listing.idProduct - b.listing.idProduct);
         return el('tbody', { class: 'pimp-group' },
-          el('tr', { class: 'pimp-group-head' }, el('td', { colspan: 4 }, expLink(first),
-            el('span', { class: 'pimp-group-count' }, t('pimp.group.count', { n: ls.length })))),
-          ls.map((l) => el('tr', { class: 'pimp-group-row' },
-            el('td', {}, el('span', { class: 'pimp-v' }, l.version)), priceCells(l))),
-          el('tr', { class: 'pimp-group-versions' }, el('td', { colspan: 4 },
-            inSet.length
-              ? el('div', {},
-                el('span', { class: 'pimp-group-label' }, t('pimp.group.inSet')),
-                el('ul', { class: 'pimp-setversions' }, inSet.map((p) => renderSetVersion(card, p))))
-              : el('span', { class: 'pimp-muted' }, t('pimp.group.unknown')))));
+          el('tr', { class: 'pimp-group-head' }, el('td', { colspan: 4 }, expLink(vs[0].listing),
+            el('span', { class: 'pimp-group-count' }, t('pimp.group.count', { n: vs.length })))),
+          sorted.map((v) => el('tr', { class: 'pimp-group-row' },
+            el('td', {}, el('span', { class: 'pimp-v' }, versionLabel(v) + (v.guessed && v.printing ? ' ≈' : ''))),
+            priceCells(v.listing))));
       }));
 
-    return el('details', { class: 'pimp-listings', open: groups.length <= 6 ? '' : null },
+    return el('details', { class: 'pimp-listings' },
       el('summary', {}, t('pimp.listings', { n: card.listings.length })),
-      el('div', { class: 'pimp-table-wrap' }, table),
-      groups.some((g) => g.length > 1) ? el('p', { class: 'pimp-muted pimp-v-hint' }, t('pimp.versionHint')) : null);
-  };
-
-  // One line of a set's version list: small image (opens the lightbox) + finish / art labels.
-  const renderSetVersion = (card, p) => {
-    const label = [p.marvel ? 'Marvel' : null, p.foiling, ...p.arts].filter(Boolean).join(' · ');
-    const special = isSpecial(p);
-    return el('li', { class: special ? 'pimp-setversion-special' : null },
-      el('button', {
-        type: 'button',
-        class: 'pimp-setversion',
-        disabled: !p.image,
-        'data-preview': p.image,
-        'data-caption': `${p.id} · ${[p.setName, p.edition, label].filter(Boolean).join(' · ')}`,
-        onclick: () => openLightbox(p.image, `${card.name} — ${p.id} · ${[p.setName, p.edition, label].filter(Boolean).join(' · ')}`),
-      },
-      p.image ? el('img', { src: p.image, alt: '', loading: 'lazy', width: 30, height: 42 }) : null,
-      el('span', {}, el('strong', {}, p.id), ` ${label}`)));
+      el('div', { class: 'pimp-table-wrap' }, table));
   };
 
   /* ---- Saved decks (Supabase table pimp_decks, row level security: own rows only) ---- */
