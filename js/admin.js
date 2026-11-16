@@ -849,7 +849,7 @@ const loadPlayerLinks = async () => {
       <li class="admin-list-item">
         <div class="admin-list-item-info">
           <span class="admin-list-item-title">${escapeHtml(m.pseudo || 'Membre sans pseudo')} → ${escapeHtml(m.player_name)}</span>
-          <span class="admin-list-item-meta">${m.player_status === 'approved' ? '✓ validé' : '⏳ en attente de validation'}</span>
+          <span class="admin-list-item-meta">${m.player_status === 'approved' ? '✓ lié' : '⏳ joueur déjà lié à un autre compte'}</span>
         </div>
         <div class="admin-list-item-actions">
           ${m.player_status !== 'approved' ? `<button class="button button-primary" data-link-action="approve" data-id="${escapeAttr(m.id)}">Valider</button>` : ''}
@@ -1514,7 +1514,7 @@ const wireEvents = () => {
       });
       const body = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(body.error || `HTTP ${r.status}`);
-      setLinksStatus(action === 'approve' ? 'Lien validé : ses hauts faits sont calculés dans quelques secondes.' : 'Lien retiré.');
+      setLinksStatus(action === 'approve' ? 'Lien validé : ses hauts faits sont calculés dans quelques secondes. Pensez à délier l’autre compte.' : 'Lien retiré.');
       await loadPlayerLinks();
       if (action === 'approve') setTimeout(loadAchReport, 4000);
     } catch (err) {

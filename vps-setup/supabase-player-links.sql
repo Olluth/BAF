@@ -3,10 +3,12 @@
 -- Run once in Supabase > SQL Editor.
 --
 --   player_name   : the player as written in tournament standings ("Antoine Billy")
---   player_status : 'pending' (chosen by the member) or 'approved' (validated by an admin)
+--   player_status : 'approved' (linked) or 'pending' (another account already has this player)
 --
--- A member can set or change their own player_name, but it always goes back to 'pending':
--- only an admin (profiles.is_admin), the server (service key) or the SQL editor can approve.
+-- A member who picks a player is linked right away ('approved'), unless another account is
+-- already linked to that player: then it stays 'pending' until an admin decides. Members
+-- can't set the status themselves; an admin (profiles.is_admin), the server (service key)
+-- or the SQL editor can.
 
 alter table public.profiles
   add column if not exists player_name text,
@@ -36,7 +38,14 @@ begin
 
   new.player_name := nullif(trim(new.player_name), '');
   if tg_op = 'INSERT' or new.player_name is distinct from old.player_name then
-    new.player_status := case when new.player_name is null then null else 'pending' end;
+    if new.player_name is null then
+      new.player_status := null;
+    elsif exists (select 1 from public.profiles p
+                  where p.player_status = 'approved' and lower(p.player_name) = lower(new.player_name) and p.id <> new.id) then
+      new.player_status := 'pending';   -- already someone else's: an admin decides
+    else
+      new.player_status := 'approved';  -- linked right away
+    end if;
   else
     new.player_status := old.player_status;
   end if;

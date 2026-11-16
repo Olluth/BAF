@@ -1549,6 +1549,15 @@ textarea::placeholder {
   overflow-x: auto;
 }
 
+.player-stats-title {
+  margin: 0.9rem 0 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 208, 216, 0.6);
+}
+
 .player-stats-table {
   width: 100%;
   border-collapse: collapse;

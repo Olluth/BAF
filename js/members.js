@@ -184,10 +184,17 @@ const loadProfile = async (userId) => {
 
 const escHtml = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-// "Joueur suivi" status badge: pending until an admin approves the link.
+// "Joueur suivi" status badge: linked right away, or pending when another account
+// already has this player (an admin decides).
 const playerStatusBadge = status => status === 'approved'
-  ? '<span class="player-link-badge player-link-ok">✓ Validé</span>'
-  : '<span class="player-link-badge player-link-pending">En attente de validation</span>';
+  ? '<span class="player-link-badge player-link-ok">✓ Lié</span>'
+  : '<span class="player-link-badge player-link-pending">Déjà lié à un autre compte — vérification par un admin</span>';
+
+// Event kinds of the per-type stats table, in display order
+const KIND_LABELS = {
+  calling: 'Calling', protour: 'Pro Tour', nationals: 'Championnat national',
+  world: 'Championnat du monde', battlehardened: 'Battle Hardened',
+};
 
 // Tracked Tier 3 results of the linked player (GET /api/player-stats, api/achievements.js):
 // progress towards the automatic achievements.
@@ -213,10 +220,34 @@ const renderPlayerStats = async (name, status) => {
       <td class="num">${yes(c.day2)}</td>
       <td class="num">${yes(c.top8)}</td>
     </tr>`).join('');
+  const record = x => `${x.wins}-${x.losses || 0}${x.draws ? `-${x.draws}` : ''}`;
   const events = s.events.map(e => `
-    <li><strong>${escHtml(e.name)}</strong> — ${escHtml(e.hero || '?')} — ${e.wins} victoire${e.wins > 1 ? 's' : ''}${e.day2 ? ' · Day 2' : ''}${e.top8 ? ' · Top 8' : ''}${e.won ? ' · 🏆 Vainqueur' : ''}</li>`).join('');
+    <li><strong>${escHtml(e.name)}</strong> — ${escHtml(e.hero || '?')} — ${record(e)}${e.day2 ? ' · Day 2' : ''}${e.top8 ? ' · Top 8' : ''}${e.won ? ' · 🏆 Vainqueur' : ''}</li>`).join('');
+  // Per kind of event: played, match record and win rate, Day 2s, Top 8s, titles
+  const kinds = Object.keys(KIND_LABELS).filter(k => s.perKind?.[k]).map(k => {
+    const x = s.perKind[k];
+    const games = x.wins + (x.losses || 0) + (x.draws || 0);
+    const rate = games ? `${Math.round((x.wins / games) * 100)} %` : '—';
+    return `
+    <tr>
+      <td>${KIND_LABELS[k]}</td>
+      <td class="num">${x.played}</td>
+      <td class="num">${record(x)}</td>
+      <td class="num">${rate}</td>
+      <td class="num">${x.day2}</td>
+      <td class="num">${x.top8}</td>
+      <td class="num">${x.won ? `🏆 ${x.won}` : '0'}</td>
+    </tr>`;
+  }).join('');
   el.innerHTML = `
-    ${status !== 'approved' ? '<p class="profile-hint">Ces résultats compteront pour vos hauts faits une fois le lien validé par un admin.</p>' : ''}
+    ${status !== 'approved' ? '<p class="profile-hint">Ce joueur est déjà lié à un autre compte : ces résultats compteront pour vos hauts faits quand un admin aura vérifié.</p>' : ''}
+    ${kinds ? `
+    <h4 class="player-stats-title">Mes stats par type d'événement</h4>
+    <table class="player-stats-table">
+      <thead><tr><th>Événement</th><th class="num">Joués</th><th class="num">V-D</th><th class="num">% victoires</th><th class="num">Day 2</th><th class="num">Top 8</th><th class="num">Titres</th></tr></thead>
+      <tbody>${kinds}</tbody>
+    </table>` : ''}
+    <h4 class="player-stats-title">Progression des hauts faits par classe</h4>
     <table class="player-stats-table">
       <thead><tr><th>Classe</th><th class="num">Victoires (Master)</th><th class="num">Day 2 (Expert)</th><th class="num">Top 8 (Legend)</th></tr></thead>
       <tbody>${classes}</tbody>
@@ -312,7 +343,7 @@ const renderProfileEdit = (profile) => {
           <option value="">— Aucun —</option>
           ${profile.player_name ? `<option value="${escHtml(profile.player_name)}" selected>${escHtml(profile.player_name)}</option>` : ''}
         </select>
-        <p class="profile-hint">Votre nom tel qu'il apparaît dans le suivi de tournoi. Un admin valide le lien, puis vos résultats aux Callings, Pro Tours, Nationaux et Mondiaux vous donnent des hauts faits automatiquement. Votre nom n'est pas dans la liste ? Demandez à un admin de vous ajouter aux joueurs suivis.</p>
+        <p class="profile-hint">Votre nom tel qu'il apparaît dans le suivi de tournoi : vos résultats aux Callings, Pro Tours, Nationaux et Mondiaux vous donnent des hauts faits automatiquement. Votre nom n'est pas dans la liste ? Demandez à un admin de vous ajouter aux joueurs suivis.</p>
       </div>
       <div class="profile-actions">
         <button id="profile-save-btn" class="button button-primary">Enregistrer</button>
@@ -426,6 +457,11 @@ const saveProfile = async (previous = {}) => {
       btn.disabled = false;
       btn.textContent = 'Enregistrer';
       return;
+    }
+    // Grant the achievements this player already earned now, not at the next 6-hourly run
+    if (player_name) {
+      btn.textContent = 'Calcul des hauts faits…';
+      try { await fetch('/api/achievements/sync', { method: 'POST' }); } catch {}
     }
   }
 

@@ -3,9 +3,10 @@
  * Automatic achievements from tracked tournament results.
  *
  * Members link their account to a followed player on members.html (profiles.player_name,
- * 'pending' until an admin approves it: vps-setup/supabase-player-links.sql). For approved
- * links, the server reads the standings of the tracked "Tier 3" events (Calling, Battle
- * Hardened, Pro Tour, National and World Championships) and grants:
+ * linked right away unless another account already has that player: then 'pending' until an
+ * admin decides, see vps-setup/supabase-player-links.sql). For linked members, the server
+ * reads the standings of the tracked "Tier 3" events (Calling, Battle Hardened, Pro Tour,
+ * National and World Championships) and grants:
  *   <Class> Master (Silver)  : 10 match wins with that class
  *   <Class> Expert (Gold)    : reached Day 2 with that class
  *   <Class> Legend (Diamond) : Top 8 with that class
@@ -17,7 +18,8 @@
  * Day 2 = rounds after the cut (player count drops by a third or more in one round);
  * Top 8 = the round with exactly 8 players.
  *
- * Runs 5 min after each standings upload, every 6 h, and on demand from the admin page.
+ * Runs 5 min after each standings upload, every 6 h, right after a member links their
+ * player (POST /api/achievements/sync from members.html) and on demand from the admin page.
  * What it granted is remembered in DATA_DIR/auto-achievements.json: if an admin removes an
  * achievement, it isn't granted again.
  */
@@ -132,6 +134,8 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
           hero: p.hero || null,
           classes: classesOf(p.hero),
           wins: rounds.filter((r) => r.result === 'win').length,
+          losses: rounds.filter((r) => r.result === 'loss').length,
+          draws: rounds.filter((r) => r.result === 'draw').length,
           // A Top 8 counts as Day 2 too (some events show no clear cut, e.g. Nationals)
           day2: (!!cut && rounds.some((r) => r.n >= cut)) || (!!top8 && rounds.some((r) => r.n >= top8)),
           top8: !!top8 && rounds.some((r) => r.n >= top8),
@@ -145,18 +149,31 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
     return byPlayer;
   };
 
-  // Totals for one player: per class wins / day 2 / top 8, Callings played, Calling / PT won.
+  // Totals for one player: per class wins / day 2 / top 8, per kind of event (Calling, Pro Tour,
+  // Nationals...: played, match record, Day 2s, Top 8s, titles), Callings played, Calling / PT won.
   const summarize = (entries) => {
     const perClass = {};
-    for (const e of entries) for (const c of e.classes) {
-      const s = (perClass[c] ||= { wins: 0, day2: false, top8: false });
-      s.wins += e.wins;
-      s.day2 ||= e.day2;
-      s.top8 ||= e.top8;
+    const perKind = {};
+    for (const e of entries) {
+      for (const c of e.classes) {
+        const s = (perClass[c] ||= { wins: 0, day2: false, top8: false });
+        s.wins += e.wins;
+        s.day2 ||= e.day2;
+        s.top8 ||= e.top8;
+      }
+      const k = (perKind[e.kind || 'other'] ||= { played: 0, wins: 0, losses: 0, draws: 0, day2: 0, top8: 0, won: 0 });
+      k.played += 1;
+      k.wins += e.wins;
+      k.losses += e.losses;
+      k.draws += e.draws;
+      k.day2 += e.day2 ? 1 : 0;
+      k.top8 += e.top8 ? 1 : 0;
+      k.won += e.won ? 1 : 0;
     }
     return {
-      events: entries.map(({ slug, name, kind, hero, wins, day2, top8, won }) => ({ slug, name, kind, hero, wins, day2, top8, won })),
+      events: entries.map(({ slug, name, kind, hero, wins, losses, draws, day2, top8, won }) => ({ slug, name, kind, hero, wins, losses, draws, day2, top8, won })),
       perClass,
+      perKind,
       callings: entries.filter((e) => e.kind === 'calling').length,
       bigWin: entries.some((e) => e.won && (e.kind === 'calling' || e.kind === 'protour')),
     };
@@ -258,6 +275,23 @@ module.exports = function mountAchievements(app, { dataDir, standingsDir, events
       }
       res.json({ ok: true });
     } catch (err) { res.status(502).json({ error: err.message }); }
+  });
+
+  // Public: called by members.html right after a member links their player, so their
+  // achievements arrive now instead of at the next 6-hourly run. At most one run per 30 s;
+  // returns only a count (the report names other members).
+  let lastSync = 0;
+  let queuedSync = null;
+  app.post('/api/achievements/sync', async (req, res) => {
+    if (!supabaseUrl || !serviceKey) return res.status(503).json({ error: 'not configured' });
+    const wait = 30000 - (Date.now() - lastSync);
+    if (wait > 0) {
+      // Too soon after the last one: one run queued for when the 30 s are up
+      queuedSync ||= setTimeout(() => { queuedSync = null; lastSync = Date.now(); run().catch((err) => console.error('[achievements]', err.message)); }, wait);
+      return res.json({ ok: true, queued: true });
+    }
+    lastSync = Date.now();
+    try { const report = await run(); res.json({ ok: true, granted: report.granted.length }); } catch (err) { res.status(502).json({ error: 'failed' }); }
   });
 
   // Admin: run now / last report.
